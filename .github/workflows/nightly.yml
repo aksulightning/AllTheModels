@@ -3,7 +3,7 @@ name: nightly
 on:
   push:
     branches:
-      - main
+      - master
       - 1.21.1
 
   schedule:
@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: main
+          - branch: master
             tag: nightly
             release_name: Nightly Build
             artifact_name: all-the-models-nightly
