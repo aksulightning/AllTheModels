@@ -1,6 +1,10 @@
 name: nightly
 
 on:
+  push:
+    branches:
+      - main
+      - 1.21.1
   schedule:
     # Ajaa joka yö klo 03:00 UTC
     - cron: "0 3 * * *"
