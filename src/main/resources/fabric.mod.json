@@ -3,7 +3,7 @@
 	"schemaVersion": 1,
 	"id": "all-the-models",
 	"version": "${version}",
-	"name": "All The Skins",
+	"name": "All The Models",
 	"description": "Let's you use any 3D-Model as your skin",
 	"authors": [
 		"1TheCrazy",

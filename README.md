@@ -1,6 +1,14 @@
 # AllTheModels
 **Use any 3D model as your Minecraft skin.**
 
+## Disclaimer
+
+This mod is a fork and was made mostly for fun.
+
+It is vibe-coded, experimental, and not meant to be a perfectly engineered project. Things may break, behave strangely, or be held together by optimism and questionable decisions.
+
+Use it at your own risk, and please do not expect polished support or guaranteed compatibility.
+
 ## Overview
 AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
 
