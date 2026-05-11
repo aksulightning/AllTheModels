@@ -1,18 +1,7 @@
 name: nightly-1.21.1
 
-on:
-  schedule:
-    # Ajaa joka yö klo 03:00 UTC
-    - cron: "0 3 * * *"
-
-  # Mahdollistaa manuaalisen ajon Actions-välilehdeltä
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
 jobs:
-  nightly:
+  nightly-1.21.1:
     runs-on: ubuntu-24.04
 
     steps:
