@@ -5,11 +5,11 @@ on:
     branches:
       - main
       - 1.21.1
+
   schedule:
     # Ajaa joka yö klo 03:00 UTC
     - cron: "0 3 * * *"
 
-  # Mahdollistaa manuaalisen ajon Actions-välilehdeltä
   workflow_dispatch:
 
 permissions:
@@ -19,9 +19,25 @@ jobs:
   nightly:
     runs-on: ubuntu-24.04
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - branch: main
+            tag: nightly
+            release_name: Nightly Build
+            artifact_name: all-the-models-nightly
+
+          - branch: 1.21.1
+            tag: nightly-1.21.1
+            release_name: Nightly Build 1.21.1
+            artifact_name: all-the-models-1.21.1
+
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
 
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
@@ -38,10 +54,16 @@ jobs:
       - name: build
         run: ./gradlew build
 
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: build/libs/
+
       - name: delete old nightly release
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
-          tag_name: nightly
+          tag_name: ${{ matrix.tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
         continue-on-error: true
@@ -49,11 +71,12 @@ jobs:
       - name: create nightly release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
-          name: Nightly Build
+          tag_name: ${{ matrix.tag }}
+          name: ${{ matrix.release_name }}
           body: |
             Automaattinen nightly build.
 
+            Branch: ${{ matrix.branch }}
             Commit: ${{ github.sha }}
           prerelease: true
           files: build/libs/*
