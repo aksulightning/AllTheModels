@@ -12,13 +12,13 @@ public class CustomModelPose {
     public static HeadLookRotation computeHeadLookRotation(PlayerEntity player, float tickDelta) {
         float bodyYaw = MathHelper.lerpAngleDegrees(
                 tickDelta,
-                player.lastBodyYaw,
+                player.prevBodyYaw,
                 player.bodyYaw
         );
 
         float headYaw = MathHelper.lerpAngleDegrees(
                 tickDelta,
-                player.lastHeadYaw,
+                player.prevHeadYaw,
                 player.getHeadYaw()
         );
 
@@ -26,7 +26,7 @@ public class CustomModelPose {
 
         float pitch = MathHelper.lerp(
                 tickDelta,
-                player.lastPitch,
+                player.prevPitch,
                 player.getPitch()
         );
 

@@ -1,36 +1,36 @@
 package me.onethecrazy.screens.rendering;
 
-import com.mojang.authlib.GameProfile;
+import me.onethecrazy.AllTheSkinsClient;
+import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.LivingEntityRenderExtension;
+import me.onethecrazy.util.model.animation.CustomModelPose;
+import me.onethecrazy.util.objects.CacheSkin;
+import me.onethecrazy.util.objects.Vertex;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.entity.EntityType;
-import org.joml.Math;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.RotationAxis;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+
+import java.util.List;
+import java.util.UUID;
 
 public class SkinPreviewRenderer {
-    private final PlayerEntityRenderState skinPreviewRenderState;
     private final int x, y;
     private final int dimensions;
     private final float scale;
     private float yaw, pitch = 0;
 
     public SkinPreviewRenderer(int x, int y, int dimensions, float scale){
-        var mc = MinecraftClient.getInstance();
-        var session = mc.getSession();
-        var playerProfile = new GameProfile(session.getUuidOrNull(), session.getUsername());
-
-        // Init render state
-        skinPreviewRenderState = new PlayerEntityRenderState();
-        skinPreviewRenderState.entityType = EntityType.PLAYER;
-        skinPreviewRenderState.squaredDistanceToCamera = 1;
-        skinPreviewRenderState.x = skinPreviewRenderState.y = skinPreviewRenderState.z = 0.0;
-        skinPreviewRenderState.skinTextures = mc.getSkinProvider().getSkinTextures(playerProfile);
-
         this.x = x;
         this.y = y;
         this.dimensions = dimensions;
@@ -38,25 +38,27 @@ public class SkinPreviewRenderer {
     }
 
     public void renderPreview(DrawContext ctx, float deltaTicks){
-        // Tick the animation state
-        skinPreviewRenderState.age += deltaTicks;
+        MinecraftClient client = MinecraftClient.getInstance();
+        AbstractClientPlayerEntity player = client.player;
 
         // Reset Player to render the correct Skin
-        resetPlayerOnLivingEntityRenderer();
+        resetPlayerOnLivingEntityRenderer(player);
 
         // Render the Preview of the player skin
-        ctx.addEntity(
-                skinPreviewRenderState,
-                scale,
-                new Vector3f(0f, 1.0f, 0f),
-                new Quaternionf()
-                        .rotateAxis(Math.toRadians(180f), 0f, 0f, 1f) // Z correction
-                        .rotateAxis(Math.toRadians(180f + yaw), 0f, 1f, 0f) // Y correction
-                        .rotateAxis(Math.toRadians(-pitch), 1f, 0f, 0f),
-                null,
+        if (player != null) {
+            InventoryScreen.drawEntity(
+                ctx,
                 x, y,
-                x + dimensions, y + dimensions
-        );
+                x + dimensions, y + dimensions,
+                Math.round(scale),
+                0f,
+                yaw,
+                pitch,
+                player
+            );
+        } else {
+            renderCachedSelfSkin(ctx, client, deltaTicks);
+        }
 
         // Render the border where the Mesh is placed inside
         ctx.drawBorder(x, y, dimensions, dimensions, 0xFFFFFFFF);
@@ -67,12 +69,72 @@ public class SkinPreviewRenderer {
         this.pitch += pitch;
     }
 
-    private void resetPlayerOnLivingEntityRenderer(){
-        MinecraftClient mc = MinecraftClient.getInstance();
-        EntityRenderDispatcher disp = mc.getEntityRenderDispatcher();
+    private void resetPlayerOnLivingEntityRenderer(AbstractClientPlayerEntity player){
+        if (player == null) {
+            return;
+        }
 
-        PlayerEntityRenderer playerRenderer = (PlayerEntityRenderer) disp.getRenderer(skinPreviewRenderState);
+        EntityRenderDispatcher disp = MinecraftClient.getInstance().getEntityRenderDispatcher();
+        PlayerEntityRenderer playerRenderer = (PlayerEntityRenderer) disp.getRenderer(player);
 
         ((LivingEntityRenderExtension)playerRenderer).all_the_skins$setPlayerAsNull();
+    }
+
+    private void renderCachedSelfSkin(DrawContext ctx, MinecraftClient client, float deltaTicks) {
+        if (!AllTheSkinsClient.options().isEnabled) {
+            return;
+        }
+
+        UUID selfUuid = client.getSession().getUuidOrNull();
+        if (selfUuid == null) {
+            return;
+        }
+
+        @Nullable CacheSkin cacheSkin = SkinManager.skinCache.get(selfUuid.toString());
+        if (cacheSkin == null) {
+            return;
+        }
+
+        List<Vertex> vertices = cacheSkin.vertices;
+        if (cacheSkin.skinnedModel != null) {
+            float seconds = (client.getRenderTime() + deltaTicks) / 1000f;
+            vertices = cacheSkin.skinnedModel.render(
+                    "Idle",
+                    seconds,
+                    CustomModelPose.HeadLookRotation.NONE,
+                    CustomModelPose.LimbPose.NONE
+            );
+        }
+
+        if (vertices == null || vertices.isEmpty()) {
+            return;
+        }
+
+        ctx.enableScissor(x, y, x + dimensions, y + dimensions);
+
+        MatrixStack matrices = ctx.getMatrices();
+        matrices.push();
+        matrices.translate(x + dimensions / 2f, y + dimensions - 6f, 100f);
+        matrices.scale(scale, -scale, scale);
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180f + yaw));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(pitch));
+
+        MatrixStack.Entry entry = matrices.peek();
+        Matrix4f matrix = entry.getPositionMatrix();
+        int light = LightmapTextureManager.pack(15, 15);
+
+        for (Vertex vertex : vertices) {
+            VertexConsumer buffer = ctx.getVertexConsumers().getBuffer(RenderLayer.getEntityCutoutNoCull(vertex.texture));
+            buffer.vertex(matrix, vertex.position.x, vertex.position.y, vertex.position.z)
+                    .color(vertex.color)
+                    .texture(vertex.textureUV.u, vertex.textureUV.v)
+                    .overlay(OverlayTexture.DEFAULT_UV)
+                    .light(light)
+                    .normal(entry, vertex.normals.x, vertex.normals.y, vertex.normals.z);
+        }
+
+        ctx.draw();
+        matrices.pop();
+        ctx.disableScissor();
     }
 }

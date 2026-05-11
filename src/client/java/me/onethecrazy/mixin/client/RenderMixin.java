@@ -14,8 +14,6 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.state.LivingEntityRenderState;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
@@ -36,16 +34,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(LivingEntityRenderer.class)
-public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntityRenderState> implements LivingEntityRenderExtension {
+public abstract class RenderMixin <T extends LivingEntity> implements LivingEntityRenderExtension {
     @Unique private static final boolean all_the_skins$debugHeadLook = Boolean.getBoolean("alltheskins.debugHeadLook");
     @Unique private static boolean all_the_skins$headLookDebugLogged;
     @Unique private AbstractClientPlayerEntity player;
     @Unique private float all_the_skins$tickDelta;
 
-    @Inject(method="render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at=@At("HEAD"), cancellable = true)
-    private void onPlayerRender(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci){
+    @Inject(method="render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at=@At("HEAD"), cancellable = true)
+    private void onPlayerRender(T livingEntity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci){
         // We only want to hook the player rendering
-        if(state instanceof PlayerEntityRenderState playerState){
+        if(livingEntity instanceof AbstractClientPlayerEntity renderedPlayer){
+            player = renderedPlayer;
+            all_the_skins$tickDelta = tickDelta;
+
             if(!AllTheSkinsClient.options().isEnabled)
                 return;
 
@@ -80,16 +81,16 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
 
             @Nullable List<Vertex> vertices = cacheResult.vertices;
             if(cacheResult.skinnedModel != null){
-                String animation = all_the_skins$currentAnimation(state);
-                float seconds = state.age / 20f;
+                String animation = all_the_skins$currentAnimation(renderedPlayer);
+                float seconds = (renderedPlayer.age + tickDelta) / 20f;
                 boolean idle = "Idle".equals(animation);
                 CustomModelPose.HeadLookRotation headLookRotation = idle && player != null
-                        ? CustomModelPose.computeHeadLookRotation(player, all_the_skins$tickDelta)
+                        ? CustomModelPose.computeHeadLookRotation(player, tickDelta)
                         : CustomModelPose.HeadLookRotation.NONE;
                 CustomModelPose.LimbPose limbPose = "Walk".equals(animation) || "Sneak".equals(animation)
-                        ? all_the_skins$computeMinecraftLimbPose(playerState, "Sneak".equals(animation))
+                        ? all_the_skins$computeMinecraftLimbPose(renderedPlayer, tickDelta, "Sneak".equals(animation))
                         : CustomModelPose.LimbPose.NONE;
-                all_the_skins$logHeadLookDebug(animation, playerState, idle && player != null);
+                all_the_skins$logHeadLookDebug(animation, renderedPlayer, tickDelta, idle && player != null);
                 vertices = cacheResult.skinnedModel.render(animation, seconds, headLookRotation, limbPose);
             }
 
@@ -100,19 +101,20 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
             matrixStack.push();
 
             // --- Stolen from net.minecraft.client.render.entity.LivingEntityRenderer#render ---
-            if (state.isInPose(EntityPose.SLEEPING)) {
-                Direction direction = state.sleepingDirection;
+            if (renderedPlayer.isInPose(EntityPose.SLEEPING)) {
+                Direction direction = renderedPlayer.getSleepingDirection();
                 if (direction != null) {
-                    float f = state.standingEyeHeight - 0.1F;
+                    float f = renderedPlayer.getStandingEyeHeight() - 0.1F;
                     matrixStack.translate((float)(-direction.getOffsetX()) * f, 0.0F, (float)(-direction.getOffsetZ()) * f);
                 }
             }
 
             // Render Nametag
-            renderNameTagIfShouldRender((PlayerEntityRenderState) state, state.displayName, matrixStack, vertexConsumerProvider, light);
+            renderNameTagIfShouldRender(renderedPlayer, renderedPlayer.getDisplayName(), matrixStack, vertexConsumerProvider, light);
 
             // Apply body yaw only; custom HEAD look is applied around its own bind pivot during skinning.
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-state.bodyYaw));
+            float bodyYaw = MathHelper.lerpAngleDegrees(tickDelta, renderedPlayer.prevBodyYaw, renderedPlayer.bodyYaw);
+            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-bodyYaw));
 
             // Get Matrices
             MatrixStack.Entry entry = matrixStack.peek();
@@ -140,14 +142,6 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
         player = null;
     }
 
-    // updateRenderState is called every frame BEFORE render, so we're guaranteed to have a value in player
-    @Inject(method="updateRenderState(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;F)V", at=@At("HEAD"))
-    private void onUpdateRenderState(T livingEntity, S livingEntityRenderState, float f, CallbackInfo ci){
-        all_the_skins$tickDelta = f;
-        if(livingEntity instanceof AbstractClientPlayerEntity)
-            player = (AbstractClientPlayerEntity) livingEntity;
-    }
-
     @Unique
     private boolean all_the_skins$isWalking(){
         if(player == null)
@@ -158,20 +152,19 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
     }
 
     @Unique
-    private String all_the_skins$currentAnimation(LivingEntityRenderState state) {
-        if (state.sneaking || (player != null && player.isSneaking())) {
+    private String all_the_skins$currentAnimation(AbstractClientPlayerEntity renderedPlayer) {
+        if (renderedPlayer.isSneaking() || renderedPlayer.isInSneakingPose()) {
             return "Sneak";
         }
         return all_the_skins$isWalking() ? "Walk" : "Idle";
     }
 
     @Unique
-    private CustomModelPose.LimbPose all_the_skins$computeMinecraftLimbPose(PlayerEntityRenderState state, boolean sneaking) {
-        float limbProgress = state.limbSwingAnimationProgress;
-        float limbAmplitude = state.limbSwingAmplitude;
-        float amplitudeDivisor = state.limbAmplitudeInverse == 0f ? 1f : state.limbAmplitudeInverse;
-        float armAmplitude = limbAmplitude / amplitudeDivisor;
-        float legAmplitude = 1.4f * limbAmplitude / amplitudeDivisor;
+    private CustomModelPose.LimbPose all_the_skins$computeMinecraftLimbPose(AbstractClientPlayerEntity renderedPlayer, float tickDelta, boolean sneaking) {
+        float limbProgress = renderedPlayer.limbAnimator.getPos(tickDelta);
+        float limbAmplitude = renderedPlayer.limbAnimator.getSpeed(tickDelta);
+        float armAmplitude = limbAmplitude;
+        float legAmplitude = 1.4f * limbAmplitude;
         float sneakArmPitch = sneaking ? 0.4f : 0f;
 
         return new CustomModelPose.LimbPose(
@@ -183,47 +176,49 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
     }
 
     @Unique
-    private void all_the_skins$logHeadLookDebug(String animation, PlayerEntityRenderState state, boolean usedPlayerLookRotation) {
+    private void all_the_skins$logHeadLookDebug(String animation, AbstractClientPlayerEntity renderedPlayer, float tickDelta, boolean usedPlayerLookRotation) {
         if (!all_the_skins$debugHeadLook || all_the_skins$headLookDebugLogged) {
             return;
         }
 
+        float bodyYaw = MathHelper.lerpAngleDegrees(tickDelta, renderedPlayer.prevBodyYaw, renderedPlayer.bodyYaw);
+        float headYaw = MathHelper.lerpAngleDegrees(tickDelta, renderedPlayer.prevHeadYaw, renderedPlayer.getHeadYaw());
+        float relativeHeadYaw = MathHelper.wrapDegrees(headYaw - bodyYaw);
+        float pitch = MathHelper.lerp(tickDelta, renderedPlayer.prevPitch, renderedPlayer.getPitch());
+
         AllTheSkins.LOGGER.info(
                 "Head look debug animation={} bodyYaw={} headYaw={} relativeHeadYaw={} pitch={} usedPlayerLookRotation={}",
                 animation,
-                state.bodyYaw,
-                state.bodyYaw + state.relativeHeadYaw,
-                state.relativeHeadYaw,
-                state.pitch,
+                bodyYaw,
+                headYaw,
+                relativeHeadYaw,
+                pitch,
                 usedPlayerLookRotation
         );
         all_the_skins$headLookDebugLogged = true;
     }
 
-    // --- Stolen and modified from net.minecraft.client.render.entity.EntityRenderer#renderLabelIfPresent ---
     @Unique
-    private void renderNameTagIfShouldRender(PlayerEntityRenderState state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light){
-        if (state.displayName == null)
+    private void renderNameTagIfShouldRender(AbstractClientPlayerEntity renderedPlayer, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light){
+        if (!renderedPlayer.shouldRenderName()) {
             return;
-
-        Vec3d vec3d = state.nameLabelPos;
-        if (vec3d != null) {
-            boolean bl = !state.sneaking;
-            int i = "deadmau5".equals(text.getString()) ? -10 : 0;
-            matrices.push();
-            matrices.translate(vec3d.x, vec3d.y + 0.5, vec3d.z);
-            matrices.multiply(MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation());
-            matrices.scale(0.025F, -0.025F, 0.025F);
-            Matrix4f matrix4f = matrices.peek().getPositionMatrix();
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-            float f = (float)(-textRenderer.getWidth((StringVisitable)text)) / 2.0F;
-            int j = (int)(MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
-            textRenderer.draw(text, f, (float)i, -2130706433, false, matrix4f, vertexConsumers, bl ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL, j, light);
-            if (bl) {
-                textRenderer.draw((Text)text, f, (float)i, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, LightmapTextureManager.applyEmission(light, 2));
-            }
-
-            matrices.pop();
         }
+
+        boolean notSneaking = !renderedPlayer.isSneaky();
+        int yOffset = "deadmau5".equals(text.getString()) ? -10 : 0;
+        matrices.push();
+        matrices.translate(0.0F, renderedPlayer.getHeight() + 0.5F, 0.0F);
+        matrices.multiply(MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation());
+        matrices.scale(0.025F, -0.025F, 0.025F);
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        float x = (float)(-textRenderer.getWidth((StringVisitable)text)) / 2.0F;
+        int backgroundColor = (int)(MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
+        textRenderer.draw(text, x, (float)yOffset, -2130706433, false, matrix4f, vertexConsumers, notSneaking ? TextRenderer.TextLayerType.SEE_THROUGH : TextRenderer.TextLayerType.NORMAL, backgroundColor, light);
+        if (notSneaking) {
+            textRenderer.draw(text, x, (float)yOffset, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, LightmapTextureManager.pack(15, 15));
+        }
+
+        matrices.pop();
     }
 }

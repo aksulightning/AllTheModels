@@ -1,7 +1,6 @@
 package me.onethecrazy.mixin.client;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.authlib.GameProfile;
 import me.onethecrazy.*;
 import me.onethecrazy.screens.ConfigScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
@@ -10,11 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.entity.EntityType;
 import net.minecraft.text.Text;
-import org.joml.*;
-import org.joml.Math;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

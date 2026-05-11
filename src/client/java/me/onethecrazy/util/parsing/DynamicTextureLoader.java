@@ -70,14 +70,14 @@ public final class DynamicTextureLoader {
         final MinecraftClient mc = MinecraftClient.getInstance();
 
         if (RenderSystem.isOnRenderThread()) {
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "model-dynamic", image);
+            NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
             mc.getTextureManager().registerTexture(id, tex);
             return id;
         }
 
         try {
             return mc.submit(() -> {
-                NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "model-dynamic", image);
+                NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
                 mc.getTextureManager().registerTexture(id, tex);
                 return id;
             }).get();
