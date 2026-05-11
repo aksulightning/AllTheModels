@@ -4,8 +4,10 @@ import me.onethecrazy.util.*;
 import me.onethecrazy.util.network.BackendInteractor;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.LookupSkin;
+import me.onethecrazy.util.objects.SkinnedModel;
 import me.onethecrazy.util.objects.Vertex;
 import me.onethecrazy.util.objects.save.ClientSkin;
+import me.onethecrazy.util.model.animation.LogicalRigAnimator;
 import me.onethecrazy.util.parsing.ParsingFormat;
 import me.onethecrazy.util.parsing.UniversalParser;
 import net.minecraft.client.MinecraftClient;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +71,8 @@ public class SkinManager {
 
             FileUtil.createFileIfNotPresent(FileUtil.getSkinPath(hash, format), data3D);
 
-            AllTheSkinsClient.options().selectedSkin = new ClientSkin(hash, name, format);
+            ClientSkin skin = new ClientSkin(hash, name, format);
+            AllTheSkinsClient.options().selectedSkin = skin;
 
             // Save the updated options:
             FileUtil.writeSave(AllTheSkinsClient.options());
@@ -107,7 +111,7 @@ public class SkinManager {
 
         if(Objects.equals(selectedSkin.hash, "")){
             putLookupEntry(uuid, new LookupSkin("", null));
-            putCacheEntry(uuid, null, null);
+            putCacheEntry(uuid, (List<Vertex>) null, null);
 
             return;
         }
@@ -115,10 +119,16 @@ public class SkinManager {
         // Load self skin
         try{
             Path data3DPath = FileUtil.getSkinPath(selectedSkin.hash, selectedSkin.format);
+            var skinnedModel = UniversalParser.parseSkinned(data3DPath, selectedSkin.format)
+                    .map(ModelNormalizer::normalize)
+                    .map(model -> withSavedAnimationSettings(model, selectedSkin));
             List<Vertex> vertices = ModelNormalizer.normalize(UniversalParser.parse(data3DPath, selectedSkin.format));
 
             putLookupEntry(uuid, new LookupSkin(selectedSkin.hash, selectedSkin.format));
-            putCacheEntry(uuid, vertices, selectedSkin.format);
+            skinnedModel.ifPresentOrElse(
+                    model -> putCacheEntry(uuid, model, selectedSkin.format),
+                    () -> putCacheEntry(uuid, vertices, selectedSkin.format)
+            );
         }
         catch(Exception e){
             AllTheSkins.LOGGER.info("Ran into error while loading self skin data3D content:", e);
@@ -152,6 +162,7 @@ public class SkinManager {
         {
             try {
                 Path path = FileUtil.getSkinPath(skinLookup.get(uuid).hash, skinLookup.get(uuid).format);
+                var skinnedModel = UniversalParser.parseSkinned(path, skinLookup.get(uuid).format).map(ModelNormalizer::normalize);
 
                 List<Vertex> vertices = ModelNormalizer.normalize(
                         UniversalParser.parse(
@@ -159,9 +170,12 @@ public class SkinManager {
                         )
                 );
 
-                putCacheEntry(uuid, vertices, skinLookup.get(uuid).format);
+                skinnedModel.ifPresentOrElse(
+                        model -> putCacheEntry(uuid, model, skinLookup.get(uuid).format),
+                        () -> putCacheEntry(uuid, vertices, skinLookup.get(uuid).format)
+                );
             } catch (Exception e) {
-                putCacheEntry(uuid, null, null);
+                putCacheEntry(uuid, (List<Vertex>) null, null);
 
                 AllTheSkins.LOGGER.error("Ran into error while loading skin from I/O Cache: {0}", e);
             }
@@ -180,11 +194,16 @@ public class SkinManager {
                         AllTheSkins.LOGGER.error("Ran into error while saving skin to I/O cache: ", e);
                     }
 
-                    List<Vertex> vertices = ModelNormalizer.normalize(UniversalParser.parse(FileUtil.getSkinPath(hash, lookupResult.format)));
-                    putCacheEntry(uuid, vertices, lookupResult.format);
+                    Path path = FileUtil.getSkinPath(hash, lookupResult.format);
+                    var skinnedModel = UniversalParser.parseSkinned(path, lookupResult.format).map(ModelNormalizer::normalize);
+                    List<Vertex> vertices = ModelNormalizer.normalize(UniversalParser.parse(path));
+                    skinnedModel.ifPresentOrElse(
+                            model -> putCacheEntry(uuid, model, lookupResult.format),
+                            () -> putCacheEntry(uuid, vertices, lookupResult.format)
+                    );
                 }
                 else{
-                    putCacheEntry(uuid, null, null);
+                    putCacheEntry(uuid, (List<Vertex>) null, null);
                 }
             });
         }
@@ -194,7 +213,54 @@ public class SkinManager {
         skinCache.put(uuid, new CacheSkin(vertices, format));
     }
 
+    public static void putCacheEntry(String uuid, @Nullable SkinnedModel skinnedModel, ParsingFormat format){
+        skinCache.put(uuid, new CacheSkin(skinnedModel, format));
+    }
+
     public static void putLookupEntry(String uuid, LookupSkin lookupSkin){
         skinLookup.put(uuid, lookupSkin);
+    }
+
+    public static void saveCurrentBinding() {
+        FileUtil.writeSave(AllTheSkinsClient.options());
+        loadSelfSkin();
+    }
+
+    private static SkinnedModel withSavedAnimationSettings(SkinnedModel model, ClientSkin selectedSkin) {
+        Map<String, SkinnedModel.Animation> importedAnimations = rotationOnlyAnimations(model.animations, selectedSkin);
+        Map<String, SkinnedModel.Animation> animations = new LinkedHashMap<>(importedAnimations);
+        LogicalRigAnimator.proceduralAnimations(model.bones, selectedSkin.binding()).forEach(animations::putIfAbsent);
+
+        for (Map.Entry<String, String> entry : selectedSkin.clipMappings().entrySet()) {
+            SkinnedModel.Animation mapped = importedAnimations.get(entry.getValue());
+            if (mapped != null) {
+                animations.put(entry.getKey(), mapped);
+            }
+        }
+
+        return model.withLogicalRigBinding(selectedSkin.binding()).withAnimations(animations);
+    }
+
+    private static Map<String, SkinnedModel.Animation> rotationOnlyAnimations(Map<String, SkinnedModel.Animation> source, ClientSkin selectedSkin) {
+        Map<String, SkinnedModel.Animation> stripped = new LinkedHashMap<>();
+        boolean ignoredTranslations = false;
+
+        for (Map.Entry<String, SkinnedModel.Animation> entry : source.entrySet()) {
+            SkinnedModel.Animation animation = entry.getValue();
+            if (animation.hasTranslationKeys()) {
+                ignoredTranslations = true;
+            }
+            stripped.put(entry.getKey(), animation.rotationOnly());
+        }
+
+        if (ignoredTranslations) {
+            String warning = "This animation contains translation keys. AllTheSkins only supports rotation-only logical rig animation, so translation keys were ignored.";
+            if (!selectedSkin.warnings().contains(warning)) {
+                selectedSkin.warnings().add(warning);
+                FileUtil.writeSave(AllTheSkinsClient.options());
+            }
+        }
+
+        return stripped;
     }
 }

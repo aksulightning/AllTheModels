@@ -2,10 +2,13 @@ package me.onethecrazy.screens;
 
 import me.onethecrazy.AllTheSkinsClient;
 import me.onethecrazy.SkinManager;
+import me.onethecrazy.screens.editor.ModelBindingEditorScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
+import me.onethecrazy.util.objects.CacheSkin;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -25,6 +28,7 @@ public class ConfigScreen extends Screen {
     private ButtonWidget selectSkinButton;
     private ButtonWidget resetButton;
     private ButtonWidget toggleButton;
+    private ButtonWidget editorButton;
     private ButtonWidget doneButton;
     private boolean rotating = false;
 
@@ -54,14 +58,19 @@ public class ConfigScreen extends Screen {
             updateEnabledButtonText();
         }).dimensions(getCellOriginX() + getScreenFriendlyDimensions() / 2 + MARGIN / 2, selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
 
+        editorButton = ButtonWidget.builder(Text.of("Edit Model Rig"), (button) ->
+                MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(this))
+        ).dimensions(getCellOriginX(), resetButton.getY() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+
         doneButton = ButtonWidget.builder(
                 Text.translatable("gui.done"),
                 (button) -> close())
-                .dimensions(getCellOriginX(), resetButton.getY() + Y_SPACING + 2 * MARGIN, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+                .dimensions(getCellOriginX(), editorButton.getY() + Y_SPACING + 2 * MARGIN, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
 
         this.addDrawableChild(selectSkinButton);
         this.addDrawableChild(resetButton);
         this.addDrawableChild(toggleButton);
+        this.addDrawableChild(editorButton);
         this.addDrawableChild(doneButton);
 
         // Set Button Texts
@@ -79,6 +88,10 @@ public class ConfigScreen extends Screen {
 
         // Render the banner text
         context.drawText(textRenderer, AllTheSkinsClient.bannerText, getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
+
+        CacheSkin cacheSkin = SkinManager.skinCache.get(MinecraftClient.getInstance().getSession().getUuidOrNull().toString());
+        if(cacheSkin != null)
+            context.drawText(textRenderer, cacheSkin.debugStatus(), getCellOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
 
         // Render Mod Title
         String title = "All The Skins";
@@ -133,7 +146,7 @@ public class ConfigScreen extends Screen {
     }
 
     @Unique private int getScreenFriendlyDimensions(){
-        return Math.min(SKIN_PREVIEW_DIMENSIONS, this.height - 150);
+        return Math.min(SKIN_PREVIEW_DIMENSIONS, this.height - 175);
     }
 
     @Unique private float getScreenFriendlyScale(){
@@ -159,4 +172,5 @@ public class ConfigScreen extends Screen {
 
         toggleButton.setMessage(text);
     }
+
 }

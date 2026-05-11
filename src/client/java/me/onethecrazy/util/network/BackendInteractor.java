@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 
 public class BackendInteractor {
     private static final HttpClient client = HttpClient.newHttpClient();
-    private static final String BASE_URL = "http://217.154.195.68:";
+    private static final String BASE_URL = "http://127.0.0.1:";
     private static final String PORT = "6969";
     private static final String URL = BASE_URL + PORT;
 

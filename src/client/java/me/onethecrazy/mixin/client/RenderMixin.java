@@ -5,6 +5,7 @@ import me.onethecrazy.AllTheSkinsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.LivingEntityRenderExtension;
 import me.onethecrazy.screens.ConfigScreen;
+import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.Vertex;
 import net.minecraft.client.MinecraftClient;
@@ -21,6 +22,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +37,10 @@ import java.util.List;
 
 @Mixin(LivingEntityRenderer.class)
 public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntityRenderState> implements LivingEntityRenderExtension {
+    @Unique private static final boolean all_the_skins$debugHeadLook = Boolean.getBoolean("alltheskins.debugHeadLook");
+    @Unique private static boolean all_the_skins$headLookDebugLogged;
     @Unique private AbstractClientPlayerEntity player;
+    @Unique private float all_the_skins$tickDelta;
 
     @Inject(method="render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at=@At("HEAD"), cancellable = true)
     private void onPlayerRender(LivingEntityRenderState state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci){
@@ -74,6 +79,19 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
                 return;
 
             @Nullable List<Vertex> vertices = cacheResult.vertices;
+            if(cacheResult.skinnedModel != null){
+                String animation = all_the_skins$currentAnimation(state);
+                float seconds = state.age / 20f;
+                boolean idle = "Idle".equals(animation);
+                CustomModelPose.HeadLookRotation headLookRotation = idle && player != null
+                        ? CustomModelPose.computeHeadLookRotation(player, all_the_skins$tickDelta)
+                        : CustomModelPose.HeadLookRotation.NONE;
+                CustomModelPose.LimbPose limbPose = "Walk".equals(animation) || "Sneak".equals(animation)
+                        ? all_the_skins$computeMinecraftLimbPose(playerState, "Sneak".equals(animation))
+                        : CustomModelPose.LimbPose.NONE;
+                all_the_skins$logHeadLookDebug(animation, playerState, idle && player != null);
+                vertices = cacheResult.skinnedModel.render(animation, seconds, headLookRotation, limbPose);
+            }
 
             // User didn't select a skin
             if(vertices == null || vertices.isEmpty())
@@ -93,9 +111,8 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
             // Render Nametag
             renderNameTagIfShouldRender((PlayerEntityRenderState) state, state.displayName, matrixStack, vertexConsumerProvider, light);
 
-            // Apply player Yaw
-            float rot = playerState.relativeHeadYaw + state.bodyYaw;
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-rot));
+            // Apply body yaw only; custom HEAD look is applied around its own bind pivot during skinning.
+            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-state.bodyYaw));
 
             // Get Matrices
             MatrixStack.Entry entry = matrixStack.peek();
@@ -126,8 +143,61 @@ public abstract class RenderMixin <T extends LivingEntity, S extends LivingEntit
     // updateRenderState is called every frame BEFORE render, so we're guaranteed to have a value in player
     @Inject(method="updateRenderState(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;F)V", at=@At("HEAD"))
     private void onUpdateRenderState(T livingEntity, S livingEntityRenderState, float f, CallbackInfo ci){
+        all_the_skins$tickDelta = f;
         if(livingEntity instanceof AbstractClientPlayerEntity)
             player = (AbstractClientPlayerEntity) livingEntity;
+    }
+
+    @Unique
+    private boolean all_the_skins$isWalking(){
+        if(player == null)
+            return false;
+
+        Vec3d velocity = player.getVelocity();
+        return velocity.x * velocity.x + velocity.z * velocity.z > 0.0004;
+    }
+
+    @Unique
+    private String all_the_skins$currentAnimation(LivingEntityRenderState state) {
+        if (state.sneaking || (player != null && player.isSneaking())) {
+            return "Sneak";
+        }
+        return all_the_skins$isWalking() ? "Walk" : "Idle";
+    }
+
+    @Unique
+    private CustomModelPose.LimbPose all_the_skins$computeMinecraftLimbPose(PlayerEntityRenderState state, boolean sneaking) {
+        float limbProgress = state.limbSwingAnimationProgress;
+        float limbAmplitude = state.limbSwingAmplitude;
+        float amplitudeDivisor = state.limbAmplitudeInverse == 0f ? 1f : state.limbAmplitudeInverse;
+        float armAmplitude = limbAmplitude / amplitudeDivisor;
+        float legAmplitude = 1.4f * limbAmplitude / amplitudeDivisor;
+        float sneakArmPitch = sneaking ? 0.4f : 0f;
+
+        return new CustomModelPose.LimbPose(
+                new CustomModelPose.BodyPartRotation(MathHelper.cos(limbProgress * 0.6662f + MathHelper.PI) * armAmplitude + sneakArmPitch, 0f, 0f),
+                new CustomModelPose.BodyPartRotation(MathHelper.cos(limbProgress * 0.6662f) * armAmplitude + sneakArmPitch, 0f, 0f),
+                new CustomModelPose.BodyPartRotation(MathHelper.cos(limbProgress * 0.6662f) * legAmplitude, 0.005f, 0.005f),
+                new CustomModelPose.BodyPartRotation(MathHelper.cos(limbProgress * 0.6662f + MathHelper.PI) * legAmplitude, -0.005f, -0.005f)
+        );
+    }
+
+    @Unique
+    private void all_the_skins$logHeadLookDebug(String animation, PlayerEntityRenderState state, boolean usedPlayerLookRotation) {
+        if (!all_the_skins$debugHeadLook || all_the_skins$headLookDebugLogged) {
+            return;
+        }
+
+        AllTheSkins.LOGGER.info(
+                "Head look debug animation={} bodyYaw={} headYaw={} relativeHeadYaw={} pitch={} usedPlayerLookRotation={}",
+                animation,
+                state.bodyYaw,
+                state.bodyYaw + state.relativeHeadYaw,
+                state.relativeHeadYaw,
+                state.pitch,
+                usedPlayerLookRotation
+        );
+        all_the_skins$headLookDebugLogged = true;
     }
 
     // --- Stolen and modified from net.minecraft.client.render.entity.EntityRenderer#renderLabelIfPresent ---

@@ -53,6 +53,16 @@ dependencies {
 	include "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-macos"
 	include "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-macos-arm64"
 
+	// --- Full model import for FBX ---
+	implementation "org.lwjgl:lwjgl-assimp:${nfdVersion}"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-windows"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-windows-arm64"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-linux"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-linux-arm64"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-macos"
+	include "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-macos-arm64"
+
 	// --- For glb parsing ---
 	include implementation ("de.javagl:jgltf-model:2.0.4")
 	include implementation ("de.javagl:jgltf-impl-v2:2.0.4")
@@ -65,6 +75,12 @@ dependencies {
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-linux-arm64"
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-macos"
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-macos-arm64"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-windows"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-windows-arm64"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-linux"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-linux-arm64"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-macos"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-macos-arm64"
 
 	// Mod Menu
 	modApi "maven.modrinth:modmenu:15.0.0-beta.3"
