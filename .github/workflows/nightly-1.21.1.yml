@@ -37,7 +37,7 @@ jobs:
       - name: delete old nightly release
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
-          tag_name: nightly
+          tag_name: nightly-1.21.1
           github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
         continue-on-error: true
