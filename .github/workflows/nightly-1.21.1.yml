@@ -1,7 +1,7 @@
-name: nightly-1.21.1
+name: nightly_1.21.1
 
 jobs:
-  nightly-1.21.1:
+  nightly_1.21.1:
     runs-on: ubuntu-24.04
 
     steps:
@@ -26,7 +26,7 @@ jobs:
       - name: delete old nightly release
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
-          tag_name: nightly-1.21.1
+          tag_name: nightly_1.21.1
           github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
         continue-on-error: true
@@ -34,7 +34,7 @@ jobs:
       - name: create nightly release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly-1.21.1
+          tag_name: nightly_1.21.1
           name: Nightly Build
           body: |
             Automatic nightly build.
