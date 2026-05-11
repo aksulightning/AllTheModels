@@ -1,12 +1,22 @@
 name: nightly_1.21.1
 
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
-  nightly_1.21.1:
+  nightly_1_21_1:
     runs-on: ubuntu-24.04
 
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: "1.21.1"
 
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
@@ -24,18 +34,16 @@ jobs:
         run: ./gradlew build
 
       - name: delete old nightly release
-        uses: dev-drprasad/delete-tag-and-release@v1.1
-        with:
-          tag_name: nightly_1.21.1
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          delete_release: true
+        run: gh release delete nightly --cleanup-tag --yes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
       - name: create nightly release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly_1.21.1
-          name: Nightly Build
+          tag_name: nightly
+          name: Nightly Build 1.21.1
           body: |
             Automatic nightly build.
 
