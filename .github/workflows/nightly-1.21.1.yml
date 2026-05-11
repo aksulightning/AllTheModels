@@ -1,4 +1,4 @@
-name: nightly
+name: nightly-1.21.1
 
 on:
   schedule:
@@ -45,10 +45,10 @@ jobs:
       - name: create nightly release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
+          tag_name: nightly-1.21.1
           name: Nightly Build
           body: |
-            Automaattinen nightly build.
+            Automatic nightly build.
 
             Commit: ${{ github.sha }}
           prerelease: true
