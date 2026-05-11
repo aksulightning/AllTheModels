@@ -1,10 +1,10 @@
-[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/1TheCrazy)
-
-# AllTheTotems
+# AllTheModels
 **Use any 3D model as your Minecraft skin.**
 
 ## Overview
-Tired of flat skins? *AllTheSkins* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+
+Tired of flat skins? *AllTheModels* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
 
 ## Features
 - 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, or `.fbx` models, complete with textures where supported.
@@ -53,24 +53,23 @@ The binding, source format, scale field, and animation clip mappings are saved w
 ⚠️ **Use at your own risk.**  
 Nothing is moderated — any player can upload any model, including inappropriate ones.
 
-- 🚫 Accounts may be blocked from the service with or without reason.
+- 🚫 Accounts may be blocked from the service or community-made custom backends with or without reason.
 - 📁 File size is limited to **20 MB** to allow free use.
-- 📴 The service may be shut down at any time if server load becomes too high.
+- 📴 The service and custom backends may be shut down at any time.
 - 🔄 Subject to change without notice.
 
 ## 👥 Community & Contribution
 *AllTheSkins* is open source and community-driven — contributions and feedback are always welcome!
 
 - 🐛 **Found a bug or have a feature idea?**  
-  → [Open an issue](https://github.com/1TheCrazy/AllTheSkins/issues)
+  → [Open an issue](https://github.com/aksulightning/alltheskins-fork/issues)
 
 - 💡 **Want to contribute?**  
-  → [Submit a pull request](https://github.com/1TheCrazy/AllTheSkins/pulls)
+  → [Submit a pull request](https://github.com/aksulightning/alltheskins-fork/pulls)
 
 
 Your creativity shapes this project — thank you for helping make *AllTheSkins* better for everyone!
 
 ## Links
-- 🧾 [GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)
-- 🌍 [Modrinth Page](https://modrinth.com/mod/all-the-skins)
-- 🔗 [CurseForge Page](https://www.curseforge.com/minecraft/mc-mods/all-the-skins)
+- 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)
+- [Support 1TheCrazy on Ko-Fi](https://ko-fi.com/1TheCrazy)
