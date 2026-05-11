@@ -1,4 +1,4 @@
-name: nightly1211
+name: nightly_1_21_1
 
 on:
   schedule:
@@ -37,18 +37,18 @@ jobs:
       - name: delete old nightly1211 release
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
-          tag_name: nightly1211
+          tag_name: nightly_1_21_1
           github_token: ${{ secrets.GITHUB_TOKEN }}
           delete_release: true
         continue-on-error: true
 
-      - name: create nightly1211 release
+      - name: create nightly_1_21_1 release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly1211
-          name: nightly1211 Build
+          tag_name: nightly_1_21_1
+          name: nightly_1_21_1 Build
           body: |
-            Automaattinen nightly1211 build.
+            Automatic nightly_1_21_1 build.
 
             Commit: ${{ github.sha }}
           prerelease: true
