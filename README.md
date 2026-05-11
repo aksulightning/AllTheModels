@@ -6,6 +6,8 @@ AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins
 
 Tired of flat skins? *AllTheModels* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
 
+[Download the mod from nightly release](https://github.com/aksulightning/AllTheModels/releases/tag/nightly)
+
 ## Features
 - 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, or `.fbx` models, complete with textures where supported.
 - ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.

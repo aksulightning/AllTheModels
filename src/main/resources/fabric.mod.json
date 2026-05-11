@@ -1,19 +1,20 @@
 
 {
 	"schemaVersion": 1,
-	"id": "all-the-skins",
+	"id": "all-the-models",
 	"version": "${version}",
 	"name": "All The Skins",
 	"description": "Let's you use any 3D-Model as your skin",
 	"authors": [
-		"1TheCrazy"
+		"1TheCrazy",
+		"Aksu Lightning"
 	],
 	"contact": {
-		"sources": "https://github.com/1TheCrazy/AllTheSkins",
-		"homepage": "https://github.com/1TheCrazy/AllTheSkins"
+		"sources": "https://github.com/aksulightning/AllTheModels",
+		"homepage": "https://github.com/aksulightning/AllTheModels"
 	},
 	"license": "MIT",
-	"icon": "assets/all-the-skins/icon.png",
+	"icon": "assets/all-the-models/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [
@@ -27,9 +28,9 @@
 		]
 	},
 	"mixins": [
-		"all-the-skins.mixins.json",
+		"all-the-models.mixins.json",
 		{
-			"config": "all-the-skins.client.mixins.json",
+			"config": "all-the-models.client.mixins.json",
 			"environment": "client"
 		}
 	],
