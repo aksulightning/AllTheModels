@@ -16,7 +16,9 @@ import java.util.Objects;
 
 public class ConfigScreen extends Screen {
     // Constants
-    private static final int SKIN_PREVIEW_DIMENSIONS = 300;
+    private static final int MAX_SKIN_PREVIEW_DIMENSIONS = 300;
+    private static final int MIN_SKIN_PREVIEW_DIMENSIONS = 120;
+    private static final int MAX_CONTENT_WIDTH = 300;
     private static final int MARGIN = 6;
     private static final int BUTTON_HEIGHT = 20;
     private static final int Y_SPACING = 24;
@@ -30,10 +32,16 @@ public class ConfigScreen extends Screen {
     private ButtonWidget toggleButton;
     private ButtonWidget editorButton;
     private ButtonWidget doneButton;
+    private final Screen parent;
     private boolean rotating = false;
 
     public ConfigScreen() {
+        this(null);
+    }
+
+    public ConfigScreen(Screen parent) {
         super(Text.of("All The Models"));
+        this.parent = parent;
     }
 
     @Override
@@ -44,28 +52,28 @@ public class ConfigScreen extends Screen {
         // Init Buttons
         selectSkinButton = ButtonWidget.builder(Text.empty(),
                 (button) -> SkinManager.pickClientSkin()
-        ).dimensions(getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+        ).dimensions(getContentOriginX(), getButtonsStartY(), getContentWidth(), BUTTON_HEIGHT).build();
 
         resetButton = ButtonWidget.builder(
-                    Text.translatable("gui.alltheskins.reset"),
+                    Text.empty(),
                     (button) -> SkinManager.resetSelfSkin())
-                    .dimensions(getCellOriginX(), selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
+                    .dimensions(getContentOriginX(), selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         toggleButton = ButtonWidget.builder(Text.empty(), (button) -> {
             AllTheSkinsClient.options().isEnabled = !AllTheSkinsClient.options().isEnabled;
 
             // Update Text
             updateEnabledButtonText();
-        }).dimensions(getCellOriginX() + getScreenFriendlyDimensions() / 2 + MARGIN / 2, selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
+        }).dimensions(getContentOriginX() + getHalfButtonWidth() + MARGIN, selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         editorButton = ButtonWidget.builder(Text.of("Edit Model Rig"), (button) ->
                 MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(this))
-        ).dimensions(getCellOriginX(), resetButton.getY() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+        ).dimensions(getContentOriginX(), resetButton.getY() + Y_SPACING, getContentWidth(), BUTTON_HEIGHT).build();
 
         doneButton = ButtonWidget.builder(
                 Text.translatable("gui.done"),
                 (button) -> close())
-                .dimensions(getCellOriginX(), editorButton.getY() + Y_SPACING + 2 * MARGIN, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+                .dimensions(getContentOriginX(), editorButton.getY() + Y_SPACING + textRenderer.fontHeight + 2 * MARGIN, getContentWidth(), BUTTON_HEIGHT).build();
 
         this.addDrawableChild(selectSkinButton);
         this.addDrawableChild(resetButton);
@@ -75,6 +83,7 @@ public class ConfigScreen extends Screen {
 
         // Set Button Texts
         updateSelectButtonText();
+        updateResetButtonText();
         updateEnabledButtonText();
     }
 
@@ -87,17 +96,27 @@ public class ConfigScreen extends Screen {
         updateSelectButtonText();
 
         // Render the banner text
-        context.drawText(textRenderer, AllTheSkinsClient.bannerText, getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
+        context.drawText(textRenderer, trimmed(AllTheSkinsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
 
-        CacheSkin cacheSkin = SkinManager.skinCache.get(MinecraftClient.getInstance().getSession().getUuidOrNull().toString());
+        CacheSkin cacheSkin = getSelfCacheSkin();
         if(cacheSkin != null)
-            context.drawText(textRenderer, cacheSkin.debugStatus(), getCellOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
+            context.drawText(textRenderer, trimmed(cacheSkin.debugStatus(), getContentWidth()), getContentOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
 
         // Render Mod Title
         String title = "All The Models";
         context.drawText(textRenderer, title, this.width / 2 - textRenderer.getWidth(title) / 2, MARGIN, 0xFFFFFFFF, true);
 
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void close() {
+        if (this.client != null && parent != null) {
+            this.client.setScreen(parent);
+            return;
+        }
+
+        super.close();
     }
 
     @Override
@@ -146,11 +165,42 @@ public class ConfigScreen extends Screen {
     }
 
     @Unique private int getScreenFriendlyDimensions(){
-        return Math.min(SKIN_PREVIEW_DIMENSIONS, this.height - 175);
+        int availableHeight = this.height - getCellOriginY() - getControlsHeight() - MARGIN;
+        int availableWidth = this.width - 2 * MARGIN;
+        return Math.max(MIN_SKIN_PREVIEW_DIMENSIONS, Math.min(MAX_SKIN_PREVIEW_DIMENSIONS, Math.min(availableHeight, availableWidth)));
     }
 
     @Unique private float getScreenFriendlyScale(){
         return getScreenFriendlyDimensions() / 2f - 10;
+    }
+
+    @Unique private int getContentWidth(){
+        int availableWidth = Math.max(1, this.width - 2 * MARGIN);
+        return Math.min(MAX_CONTENT_WIDTH, availableWidth);
+    }
+
+    @Unique private int getContentOriginX(){
+        return this.width / 2 - getContentWidth() / 2;
+    }
+
+    @Unique private int getButtonsStartY(){
+        return getCellOriginY() + getScreenFriendlyDimensions() + Y_SPACING;
+    }
+
+    @Unique private int getHalfButtonWidth(){
+        return (getContentWidth() - MARGIN) / 2;
+    }
+
+    @Unique private int getControlsHeight(){
+        return Y_SPACING
+                + BUTTON_HEIGHT
+                + Y_SPACING
+                + BUTTON_HEIGHT
+                + Y_SPACING
+                + BUTTON_HEIGHT
+                + textRenderer.fontHeight
+                + 2 * MARGIN
+                + BUTTON_HEIGHT;
     }
 
     private boolean isInsideCell(double x, double y) {
@@ -162,15 +212,34 @@ public class ConfigScreen extends Screen {
 
     // Button Text helpers
     @Unique private void updateSelectButtonText(){
-        Text text = Objects.equals(AllTheSkinsClient.options().selectedSkin.hash, "") ? Text.translatable("gui.alltheskins.select_skin") : Text.of(AllTheSkinsClient.options().selectedSkin.name);
+        Text text = Objects.equals(AllTheSkinsClient.options().selectedSkin.hash, "")
+                ? Text.translatable("gui.alltheskins.select_skin")
+                : Text.of(trimmed(AllTheSkinsClient.options().selectedSkin.name, selectSkinButton.getWidth() - 12));
 
         selectSkinButton.setMessage(text);
+    }
+
+    @Unique private void updateResetButtonText(){
+        resetButton.setMessage(Text.of(trimmed(Text.translatable("gui.alltheskins.reset").getString(), resetButton.getWidth() - 12)));
     }
 
     @Unique private void updateEnabledButtonText(){
         Text text = AllTheSkinsClient.options().isEnabled ? Text.translatable("gui.alltheskins.mod_enabled") : Text.translatable("gui.alltheskins.mod_disabled");
 
         toggleButton.setMessage(text);
+    }
+
+    @Unique private String trimmed(String text, int maxWidth) {
+        if (textRenderer.getWidth(text) <= maxWidth) {
+            return text;
+        }
+
+        return textRenderer.trimToWidth(text, Math.max(0, maxWidth - textRenderer.getWidth("..."))) + "...";
+    }
+
+    @Unique private CacheSkin getSelfCacheSkin() {
+        var uuid = MinecraftClient.getInstance().getSession().getUuidOrNull();
+        return uuid == null ? null : SkinManager.skinCache.get(uuid.toString());
     }
 
 }
