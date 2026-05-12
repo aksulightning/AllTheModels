@@ -3,6 +3,7 @@ name: nightly
 on:
   push:
     branches:
+      - master
       - 1.21.8
       - 26.1.2
       - 1.21.1
@@ -24,6 +25,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - branch: master
+            tag: nightly
+            release_name: Nightly Build from master branch
+            artifact_name: all-the-models-nightly
+            java_version: "21"
+
           - branch: 1.21.8
             tag: nightly-1.21.8
             release_name: Nightly Build 1.21.8
