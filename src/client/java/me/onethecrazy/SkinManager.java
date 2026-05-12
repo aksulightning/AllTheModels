@@ -60,7 +60,7 @@ public class SkinManager {
 
     public static void selectSelfSkin(Path dataPath){
         try{
-            String uuid = client.getSession().getUuidOrNull().toString();
+            var sessionUuid = client.getSession().getUuidOrNull();
 
             byte[] data3D = FileUtil.read3DDataFile(dataPath);
             String name = dataPath.getFileName().toString();
@@ -81,7 +81,9 @@ public class SkinManager {
             loadSelfSkin();
 
             // Send update to server
-            BackendInteractor.setSkinData(uuid, data3D, format);
+            if (sessionUuid != null) {
+                BackendInteractor.setSkinData(sessionUuid.toString(), data3D, format);
+            }
         }
         catch(Exception ex){
             AllTheSkins.LOGGER.info("Ran into error while setting self skin: {0}", ex);
@@ -89,7 +91,7 @@ public class SkinManager {
     }
 
     public static void resetSelfSkin(){
-        String uuid = client.getSession().getUuidOrNull().toString();
+        var sessionUuid = client.getSession().getUuidOrNull();
 
         AllTheSkinsClient.options().selectedSkin = new ClientSkin();
 
@@ -100,11 +102,18 @@ public class SkinManager {
         FileUtil.writeSave(AllTheSkinsClient.options());
 
         // Send update to server
-        BackendInteractor.setSkinData(uuid, new byte[0], ParsingFormat.OBJ);
+        if (sessionUuid != null) {
+            BackendInteractor.setSkinData(sessionUuid.toString(), new byte[0], ParsingFormat.OBJ);
+        }
     }
 
     public static void loadSelfSkin(){
-        String uuid = client.getSession().getUuidOrNull().toString();
+        var sessionUuid = client.getSession().getUuidOrNull();
+        if (sessionUuid == null) {
+            return;
+        }
+
+        String uuid = sessionUuid.toString();
 
         // Set self skin to empty if we don't have a selected skin
         var selectedSkin = AllTheSkinsClient.options().selectedSkin;
@@ -118,20 +127,38 @@ public class SkinManager {
 
         // Load self skin
         try{
+            CacheSkin cacheSkin = loadSelectedSkinPreview();
+            if (cacheSkin == null) {
+                return;
+            }
+
+            putLookupEntry(uuid, new LookupSkin(selectedSkin.hash, selectedSkin.format));
+            skinCache.put(uuid, cacheSkin);
+        }
+        catch(Exception e){
+            AllTheSkins.LOGGER.info("Ran into error while loading self skin data3D content:", e);
+        }
+    }
+
+    public static @Nullable CacheSkin loadSelectedSkinPreview() {
+        ClientSkin selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        if (selectedSkin == null || Objects.equals(selectedSkin.hash, "") || selectedSkin.format == null) {
+            return null;
+        }
+
+        try {
             Path data3DPath = FileUtil.getSkinPath(selectedSkin.hash, selectedSkin.format);
             var skinnedModel = UniversalParser.parseSkinned(data3DPath, selectedSkin.format)
                     .map(ModelNormalizer::normalize)
                     .map(model -> withSavedAnimationSettings(model, selectedSkin));
             List<Vertex> vertices = ModelNormalizer.normalize(UniversalParser.parse(data3DPath, selectedSkin.format));
 
-            putLookupEntry(uuid, new LookupSkin(selectedSkin.hash, selectedSkin.format));
-            skinnedModel.ifPresentOrElse(
-                    model -> putCacheEntry(uuid, model, selectedSkin.format),
-                    () -> putCacheEntry(uuid, vertices, selectedSkin.format)
-            );
-        }
-        catch(Exception e){
-            AllTheSkins.LOGGER.info("Ran into error while loading self skin data3D content:", e);
+            return skinnedModel
+                    .<CacheSkin>map(model -> new CacheSkin(model, selectedSkin.format))
+                    .orElseGet(() -> new CacheSkin(vertices, selectedSkin.format));
+        } catch (Exception e) {
+            AllTheSkins.LOGGER.info("Ran into error while loading selected skin preview:", e);
+            return null;
         }
     }
 

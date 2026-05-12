@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class SkinPreviewRenderer {
@@ -29,6 +30,8 @@ public class SkinPreviewRenderer {
     private final int dimensions;
     private final float scale;
     private float yaw, pitch = 0;
+    private String selectedPreviewHash = "";
+    @Nullable private CacheSkin selectedPreviewCache;
 
     public SkinPreviewRenderer(int x, int y, int dimensions, float scale){
         this.x = x;
@@ -86,12 +89,12 @@ public class SkinPreviewRenderer {
         }
 
         UUID selfUuid = client.getSession().getUuidOrNull();
-        if (selfUuid == null) {
-            return;
+        @Nullable CacheSkin cacheSkin = selfUuid == null ? null : SkinManager.skinCache.get(selfUuid.toString());
+        if (!hasRenderablePreview(cacheSkin)) {
+            cacheSkin = getSelectedPreviewCache();
         }
 
-        @Nullable CacheSkin cacheSkin = SkinManager.skinCache.get(selfUuid.toString());
-        if (cacheSkin == null) {
+        if (!hasRenderablePreview(cacheSkin)) {
             return;
         }
 
@@ -136,5 +139,21 @@ public class SkinPreviewRenderer {
         ctx.draw();
         matrices.pop();
         ctx.disableScissor();
+    }
+
+    private @Nullable CacheSkin getSelectedPreviewCache() {
+        var selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        String selectedHash = selectedSkin == null ? "" : selectedSkin.hash;
+        if (!Objects.equals(selectedPreviewHash, selectedHash)) {
+            selectedPreviewHash = selectedHash;
+            selectedPreviewCache = SkinManager.loadSelectedSkinPreview();
+        }
+
+        return selectedPreviewCache;
+    }
+
+    private boolean hasRenderablePreview(@Nullable CacheSkin cacheSkin) {
+        return cacheSkin != null
+                && (cacheSkin.skinnedModel != null || (cacheSkin.vertices != null && !cacheSkin.vertices.isEmpty()));
     }
 }
