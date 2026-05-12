@@ -25,9 +25,9 @@ jobs:
       matrix:
         include:
           - branch: 1.21.8
-            tag: nightly
-            release_name: Nightly Build
-            artifact_name: all-the-models-nightly
+            tag: nightly-1.21.8
+            release_name: Nightly Build 1.21.8
+            artifact_name: all-the-models-1.21.8
             java_version: "21"
 
           - branch: 26.1.2
