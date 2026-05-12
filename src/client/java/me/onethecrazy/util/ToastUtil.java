@@ -1,36 +1,36 @@
 package me.onethecrazy.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
 
 public class ToastUtil {
     public static void showFileTooLargeToast(){
         // Get the singleton client instance
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
         // Fire a "tutorial hint" toast with a title and description
-        client.getToastManager().add(
-                SystemToast.create(
+        client.getToastManager().addToast(
+                SystemToast.multiline(
                         client,
-                        SystemToast.Type.FILE_DROP_FAILURE,
-                        Text.translatable("gui.alltheskins.title.file_too_large"),
-                        Text.translatable("gui.alltheskins.description.file_too_large")
+                        SystemToast.SystemToastId.FILE_DROP_FAILURE,
+                        Component.translatable("gui.alltheskins.title.file_too_large"),
+                        Component.translatable("gui.alltheskins.description.file_too_large")
                 )
         );
     }
 
     public static void showModerationNoticeToast(){
         // Get the singleton client instance
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
         // Fire a "tutorial hint" toast with a title and description
-        client.getToastManager().add(
-                SystemToast.create(
+        client.getToastManager().addToast(
+                SystemToast.multiline(
                         client,
-                        SystemToast.Type.UNSECURE_SERVER_WARNING,
-                        Text.translatable("gui.alltheskins.title.moderation_notice"),
-                        Text.translatable("gui.alltheskins.description.moderation_notice")
+                        SystemToast.SystemToastId.UNSECURE_SERVER_WARNING,
+                        Component.translatable("gui.alltheskins.title.moderation_notice"),
+                        Component.translatable("gui.alltheskins.description.moderation_notice")
                 )
         );
     }

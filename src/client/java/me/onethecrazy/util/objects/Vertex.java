@@ -1,7 +1,7 @@
 package me.onethecrazy.util.objects;
 
 import me.onethecrazy.AllTheSkins;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class Vertex {
     public Float3 position;
@@ -14,7 +14,7 @@ public class Vertex {
         this.position = position;
         this.normals = normals;
         this.textureUV = textureUV;
-        this.texture = Identifier.of(AllTheSkins.MOD_ID, "textures/white_pixel.png");
+        this.texture = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "textures/white_pixel.png");
         this.color = 0xFFFFFFFF;
     }
 
@@ -30,7 +30,7 @@ public class Vertex {
         this.position = position;
         this.normals = normals;
         this.textureUV = textureUV;
-        this.texture = Identifier.of(AllTheSkins.MOD_ID, "textures/white_pixel.png");
+        this.texture = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "textures/white_pixel.png");
         this.color = color;
     }
 

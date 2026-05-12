@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -34,11 +34,10 @@ loom {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// --- NFD ---
 	String nfdVersion = "3.3.3";
@@ -68,7 +67,6 @@ dependencies {
 	include implementation ("de.javagl:jgltf-impl-v2:2.0.4")
 
 	// --- For Dev Env ---
-	modRuntimeOnly "me.djtheredstoner:DevAuth-fabric:1.2.1"
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-windows"
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-windows-arm64"
 	runtimeOnly "org.lwjgl:lwjgl-nfd:${nfdVersion}:natives-linux"
@@ -83,10 +81,10 @@ dependencies {
 	runtimeOnly "org.lwjgl:lwjgl-assimp:${nfdVersion}:natives-macos-arm64"
 
 	// Mod Menu
-	modApi "maven.modrinth:modmenu:15.0.0-beta.3"
+	api "maven.modrinth:modmenu:${project.modmenu_version}"
 }
 
-remapJar {
+jar {
 	archiveFileName.set("${project.archives_base_name}-v${project.mod_version}+mc${project.minecraft_version}.jar")
 }
 
@@ -99,7 +97,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
@@ -108,11 +106,11 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
-jar {
+tasks.named("jar") {
 	inputs.property "archivesName", project.base.archivesName
 
 	from("LICENSE") {

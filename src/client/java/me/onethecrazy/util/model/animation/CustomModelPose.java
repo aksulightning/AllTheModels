@@ -1,7 +1,7 @@
 package me.onethecrazy.util.model.animation;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -9,25 +9,25 @@ public class CustomModelPose {
     private static final float MAX_HEAD_YAW_DEGREES = 85f;
     private static final float MAX_HEAD_PITCH_DEGREES = 90f;
 
-    public static HeadLookRotation computeHeadLookRotation(PlayerEntity player, float tickDelta) {
-        float bodyYaw = MathHelper.lerpAngleDegrees(
+    public static HeadLookRotation computeHeadLookRotation(Player player, float tickDelta) {
+        float bodyYaw = Mth.rotLerp(
                 tickDelta,
-                player.lastBodyYaw,
-                player.bodyYaw
+                player.yBodyRotO,
+                player.yBodyRot
         );
 
-        float headYaw = MathHelper.lerpAngleDegrees(
+        float headYaw = Mth.rotLerp(
                 tickDelta,
-                player.lastHeadYaw,
-                player.getHeadYaw()
+                player.yHeadRotO,
+                player.yHeadRot
         );
 
-        float relativeHeadYaw = MathHelper.wrapDegrees(headYaw - bodyYaw);
+        float relativeHeadYaw = Mth.wrapDegrees(headYaw - bodyYaw);
 
-        float pitch = MathHelper.lerp(
+        float pitch = Mth.lerp(
                 tickDelta,
-                player.lastPitch,
-                player.getPitch()
+                player.xRotO,
+                player.getXRot()
         );
 
         return createMinecraftHeadLookRotation(relativeHeadYaw, pitch);
@@ -38,8 +38,8 @@ public class CustomModelPose {
     }
 
     public static HeadLookRotation createMinecraftHeadLookRotation(float relativeHeadYaw, float pitchDegrees) {
-        float yaw = MathHelper.clamp(relativeHeadYaw, -MAX_HEAD_YAW_DEGREES, MAX_HEAD_YAW_DEGREES);
-        float pitch = MathHelper.clamp(pitchDegrees, -MAX_HEAD_PITCH_DEGREES, MAX_HEAD_PITCH_DEGREES);
+        float yaw = Mth.clamp(relativeHeadYaw, -MAX_HEAD_YAW_DEGREES, MAX_HEAD_YAW_DEGREES);
+        float pitch = Mth.clamp(pitchDegrees, -MAX_HEAD_PITCH_DEGREES, MAX_HEAD_PITCH_DEGREES);
         // Custom model skinning is already body-yaw aligned by the renderer, so local head yaw uses the inverse sign.
         return new HeadLookRotation(
                 (float) Math.toRadians(-yaw),

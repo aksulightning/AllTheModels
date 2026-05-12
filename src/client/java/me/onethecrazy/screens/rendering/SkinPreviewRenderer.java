@@ -2,34 +2,38 @@ package me.onethecrazy.screens.rendering;
 
 import com.mojang.authlib.GameProfile;
 import me.onethecrazy.util.LivingEntityRenderExtension;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.entity.EntityType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.world.entity.EntityType;
 import org.joml.Math;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public class SkinPreviewRenderer {
-    private final PlayerEntityRenderState skinPreviewRenderState;
+    private final AvatarRenderState skinPreviewRenderState;
     private final int x, y;
     private final int dimensions;
     private final float scale;
     private float yaw, pitch = 0;
 
     public SkinPreviewRenderer(int x, int y, int dimensions, float scale){
-        var mc = MinecraftClient.getInstance();
-        var session = mc.getSession();
-        var playerProfile = new GameProfile(session.getUuidOrNull(), session.getUsername());
+        var mc = Minecraft.getInstance();
+        var user = mc.getUser();
+        var playerProfile = new GameProfile(user.getProfileId(), user.getName());
 
         // Init render state
-        skinPreviewRenderState = new PlayerEntityRenderState();
+        skinPreviewRenderState = new AvatarRenderState();
         skinPreviewRenderState.entityType = EntityType.PLAYER;
-        skinPreviewRenderState.squaredDistanceToCamera = 1;
+        skinPreviewRenderState.distanceToCameraSq = 1;
         skinPreviewRenderState.x = skinPreviewRenderState.y = skinPreviewRenderState.z = 0.0;
-        skinPreviewRenderState.skinTextures = mc.getSkinProvider().getSkinTextures(playerProfile);
+        skinPreviewRenderState.skin = mc.getSkinManager().createLookup(playerProfile, false).get();
+        if (skinPreviewRenderState.skin == null) {
+            skinPreviewRenderState.skin = DefaultPlayerSkin.get(playerProfile);
+        }
 
         this.x = x;
         this.y = y;
@@ -37,15 +41,15 @@ public class SkinPreviewRenderer {
         this.scale = scale;
     }
 
-    public void renderPreview(DrawContext ctx, float deltaTicks){
+    public void renderPreview(GuiGraphicsExtractor ctx, float deltaTicks){
         // Tick the animation state
-        skinPreviewRenderState.age += deltaTicks;
+        skinPreviewRenderState.ageInTicks += deltaTicks;
 
         // Reset Player to render the correct Skin
         resetPlayerOnLivingEntityRenderer();
 
         // Render the Preview of the player skin
-        ctx.addEntity(
+        ctx.entity(
                 skinPreviewRenderState,
                 scale,
                 new Vector3f(0f, 1.0f, 0f),
@@ -59,7 +63,7 @@ public class SkinPreviewRenderer {
         );
 
         // Render the border where the Mesh is placed inside
-        ctx.drawBorder(x, y, dimensions, dimensions, 0xFFFFFFFF);
+        ctx.outline(x, y, dimensions, dimensions, 0xFFFFFFFF);
     }
 
     public void addRotation(float yaw, float pitch){
@@ -68,10 +72,10 @@ public class SkinPreviewRenderer {
     }
 
     private void resetPlayerOnLivingEntityRenderer(){
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         EntityRenderDispatcher disp = mc.getEntityRenderDispatcher();
 
-        PlayerEntityRenderer playerRenderer = (PlayerEntityRenderer) disp.getRenderer(skinPreviewRenderState);
+        AvatarRenderer<?> playerRenderer = (AvatarRenderer<?>) disp.getRenderer(skinPreviewRenderState);
 
         ((LivingEntityRenderExtension)playerRenderer).all_the_skins$setPlayerAsNull();
     }

@@ -8,11 +8,11 @@ import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.SkinnedModel;
 import me.onethecrazy.util.parsing.FBXParser;
 import me.onethecrazy.util.parsing.ParsingFormat;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ public class ModelBindingEditorScreen extends Screen {
     private List<String> clipNames = List.of();
 
     public ModelBindingEditorScreen(Screen parent) {
-        super(Text.of("Model Rig Binding"));
+        super(Component.literal("Model Rig Binding"));
         this.parent = parent;
     }
 
@@ -41,61 +41,61 @@ public class ModelBindingEditorScreen extends Screen {
 
         for (LogicalBodyPart part : LogicalBodyPart.values()) {
             LogicalBodyPart target = part;
-            addDrawableChild(ButtonWidget.builder(buttonText(target), button -> {
+            addRenderableWidget(Button.builder(buttonText(target), button -> {
                 cycleBinding(target);
                 button.setMessage(buttonText(target));
-            }).dimensions(x, y, width, 20).build());
+            }).bounds(x, y, width, 20).build());
             y += ROW_HEIGHT;
         }
 
-        addDrawableChild(ButtonWidget.builder(Text.of("Auto Bind"), button -> {
+        addRenderableWidget(Button.builder(Component.literal("Auto Bind"), button -> {
             AllTheSkinsClient.options().selectedSkin.logicalRigBinding = LogicalRigBinding.autoBind(boneNames);
             SkinManager.saveCurrentBinding();
-            MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(parent));
-        }).dimensions(x, y + MARGIN, width / 2 - 3, 20).build());
+            Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(parent));
+        }).bounds(x, y + MARGIN, width / 2 - 3, 20).build());
 
-        addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), button -> close())
-                .dimensions(x + width / 2 + 3, y + MARGIN, width / 2 - 3, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
+                .bounds(x + width / 2 + 3, y + MARGIN, width / 2 - 3, 20).build());
 
         int clipY = y + MARGIN + ROW_HEIGHT;
         for (String state : List.of("Idle", "Walk", "Sneak")) {
             String logicalState = state;
-            addDrawableChild(ButtonWidget.builder(clipButtonText(logicalState), button -> {
+            addRenderableWidget(Button.builder(clipButtonText(logicalState), button -> {
                 cycleClip(logicalState);
                 button.setMessage(clipButtonText(logicalState));
-            }).dimensions(x, clipY, width, 20).build());
+            }).bounds(x, clipY, width, 20).build());
             clipY += ROW_HEIGHT;
         }
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawText(textRenderer, title, MARGIN, MARGIN, 0xFFFFFFFF, true);
-        context.drawText(textRenderer, Text.of("Detected bones: " + boneNames.size()), MARGIN, 24, 0xFFCCCCCC, true);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.text(font, title, MARGIN, MARGIN, 0xFFFFFFFF, true);
+        context.text(font, Component.literal("Detected bones: " + boneNames.size()), MARGIN, 24, 0xFFCCCCCC, true);
 
         int x = Math.min(330, this.width / 2);
         int y = 40;
-        context.drawText(textRenderer, Text.of("Bones / objects"), x, y - 16, 0xFFFFFFFF, true);
+        context.text(font, Component.literal("Bones / objects"), x, y - 16, 0xFFFFFFFF, true);
         if (boneNames.isEmpty()) {
-            context.drawText(textRenderer, Text.of("No bindable bones detected."), x, y, 0xFFFFAAAA, true);
+            context.text(font, Component.literal("No bindable bones detected."), x, y, 0xFFFFAAAA, true);
         } else {
             for (int i = 0; i < Math.min(18, boneNames.size()); i++) {
-                context.drawText(textRenderer, Text.of(boneNames.get(i)), x, y + i * 10, 0xFFCCCCCC, false);
+                context.text(font, Component.literal(boneNames.get(i)), x, y + i * 10, 0xFFCCCCCC, false);
             }
         }
 
         int clipY = y + Math.min(18, Math.max(1, boneNames.size())) * 10 + 24;
-        context.drawText(textRenderer, Text.of("Animation clips: " + clipNames.size()), x, clipY, 0xFFFFFFFF, true);
+        context.text(font, Component.literal("Animation clips: " + clipNames.size()), x, clipY, 0xFFFFFFFF, true);
         for (int i = 0; i < Math.min(8, clipNames.size()); i++) {
-            context.drawText(textRenderer, Text.of(clipNames.get(i)), x, clipY + 12 + i * 10, 0xFFCCCCCC, false);
+            context.text(font, Component.literal(clipNames.get(i)), x, clipY + 12 + i * 10, 0xFFCCCCCC, false);
         }
 
         int pivotY = Math.max(220, clipY + 112);
-        context.drawText(textRenderer, Text.of("Logical bind pivots"), x, pivotY, 0xFFFFFFFF, true);
+        context.text(font, Component.literal("Logical bind pivots"), x, pivotY, 0xFFFFFFFF, true);
         int pivotRow = 0;
         for (LogicalBodyPart part : LogicalBodyPart.values()) {
-            context.drawText(textRenderer, Text.of(part.displayName + ": " + pivotText(part)), x, pivotY + 12 + pivotRow * 10, 0xFFCCCCCC, false);
+            context.text(font, Component.literal(part.displayName + ": " + pivotText(part)), x, pivotY + 12 + pivotRow * 10, 0xFFCCCCCC, false);
             pivotRow++;
         }
 
@@ -103,28 +103,28 @@ public class ModelBindingEditorScreen extends Screen {
         if (!warnings.isEmpty()) {
             int warningY = this.height - 56 - Math.min(2, warnings.size()) * 10;
             for (int i = 0; i < Math.min(2, warnings.size()); i++) {
-                context.drawText(textRenderer, Text.of(warnings.get(i)), MARGIN, warningY + i * 10, 0xFFFFFF88, false);
+                context.text(font, Component.literal(warnings.get(i)), MARGIN, warningY + i * 10, 0xFFFFFF88, false);
             }
         }
 
         CacheSkin cache = currentCache();
         String status = cache == null ? "Rig: none" : cache.debugStatus();
-        context.drawText(textRenderer, Text.of(status), MARGIN, this.height - 28, 0xFFCCCCCC, true);
-        context.drawText(textRenderer, Text.of("Runtime animation is rotation-only around each bind pivot."), MARGIN, this.height - 16, 0xFFAAAAAA, true);
+        context.text(font, Component.literal(status), MARGIN, this.height - 28, 0xFFCCCCCC, true);
+        context.text(font, Component.literal("Runtime animation is rotation-only around each bind pivot."), MARGIN, this.height - 16, 0xFFAAAAAA, true);
 
         if (cache != null && cache.format == ParsingFormat.FBX) {
             int materialY = Math.max(40, this.height - 110);
             int materialX = Math.min(this.width - 220, Math.max(330, this.width / 2));
             List<String> diagnostics = FBXParser.lastMaterialDiagnostics();
             for (int i = 0; i < Math.min(6, diagnostics.size()); i++) {
-                context.drawText(textRenderer, Text.of(diagnostics.get(i)), materialX, materialY + i * 10, 0xFFCCCCCC, false);
+                context.text(font, Component.literal(diagnostics.get(i)), materialX, materialY + i * 10, 0xFFCCCCCC, false);
             }
         }
     }
 
     @Override
-    public void close() {
-        MinecraftClient.getInstance().setScreen(parent);
+    public void onClose() {
+        Minecraft.getInstance().setScreen(parent);
     }
 
     private void cycleBinding(LogicalBodyPart part) {
@@ -145,9 +145,9 @@ public class ModelBindingEditorScreen extends Screen {
         SkinManager.saveCurrentBinding();
     }
 
-    private Text buttonText(LogicalBodyPart part) {
+    private Component buttonText(LogicalBodyPart part) {
         String value = AllTheSkinsClient.options().selectedSkin.binding().firstName(part);
-        return Text.of(part.displayName + ": " + (value.isBlank() ? "Unbound" : value));
+        return Component.literal(part.displayName + ": " + (value.isBlank() ? "Unbound" : value));
     }
 
     private void cycleClip(String state) {
@@ -167,9 +167,9 @@ public class ModelBindingEditorScreen extends Screen {
         SkinManager.saveCurrentBinding();
     }
 
-    private Text clipButtonText(String state) {
+    private Component clipButtonText(String state) {
         String value = AllTheSkinsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
-        return Text.of(state + " Clip: " + (value.isBlank() ? "Procedural/default" : value));
+        return Component.literal(state + " Clip: " + (value.isBlank() ? "Procedural/default" : value));
     }
 
     private List<String> currentBones() {
@@ -216,7 +216,7 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private CacheSkin currentCache() {
-        String uuid = MinecraftClient.getInstance().getSession().getUuidOrNull().toString();
+        String uuid = Minecraft.getInstance().getUser().getProfileId().toString();
         return SkinManager.skinCache.get(uuid);
     }
 }

@@ -1,6 +1,6 @@
 package me.onethecrazy.util.model;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 public class ModelMaterial {

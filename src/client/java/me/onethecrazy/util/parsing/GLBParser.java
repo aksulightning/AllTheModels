@@ -6,7 +6,7 @@ import me.onethecrazy.AllTheSkins;
 import me.onethecrazy.util.objects.Float2;
 import me.onethecrazy.util.objects.Float3;
 import me.onethecrazy.util.objects.Vertex;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
@@ -23,7 +23,7 @@ public class GLBParser implements IParser {
     private static final boolean APPLY_YAW_180 = false;
 
     // --- Constants ---
-    private static final Identifier WHITE = Identifier.of(AllTheSkins.MOD_ID, "textures/white_pixel.png");
+    private static final Identifier WHITE = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "textures/white_pixel.png");
 
     // --- Caches ---
     private final Map<Object, Identifier> textureCache = new IdentityHashMap<>();

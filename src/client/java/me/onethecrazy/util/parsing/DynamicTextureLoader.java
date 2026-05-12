@@ -2,10 +2,10 @@ package me.onethecrazy.util.parsing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.onethecrazy.AllTheSkins;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -66,19 +66,19 @@ public final class DynamicTextureLoader {
     }
 
     private static Identifier uploadOnRenderThread(NativeImage image, String stableName) throws Exception {
-        final Identifier id = Identifier.of(AllTheSkins.MOD_ID, "dynamic/" + identifierPath(stableName));
-        final MinecraftClient mc = MinecraftClient.getInstance();
+        final Identifier id = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "dynamic/" + identifierPath(stableName));
+        final Minecraft mc = Minecraft.getInstance();
 
         if (RenderSystem.isOnRenderThread()) {
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "model-dynamic", image);
-            mc.getTextureManager().registerTexture(id, tex);
+            DynamicTexture tex = new DynamicTexture(() -> "model-dynamic", image);
+            mc.getTextureManager().register(id, tex);
             return id;
         }
 
         try {
             return mc.submit(() -> {
-                NativeImageBackedTexture tex = new NativeImageBackedTexture(() -> "model-dynamic", image);
-                mc.getTextureManager().registerTexture(id, tex);
+                DynamicTexture tex = new DynamicTexture(() -> "model-dynamic", image);
+                mc.getTextureManager().register(id, tex);
                 return id;
             }).get();
         } catch (ExecutionException e) {

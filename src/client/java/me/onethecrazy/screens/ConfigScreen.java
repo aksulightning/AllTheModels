@@ -5,11 +5,12 @@ import me.onethecrazy.SkinManager;
 import me.onethecrazy.screens.editor.ModelBindingEditorScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
 import me.onethecrazy.util.objects.CacheSkin;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Objects;
@@ -25,15 +26,15 @@ public class ConfigScreen extends Screen {
 
     // State stuff
     private SkinPreviewRenderer skinPreviewRenderer;
-    private ButtonWidget selectSkinButton;
-    private ButtonWidget resetButton;
-    private ButtonWidget toggleButton;
-    private ButtonWidget editorButton;
-    private ButtonWidget doneButton;
+    private Button selectSkinButton;
+    private Button resetButton;
+    private Button toggleButton;
+    private Button editorButton;
+    private Button doneButton;
     private boolean rotating = false;
 
     public ConfigScreen() {
-        super(Text.of("All The Skins"));
+        super(Component.literal("All The Models"));
     }
 
     @Override
@@ -42,36 +43,36 @@ public class ConfigScreen extends Screen {
         skinPreviewRenderer = new SkinPreviewRenderer(getCellOriginX(), getCellOriginY(), getScreenFriendlyDimensions(), getScreenFriendlyScale());
 
         // Init Buttons
-        selectSkinButton = ButtonWidget.builder(Text.empty(),
+        selectSkinButton = Button.builder(Component.empty(),
                 (button) -> SkinManager.pickClientSkin()
-        ).dimensions(getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+        ).bounds(getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
 
-        resetButton = ButtonWidget.builder(
-                    Text.translatable("gui.alltheskins.reset"),
+        resetButton = Button.builder(
+                    Component.translatable("gui.alltheskins.reset"),
                     (button) -> SkinManager.resetSelfSkin())
-                    .dimensions(getCellOriginX(), selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
+                    .bounds(getCellOriginX(), selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
 
-        toggleButton = ButtonWidget.builder(Text.empty(), (button) -> {
+        toggleButton = Button.builder(Component.empty(), (button) -> {
             AllTheSkinsClient.options().isEnabled = !AllTheSkinsClient.options().isEnabled;
 
             // Update Text
             updateEnabledButtonText();
-        }).dimensions(getCellOriginX() + getScreenFriendlyDimensions() / 2 + MARGIN / 2, selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
+        }).bounds(getCellOriginX() + getScreenFriendlyDimensions() / 2 + MARGIN / 2, selectSkinButton.getY() + Y_SPACING, getScreenFriendlyDimensions() / 2 - MARGIN / 2, BUTTON_HEIGHT).build();
 
-        editorButton = ButtonWidget.builder(Text.of("Edit Model Rig"), (button) ->
-                MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(this))
-        ).dimensions(getCellOriginX(), resetButton.getY() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+        editorButton = Button.builder(Component.literal("Edit Model Rig"), (button) ->
+                Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(this))
+        ).bounds(getCellOriginX(), resetButton.getY() + Y_SPACING, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
 
-        doneButton = ButtonWidget.builder(
-                Text.translatable("gui.done"),
-                (button) -> close())
-                .dimensions(getCellOriginX(), editorButton.getY() + Y_SPACING + 2 * MARGIN, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
+        doneButton = Button.builder(
+                Component.translatable("gui.done"),
+                (button) -> onClose())
+                .bounds(getCellOriginX(), editorButton.getY() + Y_SPACING + 2 * MARGIN, getScreenFriendlyDimensions(), BUTTON_HEIGHT).build();
 
-        this.addDrawableChild(selectSkinButton);
-        this.addDrawableChild(resetButton);
-        this.addDrawableChild(toggleButton);
-        this.addDrawableChild(editorButton);
-        this.addDrawableChild(doneButton);
+        this.addRenderableWidget(selectSkinButton);
+        this.addRenderableWidget(resetButton);
+        this.addRenderableWidget(toggleButton);
+        this.addRenderableWidget(editorButton);
+        this.addRenderableWidget(doneButton);
 
         // Set Button Texts
         updateSelectButtonText();
@@ -79,7 +80,9 @@ public class ConfigScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+
         // Render the skin preview
         skinPreviewRenderer.renderPreview(context, delta);
 
@@ -87,42 +90,42 @@ public class ConfigScreen extends Screen {
         updateSelectButtonText();
 
         // Render the banner text
-        context.drawText(textRenderer, AllTheSkinsClient.bannerText, getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
+        if (AllTheSkinsClient.bannerText != null && !AllTheSkinsClient.bannerText.isBlank()) {
+            context.text(font, AllTheSkinsClient.bannerText, getCellOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
+        }
 
-        CacheSkin cacheSkin = SkinManager.skinCache.get(MinecraftClient.getInstance().getSession().getUuidOrNull().toString());
+        CacheSkin cacheSkin = SkinManager.skinCache.get(Minecraft.getInstance().getUser().getProfileId().toString());
         if(cacheSkin != null)
-            context.drawText(textRenderer, cacheSkin.debugStatus(), getCellOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
+            context.text(font, cacheSkin.debugStatus(), getCellOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
 
         // Render Mod Title
-        String title = "All The Skins";
-        context.drawText(textRenderer, title, this.width / 2 - textRenderer.getWidth(title) / 2, MARGIN, 0xFFFFFFFF, true);
-
-        super.render(context, mouseX, mouseY, delta);
+        String title = "All The Models";
+        context.text(font, title, this.width / 2 - font.width(title) / 2, MARGIN, 0xFFFFFFFF, true);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && isInsideCell(mouseX, mouseY)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        if (event.button() == 0 && isInsideCell(event.x(), event.y())) {
             rotating = true;
             return true; // start drag mode
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (rotating && button == 0) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (rotating && event.button() == 0) {
             rotating = false;
             return true; // stop rotation mode
         }
 
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (rotating && button == 0) {
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        if (rotating && event.button() == 0) {
             // convert mouse motion to yaw/pitch deltas
             float yawDelta   = (float) (deltaX * YAW_SENS);
             float pitchDelta = (float) (-deltaY * PITCH_SENS);
@@ -132,7 +135,7 @@ public class ConfigScreen extends Screen {
             return true; // consume drag
         }
 
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(event, deltaX, deltaY);
     }
 
     // Position Helpers
@@ -162,13 +165,13 @@ public class ConfigScreen extends Screen {
 
     // Button Text helpers
     @Unique private void updateSelectButtonText(){
-        Text text = Objects.equals(AllTheSkinsClient.options().selectedSkin.hash, "") ? Text.translatable("gui.alltheskins.select_skin") : Text.of(AllTheSkinsClient.options().selectedSkin.name);
+        Component text = Objects.equals(AllTheSkinsClient.options().selectedSkin.hash, "") ? Component.translatable("gui.alltheskins.select_skin") : Component.literal(AllTheSkinsClient.options().selectedSkin.name);
 
         selectSkinButton.setMessage(text);
     }
 
     @Unique private void updateEnabledButtonText(){
-        Text text = AllTheSkinsClient.options().isEnabled ? Text.translatable("gui.alltheskins.mod_enabled") : Text.translatable("gui.alltheskins.mod_disabled");
+        Component text = AllTheSkinsClient.options().isEnabled ? Component.translatable("gui.alltheskins.mod_enabled") : Component.translatable("gui.alltheskins.mod_disabled");
 
         toggleButton.setMessage(text);
     }

@@ -7,7 +7,7 @@ import me.onethecrazy.util.objects.SkinnedModel;
 import me.onethecrazy.util.objects.SkinnedVertex;
 import me.onethecrazy.util.objects.Vertex;
 import me.onethecrazy.util.model.animation.LogicalRigAnimator;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -31,7 +31,7 @@ import java.util.zip.Inflater;
 
 public class FBXParser implements IParser {
     private static final Pattern NUMBER_PATTERN = Pattern.compile("[-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?");
-    private static final Identifier WHITE = Identifier.of(AllTheSkins.MOD_ID, "textures/white_pixel.png");
+    private static final Identifier WHITE = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "textures/white_pixel.png");
     private static final AssimpFBXParser ASSIMP = new AssimpFBXParser();
     private static String lastRigStatus = "not checked";
     private static String lastMaterialStatus = "not checked";

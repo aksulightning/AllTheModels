@@ -8,7 +8,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.minecraft.client.network.OtherClientPlayerEntity;
+import net.minecraft.client.player.RemotePlayer;
 import org.jetbrains.annotations.Nullable;
 
 
@@ -54,8 +54,8 @@ public class AllTheSkinsClient implements ClientModInitializer {
 	public void registerPlayerJoinCallback(){
 		ClientEntityEvents.ENTITY_LOAD.register((entity, world) -> {
 			// Reload that players skin when they (re-)join the world
-			if (entity instanceof OtherClientPlayerEntity other) {
-				SkinManager.loadSkin(other.getUuidAsString());
+			if (entity instanceof RemotePlayer other) {
+				SkinManager.loadSkin(other.getUUID().toString());
 			}
 		});
 	}

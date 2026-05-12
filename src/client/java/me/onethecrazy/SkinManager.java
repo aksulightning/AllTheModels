@@ -10,7 +10,7 @@ import me.onethecrazy.util.objects.save.ClientSkin;
 import me.onethecrazy.util.model.animation.LogicalRigAnimator;
 import me.onethecrazy.util.parsing.ParsingFormat;
 import me.onethecrazy.util.parsing.UniversalParser;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class SkinManager {
     public static Map<String, LookupSkin> skinLookup = new HashMap<>();
     public static Map<String, CacheSkin> skinCache = new HashMap<>();
 
-    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static final Minecraft client = Minecraft.getInstance();
 
     public static void pickClientSkin(){
 
@@ -54,13 +54,13 @@ public class SkinManager {
                     }
 
                     // Execute on Render Thread
-                    MinecraftClient.getInstance().send(() -> SkinManager.selectSelfSkin(Path.of(f)));
+                    Minecraft.getInstance().execute(() -> SkinManager.selectSelfSkin(Path.of(f)));
                 });
     }
 
     public static void selectSelfSkin(Path dataPath){
         try{
-            String uuid = client.getSession().getUuidOrNull().toString();
+            String uuid = client.getUser().getProfileId().toString();
 
             byte[] data3D = FileUtil.read3DDataFile(dataPath);
             String name = dataPath.getFileName().toString();
@@ -89,7 +89,7 @@ public class SkinManager {
     }
 
     public static void resetSelfSkin(){
-        String uuid = client.getSession().getUuidOrNull().toString();
+        String uuid = client.getUser().getProfileId().toString();
 
         AllTheSkinsClient.options().selectedSkin = new ClientSkin();
 
@@ -104,7 +104,7 @@ public class SkinManager {
     }
 
     public static void loadSelfSkin(){
-        String uuid = client.getSession().getUuidOrNull().toString();
+        String uuid = client.getUser().getProfileId().toString();
 
         // Set self skin to empty if we don't have a selected skin
         var selectedSkin = AllTheSkinsClient.options().selectedSkin;

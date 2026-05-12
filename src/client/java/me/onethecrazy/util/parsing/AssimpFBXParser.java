@@ -7,7 +7,7 @@ import me.onethecrazy.util.objects.SkinnedModel;
 import me.onethecrazy.util.objects.SkinnedVertex;
 import me.onethecrazy.util.objects.Vertex;
 import me.onethecrazy.util.model.animation.LogicalRigAnimator;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class AssimpFBXParser {
-    private static final Identifier WHITE = Identifier.of(AllTheSkins.MOD_ID, "textures/white_pixel.png");
+    private static final Identifier WHITE = Identifier.fromNamespaceAndPath(AllTheSkins.MOD_ID, "textures/white_pixel.png");
     private static String lastStatus = "not checked";
     private static String lastMaterialStatus = "not checked";
     private static List<String> lastMaterialDiagnostics = List.of();
