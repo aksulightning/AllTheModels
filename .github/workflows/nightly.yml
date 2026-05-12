@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - master
+      - 26.1.2
       - 1.21.1
 
   schedule:
-    # Ajaa joka yö klo 03:00 UTC
+    # Every night at 03:00 UTC
     - cron: "0 3 * * *"
 
   workflow_dispatch:
@@ -27,11 +28,19 @@ jobs:
             tag: nightly
             release_name: Nightly Build
             artifact_name: all-the-models-nightly
+            java_version: "21"
+
+          - branch: 26.1.2
+            tag: nightly-26.1.2
+            release_name: Nightly Build 26.1.2
+            artifact_name: all-the-models-26.1.2
+            java_version: "25"
 
           - branch: 1.21.1
             tag: nightly-1.21.1
             release_name: Nightly Build 1.21.1
             artifact_name: all-the-models-1.21.1
+            java_version: "21"
 
     steps:
       - name: checkout repository
@@ -46,7 +55,7 @@ jobs:
       - name: setup jdk
         uses: actions/setup-java@v5
         with:
-          java-version: "21"
+          java-version: ${{ matrix.java_version }}
           distribution: "microsoft"
 
       - name: make gradle wrapper executable
@@ -89,7 +98,7 @@ jobs:
         run: |
           gh release create "$TAG_NAME" build/libs/* \
             --title "$RELEASE_NAME" \
-            --notes "Automaattinen nightly build.
+            --notes "Automatic nightly build.
 
           Branch: $BRANCH_NAME
           Commit: $COMMIT_SHA" \
