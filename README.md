@@ -1,7 +1,12 @@
 # AllTheModels
 **Use any 3D model as your Minecraft skin.**
 
-## Disclaimer
+## Overview
+AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+
+Tired of flat skins? *AllTheModels* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+
+##### Disclaimer
 
 This mod is a fork and was made mostly for fun.
 
@@ -9,24 +14,24 @@ It is vibe-coded, experimental, and not meant to be a perfectly engineered proje
 
 Use it at your own risk, and please do not expect polished support or guaranteed compatibility.
 
-## Overview
-AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+## Releases
 
-Tired of flat skins? *AllTheModels* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Experimental port) 
 
-[Download the mod from nightly release](https://github.com/aksulightning/AllTheModels/releases/tag/nightly)
+[Download nightly for 1.21.8](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.8) (Stable)
+
+[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Experimental port, buggy.)
 
 ## Features
-- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, or `.fbx` models, complete with textures where supported.
+- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, `.fbx` models, complete with textures where supported.
 - ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.
 - 🎨 **Main Menu Preview** – Instantly see your model right in the title screen.
 - 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
 - 📦 **Lightweight & Client-Side** – No server installation required.
 
 ## FBX support
-FBX support is an MVP importer/editor workflow intended for Blender-exported models.
+FBX support is an MVP importer/editor workflow intended for Blender-exported models. This feature is truly experimental, low poly models are recommended and include a single material with texture.
 
-Supported today:
 - Static and skinned FBX mesh import through LWJGL Assimp, with an internal binary/ascii parser fallback.
 - Mesh positions, normals, UVs, materials, diffuse colors, and referenced diffuse textures where the file exposes them.
 - Armature/bone detection and up to four vertex bone weights.
@@ -35,6 +40,7 @@ Supported today:
 - Basic imported clip detection. In the model rig editor, clips can be mapped to `Idle`, `Walk`, and `Sneak`.
 
 Known limitations:
+- The rigging menu is still to-do. Specific features may not work.
 - FBX is a broad format. Blender FBX exports are the main target.
 - Shape keys/blend shapes, advanced material graphs, constraints, IK, and complex animation stacks are not fully supported yet.
 - If a model has no usable skin weights, the fallback is best-effort and may need manual rig binding.
@@ -69,16 +75,16 @@ Nothing is moderated — any player can upload any model, including inappropriat
 - 🔄 Subject to change without notice.
 
 ## 👥 Community & Contribution
-*AllTheSkins* is open source and community-driven — contributions and feedback are always welcome!
+*AllTheModels* is open source and community-driven — contributions and feedback are always welcome!
 
 - 🐛 **Found a bug or have a feature idea?**  
-  → [Open an issue](https://github.com/aksulightning/alltheskins-fork/issues)
+  → [Open an issue](https://github.com/aksulightning/AllTheModels/issues)
 
 - 💡 **Want to contribute?**  
-  → [Submit a pull request](https://github.com/aksulightning/alltheskins-fork/pulls)
+  → [Submit a pull request](https://github.com/aksulightning/AllTheModels/pulls)
 
 
-Your creativity shapes this project — thank you for helping make *AllTheSkins* better for everyone!
+Your creativity shapes this project — thank you for helping make *AllTheModels* better for everyone!
 
 ## Links
 - 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)

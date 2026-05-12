@@ -33,7 +33,7 @@ public class ConfigScreen extends Screen {
     private boolean rotating = false;
 
     public ConfigScreen() {
-        super(Text.of("All The Skins"));
+        super(Text.of("All The Models"));
     }
 
     @Override
@@ -94,7 +94,7 @@ public class ConfigScreen extends Screen {
             context.drawText(textRenderer, cacheSkin.debugStatus(), getCellOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
 
         // Render Mod Title
-        String title = "All The Skins";
+        String title = "All The Models";
         context.drawText(textRenderer, title, this.width / 2 - textRenderer.getWidth(title) / 2, MARGIN, 0xFFFFFFFF, true);
 
         super.render(context, mouseX, mouseY, delta);
