@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Small stdlib-only emulator for the AllTheSkins backend service.
+Small stdlib-only emulator for the All The Models backend service.
 
 The Minecraft client talks to:
   GET  /getSkins   JSON body: {"uuids": ["..."]}
