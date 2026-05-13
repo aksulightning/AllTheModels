@@ -8,6 +8,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,6 +40,8 @@ public class AllTheSkinsClient implements ClientModInitializer {
 		registerCommands();
 		// Register player join world callback
 		registerPlayerJoinCallback();
+		// Clear world-scoped skin state when leaving a world/server.
+		registerDisconnectCallback();
 		// Queue a self skin load
 		queueLoadSelf();
 	}
@@ -58,6 +61,10 @@ public class AllTheSkinsClient implements ClientModInitializer {
 				SkinManager.loadSkin(other.getUuidAsString());
 			}
 		});
+	}
+
+	public void registerDisconnectCallback(){
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SkinManager.clearWorldSkinState());
 	}
 
 	public void firstStartupSetup(){

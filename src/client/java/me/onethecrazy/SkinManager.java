@@ -16,17 +16,20 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SkinManager {
-    public static Map<String, LookupSkin> skinLookup = new HashMap<>();
-    public static Map<String, CacheSkin> skinCache = new HashMap<>();
+    public static Map<String, LookupSkin> skinLookup = Collections.synchronizedMap(new HashMap<>());
+    public static Map<String, CacheSkin> skinCache = Collections.synchronizedMap(new HashMap<>());
 
     private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static final AtomicInteger worldSkinGeneration = new AtomicInteger();
 
     public static void pickClientSkin(){
 
@@ -173,23 +176,46 @@ public class SkinManager {
         skinCache.put(uuid, null);
         skinLookup.put(uuid, new LookupSkin("", null));
 
+        int generation = worldSkinGeneration.get();
+
         // Player was never encountered before
         BackendInteractor.getSkinIDs(List.of(uuid))
                 .thenAccept(map -> {
-                    putLookupEntry(uuid, map.getOrDefault(uuid, null));
+                    if (generation != worldSkinGeneration.get()) {
+                        return;
+                    }
+
+                    LookupSkin lookupSkin = map.get(uuid);
+                    if (lookupSkin == null || lookupSkin.hash == null || lookupSkin.hash.isBlank() || lookupSkin.format == null) {
+                        putLookupEntry(uuid, new LookupSkin("", null));
+                        putCacheEntry(uuid, (List<Vertex>) null, null);
+                        return;
+                    }
+
+                    putLookupEntry(uuid, lookupSkin);
 
                     // We don't have the skin loaded (or want it to be updated)
-                    loadSkinIntoCache(uuid);
+                    loadSkinIntoCache(uuid, generation);
                 });
     }
 
-    private static void loadSkinIntoCache(String uuid){
+    private static void loadSkinIntoCache(String uuid, int generation){
+        if (generation != worldSkinGeneration.get()) {
+            return;
+        }
+
+        LookupSkin lookupSkin = skinLookup.get(uuid);
+        if (lookupSkin == null || lookupSkin.hash == null || lookupSkin.hash.isBlank() || lookupSkin.format == null) {
+            putCacheEntry(uuid, (List<Vertex>) null, null);
+            return;
+        }
+
         // Load from I/O cache
-        if(FileUtil.isSkinCached(skinLookup.get(uuid).hash))
+        if(FileUtil.isSkinCached(lookupSkin.hash))
         {
             try {
-                Path path = FileUtil.getSkinPath(skinLookup.get(uuid).hash, skinLookup.get(uuid).format);
-                var skinnedModel = UniversalParser.parseSkinned(path, skinLookup.get(uuid).format).map(ModelNormalizer::normalize);
+                Path path = FileUtil.getSkinPath(lookupSkin.hash, lookupSkin.format);
+                var skinnedModel = UniversalParser.parseSkinned(path, lookupSkin.format).map(ModelNormalizer::normalize);
 
                 List<Vertex> vertices = ModelNormalizer.normalize(
                         UniversalParser.parse(
@@ -198,20 +224,39 @@ public class SkinManager {
                 );
 
                 skinnedModel.ifPresentOrElse(
-                        model -> putCacheEntry(uuid, model, skinLookup.get(uuid).format),
-                        () -> putCacheEntry(uuid, vertices, skinLookup.get(uuid).format)
+                        model -> {
+                            if (generation == worldSkinGeneration.get()) {
+                                putCacheEntry(uuid, model, lookupSkin.format);
+                            }
+                        },
+                        () -> {
+                            if (generation == worldSkinGeneration.get()) {
+                                putCacheEntry(uuid, vertices, lookupSkin.format);
+                            }
+                        }
                 );
             } catch (Exception e) {
-                putCacheEntry(uuid, (List<Vertex>) null, null);
+                if (generation == worldSkinGeneration.get()) {
+                    putCacheEntry(uuid, (List<Vertex>) null, null);
+                }
 
                 AllTheSkins.LOGGER.error("Ran into error while loading skin from I/O Cache: {0}", e);
             }
         }
         // Request from Server
         else{
-            BackendInteractor.getSkinData(skinLookup.get(uuid), (data3D) -> {
+            BackendInteractor.getSkinData(lookupSkin, (data3D) -> {
+                if (generation != worldSkinGeneration.get()) {
+                    return;
+                }
+
                 if(data3D.length != 0){
                     var lookupResult = skinLookup.get(uuid);
+                    if (lookupResult == null || lookupResult.hash == null || lookupResult.format == null) {
+                        putCacheEntry(uuid, (List<Vertex>) null, null);
+                        return;
+                    }
+
                     String hash = lookupResult.hash;
 
                     // Try saving to local Cache
@@ -225,14 +270,49 @@ public class SkinManager {
                     var skinnedModel = UniversalParser.parseSkinned(path, lookupResult.format).map(ModelNormalizer::normalize);
                     List<Vertex> vertices = ModelNormalizer.normalize(UniversalParser.parse(path));
                     skinnedModel.ifPresentOrElse(
-                            model -> putCacheEntry(uuid, model, lookupResult.format),
-                            () -> putCacheEntry(uuid, vertices, lookupResult.format)
+                            model -> {
+                                if (generation == worldSkinGeneration.get()) {
+                                    putCacheEntry(uuid, model, lookupResult.format);
+                                }
+                            },
+                            () -> {
+                                if (generation == worldSkinGeneration.get()) {
+                                    putCacheEntry(uuid, vertices, lookupResult.format);
+                                }
+                            }
                     );
                 }
                 else{
-                    putCacheEntry(uuid, (List<Vertex>) null, null);
+                    if (generation == worldSkinGeneration.get()) {
+                        putCacheEntry(uuid, (List<Vertex>) null, null);
+                    }
                 }
             });
+        }
+    }
+
+    public static void clearWorldSkinState() {
+        worldSkinGeneration.incrementAndGet();
+
+        String selfUuid = null;
+        var sessionUuid = client.getSession().getUuidOrNull();
+        if (sessionUuid != null) {
+            selfUuid = sessionUuid.toString();
+        }
+
+        LookupSkin selfLookup = selfUuid == null ? null : skinLookup.get(selfUuid);
+        CacheSkin selfCache = selfUuid == null ? null : skinCache.get(selfUuid);
+
+        skinLookup.clear();
+        skinCache.clear();
+
+        if (selfUuid != null) {
+            if (selfLookup != null) {
+                skinLookup.put(selfUuid, selfLookup);
+            }
+            if (selfCache != null) {
+                skinCache.put(selfUuid, selfCache);
+            }
         }
     }
 

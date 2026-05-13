@@ -216,7 +216,7 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private CacheSkin currentCache() {
-        String uuid = MinecraftClient.getInstance().getSession().getUuidOrNull().toString();
-        return SkinManager.skinCache.get(uuid);
+        var uuid = MinecraftClient.getInstance().getSession().getUuidOrNull();
+        return uuid == null ? null : SkinManager.skinCache.get(uuid.toString());
     }
 }

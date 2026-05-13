@@ -59,8 +59,14 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
                 var screen = MinecraftClient.getInstance().currentScreen;
 
                 // We are inside a screen and don't have an uuid, so we just fall back to the clients uuid
-                if(screen instanceof TitleScreen || screen instanceof ConfigScreen)
-                    uuid = MinecraftClient.getInstance().getSession().getUuidOrNull().toString();
+                if(screen instanceof TitleScreen || screen instanceof ConfigScreen) {
+                    var sessionUuid = MinecraftClient.getInstance().getSession().getUuidOrNull();
+                    if (sessionUuid == null) {
+                        return;
+                    }
+
+                    uuid = sessionUuid.toString();
+                }
                 // Just hand off to default rendering
                 else
                     return;
