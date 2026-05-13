@@ -396,7 +396,10 @@ public class AssimpFBXParser {
             }
         }
 
-        return Map.of("Idle", new SkinnedModel.Animation(2f, idle), "Walk", new SkinnedModel.Animation(0.7f, walk));
+        return Map.of(
+                "Idle", SkinnedModel.Animation.logicalRigDriven(2f, idle),
+                "Walk", SkinnedModel.Animation.logicalRigDriven(0.7f, walk)
+        );
     }
 
     private static Float3 convert(AIVector3D vector) {

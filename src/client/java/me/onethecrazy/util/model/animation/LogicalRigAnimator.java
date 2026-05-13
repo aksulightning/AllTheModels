@@ -42,8 +42,8 @@ public class LogicalRigAnimator {
         }
 
         return Map.of(
-                "Walk", new SkinnedModel.Animation(0.7f, walk),
-                "Sneak", new SkinnedModel.Animation(1f, sneak)
+                "Walk", SkinnedModel.Animation.logicalRigDriven(0.7f, walk),
+                "Sneak", SkinnedModel.Animation.logicalRigDriven(1f, sneak)
         );
     }
 

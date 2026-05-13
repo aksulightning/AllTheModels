@@ -66,7 +66,7 @@ public class ConfigScreen extends Screen {
             updateEnabledButtonText();
         }).dimensions(getContentOriginX() + getHalfButtonWidth() + MARGIN, selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
-        editorButton = ButtonWidget.builder(Text.of("Edit Model Rig"), (button) ->
+        editorButton = ButtonWidget.builder(Text.of("Settings"), (button) ->
                 MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(this))
         ).dimensions(getContentOriginX(), resetButton.getY() + Y_SPACING, getContentWidth(), BUTTON_HEIGHT).build();
 

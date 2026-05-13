@@ -70,7 +70,10 @@ public class SkinManager {
             String hash = FileUtil.getSha256(data3D);
             ParsingFormat format = UniversalParser.getParsingFormat(dataPath);
 
-            assert format != null;
+            if (format != ParsingFormat.FBX) {
+                AllTheSkins.LOGGER.warn("Only FBX models are supported now: {}", dataPath);
+                return;
+            }
 
             FileUtil.createFileIfNotPresent(FileUtil.getSkinPath(hash, format), data3D);
 
@@ -106,7 +109,7 @@ public class SkinManager {
 
         // Send update to server
         if (sessionUuid != null) {
-            BackendInteractor.setSkinData(sessionUuid.toString(), new byte[0], ParsingFormat.OBJ);
+            BackendInteractor.setSkinData(sessionUuid.toString(), new byte[0], ParsingFormat.FBX);
         }
     }
 
@@ -334,7 +337,9 @@ public class SkinManager {
     }
 
     private static SkinnedModel withSavedAnimationSettings(SkinnedModel model, ClientSkin selectedSkin) {
-        Map<String, SkinnedModel.Animation> importedAnimations = rotationOnlyAnimations(model.animations, selectedSkin);
+        selectedSkin.clipMappings().remove("Idle");
+
+        Map<String, SkinnedModel.Animation> importedAnimations = new LinkedHashMap<>(model.animations);
         Map<String, SkinnedModel.Animation> animations = new LinkedHashMap<>(importedAnimations);
         LogicalRigAnimator.proceduralAnimations(model.bones, selectedSkin.binding()).forEach(animations::putIfAbsent);
 
@@ -346,28 +351,5 @@ public class SkinManager {
         }
 
         return model.withLogicalRigBinding(selectedSkin.binding()).withAnimations(animations);
-    }
-
-    private static Map<String, SkinnedModel.Animation> rotationOnlyAnimations(Map<String, SkinnedModel.Animation> source, ClientSkin selectedSkin) {
-        Map<String, SkinnedModel.Animation> stripped = new LinkedHashMap<>();
-        boolean ignoredTranslations = false;
-
-        for (Map.Entry<String, SkinnedModel.Animation> entry : source.entrySet()) {
-            SkinnedModel.Animation animation = entry.getValue();
-            if (animation.hasTranslationKeys()) {
-                ignoredTranslations = true;
-            }
-            stripped.put(entry.getKey(), animation.rotationOnly());
-        }
-
-        if (ignoredTranslations) {
-            String warning = "This animation contains translation keys. AllTheSkins only supports rotation-only logical rig animation, so translation keys were ignored.";
-            if (!selectedSkin.warnings().contains(warning)) {
-                selectedSkin.warnings().add(warning);
-                FileUtil.writeSave(AllTheSkinsClient.options());
-            }
-        }
-
-        return stripped;
     }
 }

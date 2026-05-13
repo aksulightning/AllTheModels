@@ -4,7 +4,7 @@ Small stdlib-only emulator for the AllTheSkins backend service.
 
 The Minecraft client talks to:
   GET  /getSkins   JSON body: {"uuids": ["..."]}
-  GET  /files/<sha256>.<obj|glb|fbx>
+  GET  /files/<sha256>.fbx
   POST /setSkin    JSON body: {"uuid": "...", "data3d": {"base64": "...", "format": "..."}}
   GET  /banner
 
@@ -26,7 +26,7 @@ from typing import Any
 from urllib.parse import unquote
 
 
-SUPPORTED_FORMATS = {"obj", "glb", "fbx"}
+SUPPORTED_FORMATS = {"fbx"}
 LOGGER = logging.getLogger("backend_emulator")
 
 
@@ -76,7 +76,7 @@ class SkinStore:
     def set_skin(self, uuid: str, raw_data: bytes, fmt: str) -> dict[str, str]:
         fmt = fmt.lower()
         if fmt not in SUPPORTED_FORMATS:
-            raise ValueError(f"unsupported format {fmt!r}; expected obj, glb, or fbx")
+            raise ValueError(f"unsupported format {fmt!r}; expected fbx")
 
         if not raw_data:
             self.index.pop(uuid, None)

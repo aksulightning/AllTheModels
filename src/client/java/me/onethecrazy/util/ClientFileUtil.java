@@ -32,8 +32,8 @@ public class ClientFileUtil {
 
                 NFDFilterItem.Buffer filtersBuffer = NFDFilterItem.malloc(1);
                 filtersBuffer.get(0)
-                        .name(stack.UTF8("3D Model"))
-                        .spec(stack.UTF8("obj,glb,gltf,fbx"));
+                        .name(stack.UTF8("FBX Model"))
+                        .spec(stack.UTF8("fbx"));
 
                 int result = NativeFileDialog.NFD_OpenDialog(out, filtersBuffer, "");
 

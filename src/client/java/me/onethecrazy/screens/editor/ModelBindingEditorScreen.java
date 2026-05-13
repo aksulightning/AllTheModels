@@ -27,7 +27,7 @@ public class ModelBindingEditorScreen extends Screen {
     private List<String> clipNames = List.of();
 
     public ModelBindingEditorScreen(Screen parent) {
-        super(Text.of("Model Rig Binding"));
+        super(Text.of("Settings"));
         this.parent = parent;
     }
 
@@ -57,15 +57,9 @@ public class ModelBindingEditorScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), button -> close())
                 .dimensions(x + width / 2 + 3, y + MARGIN, width / 2 - 3, 20).build());
 
-        int clipY = y + MARGIN + ROW_HEIGHT;
-        for (String state : List.of("Idle", "Walk", "Sneak")) {
-            String logicalState = state;
-            addDrawableChild(ButtonWidget.builder(clipButtonText(logicalState), button -> {
-                cycleClip(logicalState);
-                button.setMessage(clipButtonText(logicalState));
-            }).dimensions(x, clipY, width, 20).build());
-            clipY += ROW_HEIGHT;
-        }
+        addDrawableChild(ButtonWidget.builder(Text.of("FBX Animations"), button ->
+                MinecraftClient.getInstance().setScreen(new FbxAnimationsScreen(this))
+        ).dimensions(x, y + MARGIN + ROW_HEIGHT, width, 20).build());
     }
 
     @Override
@@ -110,7 +104,7 @@ public class ModelBindingEditorScreen extends Screen {
         CacheSkin cache = currentCache();
         String status = cache == null ? "Rig: none" : cache.debugStatus();
         context.drawText(textRenderer, Text.of(status), MARGIN, this.height - 28, 0xFFCCCCCC, true);
-        context.drawText(textRenderer, Text.of("Runtime animation is rotation-only around each bind pivot."), MARGIN, this.height - 16, 0xFFAAAAAA, true);
+        context.drawText(textRenderer, Text.of("Rig binding controls procedural fallback movement only."), MARGIN, this.height - 16, 0xFFAAAAAA, true);
 
         if (cache != null && cache.format == ParsingFormat.FBX) {
             int materialY = Math.max(40, this.height - 110);
@@ -148,28 +142,6 @@ public class ModelBindingEditorScreen extends Screen {
     private Text buttonText(LogicalBodyPart part) {
         String value = AllTheSkinsClient.options().selectedSkin.binding().firstName(part);
         return Text.of(part.displayName + ": " + (value.isBlank() ? "Unbound" : value));
-    }
-
-    private void cycleClip(String state) {
-        if (clipNames.isEmpty()) {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().remove(state);
-            SkinManager.saveCurrentBinding();
-            return;
-        }
-
-        String current = AllTheSkinsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
-        int next = current.isBlank() ? 0 : clipNames.indexOf(current) + 1;
-        if (next < 0 || next >= clipNames.size()) {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().remove(state);
-        } else {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().put(state, clipNames.get(next));
-        }
-        SkinManager.saveCurrentBinding();
-    }
-
-    private Text clipButtonText(String state) {
-        String value = AllTheSkinsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
-        return Text.of(state + " Clip: " + (value.isBlank() ? "Procedural/default" : value));
     }
 
     private List<String> currentBones() {

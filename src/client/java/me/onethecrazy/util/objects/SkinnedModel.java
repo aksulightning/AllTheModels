@@ -93,8 +93,9 @@ public class SkinnedModel {
             return staticVertices();
         }
 
-        boolean minecraftLimbs = "Walk".equals(animationName) || "Sneak".equals(animationName);
-        return renderPose(animation, seconds, headLookRotation, "Idle".equals(animationName), minecraftLimbs ? limbPose : CustomModelPose.LimbPose.NONE);
+        boolean logicalRigDriven = animation.logicalRigDriven();
+        boolean minecraftLimbs = logicalRigDriven && ("Walk".equals(animationName) || "Sneak".equals(animationName));
+        return renderPose(animation, seconds, headLookRotation, logicalRigDriven && "Idle".equals(animationName), minecraftLimbs ? limbPose : CustomModelPose.LimbPose.NONE);
     }
 
     private List<Vertex> renderPose(Animation animation, float seconds, CustomModelPose.HeadLookRotation headLookRotation, boolean applyIdleHeadLook, CustomModelPose.LimbPose limbPose) {
@@ -392,7 +393,15 @@ public class SkinnedModel {
 
     public record Bone(String name, int parentIndex, Matrix4f localBind, Matrix4f inverseBind) {}
 
-    public record Animation(float durationSeconds, Map<Integer, BoneTrack> tracks) {
+    public record Animation(float durationSeconds, Map<Integer, BoneTrack> tracks, boolean logicalRigDriven) {
+        public Animation(float durationSeconds, Map<Integer, BoneTrack> tracks) {
+            this(durationSeconds, tracks, false);
+        }
+
+        public static Animation logicalRigDriven(float durationSeconds, Map<Integer, BoneTrack> tracks) {
+            return new Animation(durationSeconds, tracks, true);
+        }
+
         Matrix4f localTransform(int boneIndex, float seconds, Matrix4f fallback) {
             BoneTrack track = tracks.get(boneIndex);
             if (track == null || durationSeconds <= 0f) {
@@ -428,7 +437,7 @@ public class SkinnedModel {
                             (left, right) -> left,
                             java.util.LinkedHashMap::new
                     )
-            ));
+            ), logicalRigDriven);
         }
     }
 
@@ -440,12 +449,28 @@ public class SkinnedModel {
         Matrix4f sample(float seconds, Matrix4f fallback) {
             Vector3f r = sampleVec(rotation, seconds, null);
 
-            if (r == null) {
-                return new Matrix4f(fallback);
+            if (additive) {
+                if (r == null) {
+                    return new Matrix4f(fallback);
+                }
+
+                return new Matrix4f(fallback)
+                        .rotateXYZ((float) Math.toRadians(r.x), (float) Math.toRadians(r.y), (float) Math.toRadians(r.z));
             }
 
-            return new Matrix4f(fallback)
-                    .rotateXYZ((float) Math.toRadians(r.x), (float) Math.toRadians(r.y), (float) Math.toRadians(r.z));
+            Vector3f fallbackTranslation = fallback.getTranslation(new Vector3f());
+            Vector3f fallbackScale = fallback.getScale(new Vector3f());
+            Vector3f t = sampleVec(translation, seconds, fallbackTranslation);
+            Vector3f s = sampleVec(scale, seconds, fallbackScale);
+
+            if (r == null) {
+                r = new Vector3f();
+            }
+
+            return new Matrix4f()
+                    .translation(t)
+                    .rotateXYZ((float) Math.toRadians(r.x), (float) Math.toRadians(r.y), (float) Math.toRadians(r.z))
+                    .scale(s);
         }
 
         public boolean hasTranslationKeys() {
