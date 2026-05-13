@@ -47,8 +47,12 @@ public class SkinPreviewRenderer {
         // Reset Player to render the correct Skin
         resetPlayerOnLivingEntityRenderer(player);
 
+        // Prefer the cached custom model path for previews. InventoryScreen rotates the
+        // player entity for vanilla skins, which flips custom model previews backward.
+        boolean renderedCustomPreview = renderCachedSelfSkin(ctx, client, deltaTicks);
+
         // Render the Preview of the player skin
-        if (player != null) {
+        if (!renderedCustomPreview && player != null && shouldRenderVanillaPlayerFallback()) {
             InventoryScreen.drawEntity(
                 ctx,
                 x, y,
@@ -59,8 +63,6 @@ public class SkinPreviewRenderer {
                 pitch,
                 player
             );
-        } else {
-            renderCachedSelfSkin(ctx, client, deltaTicks);
         }
 
         // Render the border where the Mesh is placed inside
@@ -83,9 +85,9 @@ public class SkinPreviewRenderer {
         ((LivingEntityRenderExtension)playerRenderer).all_the_skins$setPlayerAsNull();
     }
 
-    private void renderCachedSelfSkin(DrawContext ctx, MinecraftClient client, float deltaTicks) {
+    private boolean renderCachedSelfSkin(DrawContext ctx, MinecraftClient client, float deltaTicks) {
         if (!AllTheSkinsClient.options().isEnabled) {
-            return;
+            return false;
         }
 
         UUID selfUuid = client.getSession().getUuidOrNull();
@@ -95,7 +97,7 @@ public class SkinPreviewRenderer {
         }
 
         if (!hasRenderablePreview(cacheSkin)) {
-            return;
+            return false;
         }
 
         List<Vertex> vertices = cacheSkin.vertices;
@@ -110,7 +112,7 @@ public class SkinPreviewRenderer {
         }
 
         if (vertices == null || vertices.isEmpty()) {
-            return;
+            return false;
         }
 
         ctx.enableScissor(x, y, x + dimensions, y + dimensions);
@@ -119,7 +121,7 @@ public class SkinPreviewRenderer {
         matrices.push();
         matrices.translate(x + dimensions / 2f, y + dimensions - 6f, 100f);
         matrices.scale(scale, -scale, scale);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180f + yaw));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yaw));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(pitch));
 
         MatrixStack.Entry entry = matrices.peek();
@@ -139,6 +141,7 @@ public class SkinPreviewRenderer {
         ctx.draw();
         matrices.pop();
         ctx.disableScissor();
+        return true;
     }
 
     private @Nullable CacheSkin getSelectedPreviewCache() {
@@ -150,6 +153,14 @@ public class SkinPreviewRenderer {
         }
 
         return selectedPreviewCache;
+    }
+
+    private boolean shouldRenderVanillaPlayerFallback() {
+        var selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        return !AllTheSkinsClient.options().isEnabled
+                || selectedSkin == null
+                || selectedSkin.hash == null
+                || selectedSkin.hash.isBlank();
     }
 
     private boolean hasRenderablePreview(@Nullable CacheSkin cacheSkin) {

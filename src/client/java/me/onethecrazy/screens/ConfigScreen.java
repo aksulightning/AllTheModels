@@ -75,11 +75,13 @@ public class ConfigScreen extends Screen {
                 (button) -> close())
                 .dimensions(getContentOriginX(), editorButton.getY() + Y_SPACING + textRenderer.fontHeight + 2 * MARGIN, getContentWidth(), BUTTON_HEIGHT).build();
 
+        this.addDrawable((context, mouseX, mouseY, delta) -> skinPreviewRenderer.renderPreview(context, delta));
         this.addDrawableChild(selectSkinButton);
         this.addDrawableChild(resetButton);
         this.addDrawableChild(toggleButton);
         this.addDrawableChild(editorButton);
         this.addDrawableChild(doneButton);
+        this.addDrawable(this::renderText);
 
         // Set Button Texts
         updateSelectButtonText();
@@ -89,12 +91,13 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Render the skin preview
-        skinPreviewRenderer.renderPreview(context, delta);
-
         // Update Text
         updateSelectButtonText();
 
+        super.render(context, mouseX, mouseY, delta);
+    }
+
+    private void renderText(DrawContext context, int mouseX, int mouseY, float delta) {
         // Render the banner text
         context.drawText(textRenderer, trimmed(AllTheSkinsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
 
@@ -105,8 +108,6 @@ public class ConfigScreen extends Screen {
         // Render Mod Title
         String title = "All The Models";
         context.drawText(textRenderer, title, this.width / 2 - textRenderer.getWidth(title) / 2, MARGIN, 0xFFFFFFFF, true);
-
-        super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
