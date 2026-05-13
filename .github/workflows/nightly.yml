@@ -6,7 +6,7 @@ on:
       - master
       - 1.21.8
       - 26.1.2
-      - 1.21.1
+      - 1.21.1-fbx
 
   schedule:
     # Every night at 03:00 UTC
@@ -31,19 +31,13 @@ jobs:
             artifact_name: all-the-models-nightly
             java_version: "21"
 
-          - branch: 1.21.8
-            tag: nightly-1.21.8
-            release_name: Nightly Build 1.21.8
-            artifact_name: all-the-models-1.21.8
-            java_version: "21"
-
           - branch: 26.1.2
             tag: nightly-26.1.2
             release_name: Nightly Build 26.1.2
             artifact_name: all-the-models-26.1.2
             java_version: "25"
 
-          - branch: 1.21.1
+          - branch: 1.21.1-fbx
             tag: nightly-1.21.1
             release_name: Nightly Build 1.21.1
             artifact_name: all-the-models-1.21.1
