@@ -350,6 +350,8 @@ public class SkinManager {
             }
         }
 
-        return model.withLogicalRigBinding(selectedSkin.binding()).withAnimations(animations);
+        return model.withLogicalRigBinding(selectedSkin.binding())
+                .withAnimations(animations)
+                .withAnimationsEnabled(selectedSkin.animationsEnabled());
     }
 }

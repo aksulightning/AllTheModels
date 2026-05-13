@@ -206,6 +206,10 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
 
     @Unique
     private void renderNameTagIfShouldRender(AbstractClientPlayerEntity renderedPlayer, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light){
+        if (renderedPlayer == MinecraftClient.getInstance().player) {
+            return;
+        }
+
         if (!renderedPlayer.shouldRenderName()) {
             return;
         }

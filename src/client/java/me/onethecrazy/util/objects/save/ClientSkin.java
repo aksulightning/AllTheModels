@@ -15,6 +15,7 @@ public class ClientSkin {
     public ParsingFormat format;
     public String sourceFormat;
     public float scale;
+    public Boolean animationsEnabled;
     public LogicalRigBinding logicalRigBinding;
     public Map<String, String> animationClipMappings;
     public List<String> importWarnings;
@@ -25,6 +26,7 @@ public class ClientSkin {
         this.format = null;
         this.sourceFormat = "";
         this.scale = 1f;
+        this.animationsEnabled = true;
         this.logicalRigBinding = new LogicalRigBinding();
         this.animationClipMappings = new LinkedHashMap<>();
         this.importWarnings = new ArrayList<>();
@@ -36,6 +38,7 @@ public class ClientSkin {
         this.format = format;
         this.sourceFormat = format == null ? "" : format.name();
         this.scale = 1f;
+        this.animationsEnabled = true;
         this.logicalRigBinding = new LogicalRigBinding();
         this.animationClipMappings = new LinkedHashMap<>();
         this.importWarnings = new ArrayList<>();
@@ -60,5 +63,16 @@ public class ClientSkin {
             importWarnings = new ArrayList<>();
         }
         return importWarnings;
+    }
+
+    public boolean animationsEnabled() {
+        if (animationsEnabled == null) {
+            animationsEnabled = true;
+        }
+        return animationsEnabled;
+    }
+
+    public void setAnimationsEnabled(boolean animationsEnabled) {
+        this.animationsEnabled = animationsEnabled;
     }
 }

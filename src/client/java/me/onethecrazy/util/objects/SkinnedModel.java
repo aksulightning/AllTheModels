@@ -23,6 +23,7 @@ public class SkinnedModel {
     public final List<Bone> bones;
     public final List<SkinnedVertex> vertices;
     public final Map<String, Animation> animations;
+    private final boolean animationsEnabled;
     private final LogicalRigBinding logicalRigBinding;
     private final int headBoneIndex;
     private final int rightArmBoneIndex;
@@ -31,13 +32,14 @@ public class SkinnedModel {
     private final int leftLegBoneIndex;
 
     public SkinnedModel(List<Bone> bones, List<SkinnedVertex> vertices, Map<String, Animation> animations) {
-        this(bones, vertices, animations, LogicalRigBinding.autoBind(bones.stream().map(Bone::name).toList()));
+        this(bones, vertices, animations, LogicalRigBinding.autoBind(bones.stream().map(Bone::name).toList()), true);
     }
 
-    private SkinnedModel(List<Bone> bones, List<SkinnedVertex> vertices, Map<String, Animation> animations, LogicalRigBinding logicalRigBinding) {
+    private SkinnedModel(List<Bone> bones, List<SkinnedVertex> vertices, Map<String, Animation> animations, LogicalRigBinding logicalRigBinding, boolean animationsEnabled) {
         this.bones = bones;
         this.vertices = vertices;
         this.animations = animations;
+        this.animationsEnabled = animationsEnabled;
         this.logicalRigBinding = logicalRigBinding == null
                 ? LogicalRigBinding.autoBind(bones.stream().map(Bone::name).toList())
                 : logicalRigBinding;
@@ -50,11 +52,15 @@ public class SkinnedModel {
     }
 
     public SkinnedModel withAnimations(Map<String, Animation> animations) {
-        return new SkinnedModel(bones, vertices, animations, logicalRigBinding);
+        return new SkinnedModel(bones, vertices, animations, logicalRigBinding, animationsEnabled);
     }
 
     public SkinnedModel withLogicalRigBinding(LogicalRigBinding logicalRigBinding) {
-        return new SkinnedModel(bones, vertices, animations, logicalRigBinding);
+        return new SkinnedModel(bones, vertices, animations, logicalRigBinding, animationsEnabled);
+    }
+
+    public SkinnedModel withAnimationsEnabled(boolean animationsEnabled) {
+        return new SkinnedModel(bones, vertices, animations, logicalRigBinding, animationsEnabled);
     }
 
     public boolean hasAnimations() {
@@ -85,6 +91,10 @@ public class SkinnedModel {
     }
 
     public List<Vertex> render(String animationName, float seconds, CustomModelPose.HeadLookRotation headLookRotation, CustomModelPose.LimbPose limbPose) {
+        if (!animationsEnabled) {
+            return staticVertices();
+        }
+
         Animation animation = animations.get(animationName);
         if (animation == null) {
             if ("Idle".equals(animationName)) {
