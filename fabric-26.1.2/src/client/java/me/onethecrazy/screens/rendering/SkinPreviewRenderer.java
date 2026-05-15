@@ -23,6 +23,7 @@ import java.util.UUID;
 
 public class SkinPreviewRenderer {
     private static final int FULL_BRIGHT_LIGHT = 0xF000F0;
+    private static final float GUI_PREVIEW_BODY_ROTATION = 180f;
     private final int x, y;
     private final int dimensions;
     private final float scale;
@@ -103,7 +104,7 @@ public class SkinPreviewRenderer {
         state.boundingBoxHeight = 2f;
         state.eyeHeight = 1.62f;
         state.lightCoords = FULL_BRIGHT_LIGHT;
-        state.setData(CustomSkinRenderData.KEY, new CustomSkinRenderData(vertices, 0f, state.pose, null, state.eyeHeight, FULL_BRIGHT_LIGHT));
+        state.setData(CustomSkinRenderData.KEY, new CustomSkinRenderData(vertices, GUI_PREVIEW_BODY_ROTATION, state.pose, null, state.eyeHeight, FULL_BRIGHT_LIGHT));
 
         Quaternionf rotation = new Quaternionf()
                 .rotateZ((float) Math.PI)

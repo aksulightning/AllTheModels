@@ -12,5 +12,19 @@ pluginManagement {
 rootProject.name = "all-the-models-multiversion"
 
 include("common")
-include("fabric-1.21.1")
-include("fabric-26.1.2")
+
+def requestedFabricProjects = gradle.startParameter.taskNames
+		.collect { it.startsWith(":") ? it.substring(1) : it }
+		.findAll { it.startsWith("fabric-") }
+		.collect { it.split(":")[0] }
+		.toSet()
+
+def includeAllFabricProjects = requestedFabricProjects.isEmpty()
+
+if (includeAllFabricProjects || requestedFabricProjects.contains("fabric-1.21.1")) {
+	include("fabric-1.21.1")
+}
+
+if (includeAllFabricProjects || requestedFabricProjects.contains("fabric-26.1.2")) {
+	include("fabric-26.1.2")
+}
