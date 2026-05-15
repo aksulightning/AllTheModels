@@ -16,11 +16,11 @@ Use it at your own risk, and please do not expect polished support or guaranteed
 
 ## Releases
 
-[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Experimental port.) 
+[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental, limited to FBX support.)
 
 [Download nightly for 1.21.8](https://github.com/aksulightning/AllTheModels/releases/tag/nightly) (Stable.)
 
-[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental, limited to FBX support.)
+[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Experimental, limited to FBX support.) 
 
 ## Features
 - 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, `.fbx` models, complete with textures where supported.

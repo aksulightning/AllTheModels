@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - master
-      - 1.21.8
-      - 26.1.2
-      - 1.21.1-fbx
+      - multiversion
 
   schedule:
     # Every night at 03:00 UTC
@@ -27,20 +25,26 @@ jobs:
         include:
           - branch: master
             tag: nightly
-            release_name: Nightly Build from master branch
+            release_name: Nightly Build 1.21.8
             artifact_name: all-the-models-nightly
+            artifact_path: "build/libs/"
+            gradlew_build: "./gradlew build"
             java_version: "21"
 
-          - branch: 26.1.2
+          - branch: multiversion
             tag: nightly-26.1.2
             release_name: Nightly Build 26.1.2
             artifact_name: all-the-models-26.1.2
+            artifact_path: "fabric-26.1.2/build/libs/"
+            gradlew_build: "./gradlew :fabric-26.1.2:build"
             java_version: "25"
 
-          - branch: 1.21.1-fbx
+          - branch: multiversion
             tag: nightly-1.21.1
             release_name: Nightly Build 1.21.1
             artifact_name: all-the-models-1.21.1
+            artifact_path: "fabric-1.21.1/build/libs/"
+            gradlew_build: "./gradlew :fabric-1.21.1:build"
             java_version: "21"
 
     steps:
@@ -63,13 +67,13 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: build
-        run: ./gradlew build
+        run: ${{ matrix.gradlew_build }}
 
       - name: capture build artifacts
         uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact_name }}
-          path: build/libs/
+          path: ${{ matrix.artifact_path }}
 
       - name: prepare release tag
         env:
