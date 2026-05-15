@@ -2,9 +2,9 @@
 **Use any 3D model as your Minecraft skin.**
 
 ## Overview
-AllTheModels is a fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+All The Models is an AI-assisted fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
 
-Tired of flat skins? *AllTheModels* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+Tired of vanilla skins? *All The Models* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
 
 ##### Disclaimer
 
@@ -16,14 +16,12 @@ Use it at your own risk, and please do not expect polished support or guaranteed
 
 ## Releases
 
-[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental, limited to FBX support.)
+[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental.)
 
-[Download nightly for 1.21.8](https://github.com/aksulightning/AllTheModels/releases/tag/nightly) (Support Stable.)
-
-[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Experimental, limited to FBX support.) 
+[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Fully supported, experimental.) 
 
 ## Features
-- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.obj`, `.glb`/`.gltf`, `.fbx` models, complete with textures where supported.
+- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.fbx` models, complete with textures where supported.
 - ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.
 - 🎨 **Main Menu Preview** – Instantly see your model right in the title screen.
 - 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
@@ -56,7 +54,7 @@ Known limitations:
 - Names like `head`, `neck`, `spine`, `chest`, `torso`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` help the auto-binder.
 
 ## Binding bones in game
-1. Run `/skin` and choose an `.fbx`, `.obj`, `.glb`, or `.gltf` file.
+1. Run `/skin` and choose an `.fbx` file.
 2. Open **Edit Model Rig** from the config screen.
 3. Use **Auto Bind** to map common Blender bone names to the six Minecraft body parts.
 4. Click each body-part row to cycle through detected bones and manually override the binding.
@@ -69,13 +67,13 @@ The binding, source format, scale field, and animation clip mappings are saved w
 ⚠️ **Use at your own risk.**  
 Nothing is moderated — any player can upload any model, including inappropriate ones.
 
-- 🚫 Accounts may be blocked from the service or community-made custom backends with or without reason.
+- 🚫 Accounts may be blocked from community-made custom backends with or without reason.
 - 📁 File size is limited to **20 MB** to allow free use.
-- 📴 The service and custom backends may be shut down at any time.
+- 📴 Custom backends may be shut down at any time.
 - 🔄 Subject to change without notice.
 
 ## 👥 Community & Contribution
-*AllTheModels* is open source and community-driven — contributions and feedback are always welcome!
+*All The Models* is open source — contributions and feedback are always welcome!
 
 - 🐛 **Have a feature idea?**  
   → [Open an issue](https://github.com/aksulightning/AllTheModels/issues)
@@ -84,7 +82,7 @@ Nothing is moderated — any player can upload any model, including inappropriat
   → [Submit a pull request](https://github.com/aksulightning/AllTheModels/pulls)
 
 
-Your creativity shapes this project — thank you for helping make *AllTheModels* better for everyone!
+Your creativity shapes this project — thank you for helping make *All The Models* better for everyone!
 
 ## Links
 - 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)
