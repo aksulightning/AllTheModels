@@ -1,134 +1,89 @@
 # AllTheModels
+**Use any 3D model as your Minecraft skin.**
 
-Use any 3D model as your Minecraft skin.
+## Overview
+All The Models is an AI-assisted fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
 
-## Fabric-only support
+Tired of vanilla skins? *All The Models* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
 
-This repository is Fabric-only. It does not use Forge, NeoForge, Quilt, or Architectury.
+##### Disclaimer
 
-The project is structured for separate Fabric jars per Minecraft target. A universal jar is not implemented.
+This mod is a fork and was made mostly for fun.
 
-## Supported targets
+It is vibe-coded, experimental, and not meant to be a perfectly engineered project. Things may break, behave strangely, or be held together by optimism and questionable decisions.
 
-| Module | Minecraft | Yarn mappings | Fabric Loader | Fabric API | Mod version | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| `fabric-1.21.1` | `1.21.1` | `1.21.1+build.3` | `0.16.14` | `0.116.6+1.21.1` | `2.0.0+1.21.1` | Builds |
-| `fabric-26.1.2` | `1.21.1` | `1.21.1+build.3` | `0.16.14` | `0.116.6+1.21.1` | `2.0.0+1.21.1` | Builds |
+Use it at your own risk, and please do not expect polished support or guaranteed compatibility.
 
-`26.1.2` was requested as a supported target, but it is not a Minecraft version in this project. It does not appear in the original project metadata as a Minecraft version, Fabric Loader version, Fabric API version, or mod version. The `fabric-26.1.2` module therefore preserves the requested folder name while targeting the same confirmed Fabric `1.21.1` dependency set used by the existing port.
+## Releases
 
-## Build commands
+[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental.)
 
-Build all configured modules:
+[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Fully supported, experimental.) 
 
-```bash
-./gradlew build
-```
+## Features
+- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.fbx` models, complete with textures where supported.
+- ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.
+- 🎨 **Main Menu Preview** – Instantly see your model right in the title screen.
+- 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
+- 📦 **Lightweight & Client-Side** – No server installation required.
 
-Build the Fabric 1.21.1 jar:
+## FBX support
+FBX support is an MVP importer/editor workflow intended for Blender-exported models. This feature is truly experimental, low poly models are recommended and include a single material with texture.
 
-```bash
-./gradlew :fabric-1.21.1:build
-```
+- Static and skinned FBX mesh import through LWJGL Assimp, with an internal binary/ascii parser fallback.
+- Mesh positions, normals, UVs, materials, diffuse colors, and referenced diffuse textures where the file exposes them.
+- Armature/bone detection and up to four vertex bone weights.
+- In-game binding of imported bones to the six logical Minecraft body parts: `HEAD`, `CHEST`, `RIGHT_ARM`, `LEFT_ARM`, `RIGHT_LEG`, and `LEFT_LEG`.
+- Rotation-only procedural `Idle`, `Walk`, and `Sneak` animation for the six-part logical rig.
+- Basic imported clip detection. In the model rig editor, clips can be mapped to `Idle`, `Walk`, and `Sneak`.
 
-Build the Fabric 26.1.2-labeled jar:
+Known limitations:
+- The rigging menu is still to-do. Specific features may not work.
+- FBX is a broad format. Blender FBX exports are the main target.
+- Shape keys/blend shapes, advanced material graphs, constraints, IK, and complex animation stacks are not fully supported yet.
+- If a model has no usable skin weights, the fallback is best-effort and may need manual rig binding.
+- Translation keys in imported animation clips are ignored. Runtime logical rig animation rotates around each configured bind pivot and does not move body parts away from their bind positions.
+- Bad, oversized, malformed, or unsupported FBX files should fail gracefully instead of crashing the client.
 
-```bash
-./gradlew :fabric-26.1.2:build
-```
+## Blender FBX export notes
+- Apply transforms before export when possible.
+- Use a simple armature and clear bone names.
+- Keep the model under the mod upload limit of **20 MB**.
+- Export with UVs and materials enabled.
+- Prefer embedded textures or clearly referenced texture files next to the FBX.
+- Names like `head`, `neck`, `spine`, `chest`, `torso`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` help the auto-binder.
 
-The 1.21.1 remapped jar is written under `fabric-1.21.1/build/libs/`.
-The 26.1.2-labeled remapped jar is written under `fabric-26.1.2/build/libs/`.
+## Binding bones in game
+1. Run `/skin` and choose an `.fbx` file.
+2. Open **Edit Model Rig** from the config screen.
+3. Use **Auto Bind** to map common Blender bone names to the six Minecraft body parts.
+4. Click each body-part row to cycle through detected bones and manually override the binding.
+5. Inspect each logical bind pivot in the editor. Animations rotate around these pivots.
+6. Optionally map imported animation clips to `Idle`, `Walk`, and `Sneak`.
 
-## Project layout
+The binding, source format, scale field, and animation clip mappings are saved with the selected skin in the existing config JSON.
 
-```text
-root/
-  settings.gradle
-  build.gradle
-  gradle.properties
-  common/
-    build.gradle
-    src/main/java/...
-    src/main/resources/...
-  fabric-1.21.1/
-    build.gradle
-    src/main/java/...
-    src/client/java/...
-    src/main/resources/fabric.mod.json
-    src/main/resources/all-the-models.mixins.json
-    src/client/resources/all-the-models.client.mixins.json
-  fabric-26.1.2/
-    build.gradle
-    src/main/java/...
-    src/client/java/...
-    src/main/resources/fabric.mod.json
-    src/main/resources/all-the-models.mixins.json
-    src/client/resources/all-the-models.client.mixins.json
-```
+## Constraints
+⚠️ **Use at your own risk.**  
+Nothing is moderated — any player can upload any model, including inappropriate ones.
 
-## Common code
+- 🚫 Accounts may be blocked from community-made custom backends with or without reason.
+- 📁 File size is limited to **20 MB** to allow free use.
+- 📴 Custom backends may be shut down at any time.
+- 🔄 Subject to change without notice.
 
-Put version-independent code in `common`, including:
+## 👥 Community & Contribution
+*All The Models* is open source — contributions and feedback are always welcome!
 
-- Constants such as `AllTheModels.MOD_ID`.
-- Config/save model classes.
-- Pure Java utilities and model data structures.
-- Shared assets that are valid for every configured Fabric target.
-- Platform-neutral interfaces under `com.aksulightning.platform`.
+- 🐛 **Have a feature idea?**  
+  → [Open an issue](https://github.com/aksulightning/AllTheModels/issues)
 
-Common code must not import Minecraft, Fabric, Mixin, Mod Menu, or mapping-specific classes.
+- 💡 **Want to contribute?**  
+  → [Submit a pull request](https://github.com/aksulightning/AllTheModels/pulls)
 
-## Fabric version code
 
-Put Minecraft- and Fabric-sensitive code in a Fabric target module, such as `fabric-1.21.1`, including:
+Your creativity shapes this project — thank you for helping make *All The Models* better for everyone!
 
-- `ModInitializer` and `ClientModInitializer` entrypoints.
-- Fabric event registration.
-- Client commands.
-- Mod Menu integration.
-- Screens, renderers, texture upload, and key client setup.
-- Mixins and mixin config files.
-- `fabric.mod.json`.
-- Access wideners, if any are added later.
-
-Fabric platform implementations live under `com.aksulightning.platform.fabric`.
-
-## Current entrypoints
-
-`fabric-1.21.1/src/main/resources/fabric.mod.json` declares:
-
-- `main`: `me.onethecrazy.AllTheSkins`
-- `client`: `me.onethecrazy.AllTheSkinsClient`
-- `modmenu`: `me.onethecrazy.ModMenuIntegration`
-
-## Mixins and access wideners
-
-The current mixin configs are version-specific:
-
-- `all-the-models.mixins.json`
-- `all-the-models.client.mixins.json`
-
-The client mixins are:
-
-- `me.onethecrazy.mixin.client.RenderMixin`
-- `me.onethecrazy.mixin.client.MainMenuMixin`
-
-There are currently no project access wideners.
-
-## Version-sensitive code
-
-Code that imports `net.minecraft.*`, `com.mojang.*`, `net.fabricmc.*`, Mixin, or Mod Menu APIs remains in `fabric-1.21.1`. This includes rendering, screens, commands, dynamic texture loading, Fabric events, Fabric Loader config paths, and the mixins.
-
-Shared code currently includes platform interfaces, constants, save/config models, rig binding metadata, simple model structures, `Float2`, `Float3`, and shared resources.
-
-## Adding another Fabric Minecraft version
-
-1. Confirm the actual Minecraft version, Yarn mappings, Fabric Loader version, and Fabric API version.
-2. Add target-specific properties to `gradle.properties`.
-3. Add `include("fabric-<minecraft-version>")` to `settings.gradle`.
-4. Create `fabric-<minecraft-version>/build.gradle` based on `fabric-1.21.1/build.gradle`.
-5. Copy only the necessary Fabric glue, resources, entrypoints, and mixins into the new module.
-6. Adapt mappings, dependencies, `fabric.mod.json`, mixin targets, injection descriptors, and any access wideners for that Minecraft version.
-7. Keep shared logic in `common`; isolate mapping-sensitive differences inside the Fabric target module.
-8. Run `./gradlew :fabric-<minecraft-version>:build` and fix compile or mapping errors in that module.
+## Links
+- 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)
+- [Support 1TheCrazy on Ko-Fi](https://ko-fi.com/1TheCrazy)
