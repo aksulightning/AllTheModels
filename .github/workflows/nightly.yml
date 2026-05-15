@@ -3,6 +3,7 @@ name: nightly
 on:
   push:
     branches:
+      - master
       - multiversion
 
   schedule:
