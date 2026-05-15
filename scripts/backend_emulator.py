@@ -101,7 +101,7 @@ class SkinStore:
 
 
 class BackendHandler(BaseHTTPRequestHandler):
-    server_version = "AllTheSkinsBackendEmulator/1.0"
+    server_version = "All The ModelsBackendEmulator/1.0"
 
     @property
     def store(self) -> SkinStore:
@@ -223,11 +223,11 @@ class BackendServer(ThreadingHTTPServer):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Emulate the AllTheSkins HTTP backend.")
+    parser = argparse.ArgumentParser(description="Emulate the All The Models HTTP backend.")
     parser.add_argument("--host", default="127.0.0.1", help="Host/interface to bind. Use 0.0.0.0 for LAN access.")
     parser.add_argument("--port", type=int, default=6969, help="Port to bind.")
     parser.add_argument("--data-dir", type=Path, default=Path(".backend-emulator"), help="Persistent data directory.")
-    parser.add_argument("--banner", default="AllTheSkins backend emulator", help="Text returned by GET /banner.")
+    parser.add_argument("--banner", default="All The Models backend emulator", help="Text returned by GET /banner.")
     parser.add_argument("--log-file", type=Path, help="Write logs to this file. Defaults to <data-dir>/backend.log.")
     parser.add_argument("--no-log-file", action="store_true", help="Only log to stdout.")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging.")
@@ -258,7 +258,7 @@ def main() -> None:
     log_path = configure_logging(args)
     store = SkinStore(args.data_dir)
     server = BackendServer((args.host, args.port), BackendHandler, store, args.banner)
-    print(f"Serving AllTheSkins backend emulator at http://{args.host}:{args.port}")
+    print(f"Serving All The Models backend emulator at http://{args.host}:{args.port}")
     print(f"Data directory: {args.data_dir.resolve()}")
     if log_path is not None:
         print(f"Log file: {log_path.resolve()}")
