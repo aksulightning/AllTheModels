@@ -3,7 +3,6 @@ name: nightly
 on:
   push:
     branches:
-      - master
       - multiversion
 
   schedule:
@@ -23,14 +22,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: master
-            tag: nightly
-            release_name: Nightly Build 1.21.8
-            artifact_name: all-the-models-nightly
-            artifact_path: "build/libs"
-            gradlew_build: "./gradlew build"
-            java_version: "21"
-
           - branch: multiversion
             tag: nightly-26.1.2
             release_name: Nightly Build 26.1.2
