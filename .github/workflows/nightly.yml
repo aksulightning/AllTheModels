@@ -27,7 +27,7 @@ jobs:
             tag: nightly
             release_name: Nightly Build 1.21.8
             artifact_name: all-the-models-nightly
-            artifact_path: "build/libs/"
+            artifact_path: "build/libs"
             gradlew_build: "./gradlew build"
             java_version: "21"
 
@@ -35,7 +35,7 @@ jobs:
             tag: nightly-26.1.2
             release_name: Nightly Build 26.1.2
             artifact_name: all-the-models-26.1.2
-            artifact_path: "fabric-26.1.2/build/libs/"
+            artifact_path: "fabric-26.1.2/build/libs"
             gradlew_build: "./gradlew :fabric-26.1.2:build"
             java_version: "25"
 
@@ -43,7 +43,7 @@ jobs:
             tag: nightly-1.21.1
             release_name: Nightly Build 1.21.1
             artifact_name: all-the-models-1.21.1
-            artifact_path: "fabric-1.21.1/build/libs/"
+            artifact_path: "fabric-1.21.1/build/libs"
             gradlew_build: "./gradlew :fabric-1.21.1:build"
             java_version: "21"
 
@@ -100,8 +100,9 @@ jobs:
           TAG_NAME: ${{ matrix.tag }}
           RELEASE_NAME: ${{ matrix.release_name }}
           BRANCH_NAME: ${{ matrix.branch }}
+          BUILD_PATH: ${{ matrix.artifact_path }}
         run: |
-          gh release create "$TAG_NAME" build/libs/* \
+          gh release create "$TAG_NAME" $BUILD_PATH/* \
             --title "$RELEASE_NAME" \
             --notes "Automatic nightly build.
 
