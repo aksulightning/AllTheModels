@@ -1,0 +1,43 @@
+
+{
+	"schemaVersion": 1,
+	"id": "all-the-models",
+	"version": "${version}",
+	"name": "All The Models",
+	"description": "Let's you use any 3D-Model as your skin",
+	"authors": [
+		"1TheCrazy",
+		"Aksu Lightning"
+	],
+	"contact": {
+		"sources": "https://github.com/aksulightning/AllTheModels",
+		"homepage": "https://github.com/aksulightning/AllTheModels"
+	},
+	"license": "MIT",
+	"icon": "assets/all-the-models/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"me.onethecrazy.AllTheSkins"
+		],
+		"client": [
+			"me.onethecrazy.AllTheSkinsClient"
+		],
+		"modmenu": [
+			"me.onethecrazy.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"all-the-models.mixins.json",
+		{
+			"config": "all-the-models.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

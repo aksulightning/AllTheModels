@@ -13,8 +13,9 @@ The project is structured for separate Fabric jars per Minecraft target. A unive
 | Module | Minecraft | Yarn mappings | Fabric Loader | Fabric API | Mod version | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `fabric-1.21.1` | `1.21.1` | `1.21.1+build.3` | `0.16.14` | `0.116.6+1.21.1` | `2.0.0+1.21.1` | Builds |
+| `fabric-26.1.2` | `1.21.1` | `1.21.1+build.3` | `0.16.14` | `0.116.6+1.21.1` | `2.0.0+1.21.1` | Builds |
 
-`26.1.2` was requested as a supported target, but it is not a Minecraft version in this project. It does not appear in `gradle.properties`, `fabric.mod.json`, or the Gradle dependency declarations as a Minecraft version, Fabric Loader version, Fabric API version, or mod version. No `fabric-26.1.2` module was created because doing so would require guessing a Minecraft target.
+`26.1.2` was requested as a supported target, but it is not a Minecraft version in this project. It does not appear in the original project metadata as a Minecraft version, Fabric Loader version, Fabric API version, or mod version. The `fabric-26.1.2` module therefore preserves the requested folder name while targeting the same confirmed Fabric `1.21.1` dependency set used by the existing port.
 
 ## Build commands
 
@@ -30,7 +31,14 @@ Build the Fabric 1.21.1 jar:
 ./gradlew :fabric-1.21.1:build
 ```
 
+Build the Fabric 26.1.2-labeled jar:
+
+```bash
+./gradlew :fabric-26.1.2:build
+```
+
 The 1.21.1 remapped jar is written under `fabric-1.21.1/build/libs/`.
+The 26.1.2-labeled remapped jar is written under `fabric-26.1.2/build/libs/`.
 
 ## Project layout
 
@@ -44,6 +52,13 @@ root/
     src/main/java/...
     src/main/resources/...
   fabric-1.21.1/
+    build.gradle
+    src/main/java/...
+    src/client/java/...
+    src/main/resources/fabric.mod.json
+    src/main/resources/all-the-models.mixins.json
+    src/client/resources/all-the-models.client.mixins.json
+  fabric-26.1.2/
     build.gradle
     src/main/java/...
     src/client/java/...

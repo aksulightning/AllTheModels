@@ -13,3 +13,4 @@ rootProject.name = "all-the-models-multiversion"
 
 include("common")
 include("fabric-1.21.1")
+include("fabric-26.1.2")

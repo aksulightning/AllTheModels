@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "me.onethecrazy.mixin.client",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "RenderMixin",
+    "MainMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}
