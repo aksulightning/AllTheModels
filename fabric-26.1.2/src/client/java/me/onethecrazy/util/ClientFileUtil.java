@@ -1,6 +1,6 @@
 package me.onethecrazy.util;
 
-import me.onethecrazy.AllTheSkins;
+import me.onethecrazy.FBXPlayerModelsMod;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -15,10 +15,10 @@ public class ClientFileUtil {
     private static boolean isNfdInitialized = false;
     private static @Nullable CompletableFuture<@Nullable String> currentOpenFileDialog = new CompletableFuture<String>();
     private static final ExecutorService DIALOG_THREAD =
-            Executors.newSingleThreadExecutor(r -> new Thread(r, "AllTheSkins-Native-Dialog-Thread"));
+            Executors.newSingleThreadExecutor(r -> new Thread(r, "FBXPlayerModelsMod-Native-Dialog-Thread"));
 
     public static CompletableFuture<String> modelPickerDialog() {
-        AllTheSkins.LOGGER.info("Opening file picker...");
+        FBXPlayerModelsMod.LOGGER.info("Opening file picker...");
         currentOpenFileDialog = new CompletableFuture<>();
 
         Runnable dialogTask = () -> {
@@ -43,7 +43,7 @@ public class ClientFileUtil {
                     currentOpenFileDialog.complete(null);
                 }
             } catch (Exception e) {
-                AllTheSkins.LOGGER.error("Ran into error while opening File Dialog: ", e);
+                FBXPlayerModelsMod.LOGGER.error("Ran into error while opening File Dialog: ", e);
             }
         };
 

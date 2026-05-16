@@ -1,6 +1,6 @@
 package me.onethecrazy.screens.rendering;
 
-import me.onethecrazy.AllTheSkinsClient;
+import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.LivingEntityRenderExtension;
 import me.onethecrazy.util.model.animation.CustomModelPose;
@@ -82,11 +82,11 @@ public class SkinPreviewRenderer {
         EntityRenderDispatcher disp = MinecraftClient.getInstance().getEntityRenderDispatcher();
         PlayerEntityRenderer playerRenderer = (PlayerEntityRenderer) disp.getRenderer(player);
 
-        ((LivingEntityRenderExtension)playerRenderer).all_the_skins$setPlayerAsNull();
+        ((LivingEntityRenderExtension)playerRenderer).fbx_player_models$setPlayerAsNull();
     }
 
     private boolean renderCachedSelfSkin(DrawContext ctx, MinecraftClient client, float deltaTicks) {
-        if (!AllTheSkinsClient.options().isEnabled) {
+        if (!FBXPlayerModelsClient.options().isEnabled) {
             return false;
         }
 
@@ -145,7 +145,7 @@ public class SkinPreviewRenderer {
     }
 
     private @Nullable CacheSkin getSelectedPreviewCache() {
-        var selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        var selectedSkin = FBXPlayerModelsClient.options().selectedSkin;
         String selectedHash = selectedSkin == null ? "" : selectedSkin.hash;
         if (!Objects.equals(selectedPreviewHash, selectedHash)) {
             selectedPreviewHash = selectedHash;
@@ -156,8 +156,8 @@ public class SkinPreviewRenderer {
     }
 
     private boolean shouldRenderVanillaPlayerFallback() {
-        var selectedSkin = AllTheSkinsClient.options().selectedSkin;
-        return !AllTheSkinsClient.options().isEnabled
+        var selectedSkin = FBXPlayerModelsClient.options().selectedSkin;
+        return !FBXPlayerModelsClient.options().isEnabled
                 || selectedSkin == null
                 || selectedSkin.hash == null
                 || selectedSkin.hash.isBlank();

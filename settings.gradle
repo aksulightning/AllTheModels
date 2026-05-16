@@ -9,7 +9,7 @@ pluginManagement {
 	}
 }
 
-rootProject.name = "all-the-models-multiversion"
+rootProject.name = "fbx-player-models-multiversion"
 
 include("common")
 

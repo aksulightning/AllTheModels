@@ -1,6 +1,6 @@
 package me.onethecrazy.util.objects;
 
-import me.onethecrazy.AllTheModels;
+import me.onethecrazy.FBXPlayerModels;
 import net.minecraft.util.Identifier;
 
 public class Vertex {
@@ -14,7 +14,7 @@ public class Vertex {
         this.position = position;
         this.normals = normals;
         this.textureUV = textureUV;
-        this.texture = Identifier.of(AllTheModels.MOD_ID, "textures/white_pixel.png");
+        this.texture = Identifier.of(FBXPlayerModels.MOD_ID, "textures/white_pixel.png");
         this.color = 0xFFFFFFFF;
     }
 
@@ -30,7 +30,7 @@ public class Vertex {
         this.position = position;
         this.normals = normals;
         this.textureUV = textureUV;
-        this.texture = Identifier.of(AllTheModels.MOD_ID, "textures/white_pixel.png");
+        this.texture = Identifier.of(FBXPlayerModels.MOD_ID, "textures/white_pixel.png");
         this.color = color;
     }
 

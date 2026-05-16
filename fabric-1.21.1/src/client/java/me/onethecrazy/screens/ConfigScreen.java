@@ -1,6 +1,6 @@
 package me.onethecrazy.screens;
 
-import me.onethecrazy.AllTheSkinsClient;
+import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.screens.editor.ModelBindingEditorScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
@@ -40,7 +40,7 @@ public class ConfigScreen extends Screen {
     }
 
     public ConfigScreen(Screen parent) {
-        super(Text.of("All The Models"));
+        super(Text.of("FBX Player Models"));
         this.parent = parent;
     }
 
@@ -60,7 +60,7 @@ public class ConfigScreen extends Screen {
                     .dimensions(getContentOriginX(), selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         toggleButton = ButtonWidget.builder(Text.empty(), (button) -> {
-            AllTheSkinsClient.options().isEnabled = !AllTheSkinsClient.options().isEnabled;
+            FBXPlayerModelsClient.options().isEnabled = !FBXPlayerModelsClient.options().isEnabled;
 
             // Update Text
             updateEnabledButtonText();
@@ -99,14 +99,14 @@ public class ConfigScreen extends Screen {
 
     private void renderText(DrawContext context, int mouseX, int mouseY, float delta) {
         // Render the banner text
-        context.drawText(textRenderer, trimmed(AllTheSkinsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
+        context.drawText(textRenderer, trimmed(FBXPlayerModelsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
 
         CacheSkin cacheSkin = getSelfCacheSkin();
         if(cacheSkin != null)
             context.drawText(textRenderer, trimmed(cacheSkin.debugStatus(), getContentWidth()), getContentOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
 
         // Render Mod Title
-        String title = "All The Models";
+        String title = "FBX Player Models";
         context.drawText(textRenderer, title, this.width / 2 - textRenderer.getWidth(title) / 2, MARGIN, 0xFFFFFFFF, true);
     }
 
@@ -213,19 +213,19 @@ public class ConfigScreen extends Screen {
 
     // Button Text helpers
     @Unique private void updateSelectButtonText(){
-        Text text = Objects.equals(AllTheSkinsClient.options().selectedSkin.hash, "")
-                ? Text.translatable("gui.alltheskins.select_skin")
-                : Text.of(trimmed(AllTheSkinsClient.options().selectedSkin.name, selectSkinButton.getWidth() - 12));
+        Text text = Objects.equals(FBXPlayerModelsClient.options().selectedSkin.hash, "")
+                ? Text.translatable("gui.fbxplayermodels.select_skin")
+                : Text.of(trimmed(FBXPlayerModelsClient.options().selectedSkin.name, selectSkinButton.getWidth() - 12));
 
         selectSkinButton.setMessage(text);
     }
 
     @Unique private void updateResetButtonText(){
-        resetButton.setMessage(Text.of(trimmed(Text.translatable("gui.alltheskins.reset").getString(), resetButton.getWidth() - 12)));
+        resetButton.setMessage(Text.of(trimmed(Text.translatable("gui.fbxplayermodels.reset").getString(), resetButton.getWidth() - 12)));
     }
 
     @Unique private void updateEnabledButtonText(){
-        Text text = AllTheSkinsClient.options().isEnabled ? Text.translatable("gui.alltheskins.mod_enabled") : Text.translatable("gui.alltheskins.mod_disabled");
+        Text text = FBXPlayerModelsClient.options().isEnabled ? Text.translatable("gui.fbxplayermodels.mod_enabled") : Text.translatable("gui.fbxplayermodels.mod_disabled");
 
         toggleButton.setMessage(text);
     }

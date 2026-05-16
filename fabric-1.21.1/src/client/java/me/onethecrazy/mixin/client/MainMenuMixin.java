@@ -42,7 +42,7 @@ public abstract class MainMenuMixin extends Screen{
         skinPreviewRenderer = new SkinPreviewRenderer(getCellOriginX(), getCellOriginY(), SKIN_CELL_DIMENSIONS, PLAYER_SKIN_PREVIEW_SCALE);
 
         // Show Moderation Notice everytime we open Main Menu
-        if(!hasModerationNoticeBeenShown && AllTheSkinsClient.isFirstStartup){
+        if(!hasModerationNoticeBeenShown && FBXPlayerModelsClient.isFirstStartup){
             ToastUtil.showModerationNoticeToast();
             hasModerationNoticeBeenShown = true;
         }

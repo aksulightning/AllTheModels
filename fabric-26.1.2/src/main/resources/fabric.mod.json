@@ -1,36 +1,36 @@
 
 {
 	"schemaVersion": 1,
-	"id": "all-the-models",
+	"id": "fbx-player-models",
 	"version": "${version}",
-	"name": "All The Models",
+	"name": "FBX Player Models",
 	"description": "Let's you use any 3D-Model as your skin",
 	"authors": [
 		"1TheCrazy",
 		"Aksu Lightning"
 	],
 	"contact": {
-		"sources": "https://github.com/aksulightning/AllTheModels",
-		"homepage": "https://github.com/aksulightning/AllTheModels"
+		"sources": "https://github.com/aksulightning/FBXPlayerModels",
+		"homepage": "https://github.com/aksulightning/FBXPlayerModels"
 	},
 	"license": "MIT",
-	"icon": "assets/all-the-models/icon.png",
+	"icon": "assets/fbx-player-models/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"main": [
-			"me.onethecrazy.AllTheSkins"
+			"me.onethecrazy.FBXPlayerModelsMod"
 		],
 		"client": [
-			"me.onethecrazy.AllTheSkinsClient"
+			"me.onethecrazy.FBXPlayerModelsClient"
 		],
 		"modmenu": [
 			"me.onethecrazy.ModMenuIntegration"
 		]
 	},
 	"mixins": [
-		"all-the-models.mixins.json",
+		"fbx-player-models.mixins.json",
 		{
-			"config": "all-the-models.client.mixins.json",
+			"config": "fbx-player-models.client.mixins.json",
 			"environment": "client"
 		}
 	],

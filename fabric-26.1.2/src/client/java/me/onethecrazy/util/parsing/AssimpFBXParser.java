@@ -1,7 +1,7 @@
 package me.onethecrazy.util.parsing;
 
-import me.onethecrazy.AllTheSkins;
-import me.onethecrazy.AllTheModels;
+import me.onethecrazy.FBXPlayerModelsMod;
+import me.onethecrazy.FBXPlayerModels;
 import me.onethecrazy.util.objects.Float2;
 import me.onethecrazy.util.objects.Float3;
 import me.onethecrazy.util.objects.SkinnedModel;
@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class AssimpFBXParser {
-    private static final Identifier WHITE = Identifier.fromNamespaceAndPath(AllTheModels.MOD_ID, "textures/white_pixel.png");
+    private static final Identifier WHITE = Identifier.fromNamespaceAndPath(FBXPlayerModels.MOD_ID, "textures/white_pixel.png");
     private static String lastStatus = "not checked";
     private static String lastMaterialStatus = "not checked";
     private static List<String> lastMaterialDiagnostics = List.of();
@@ -135,7 +135,7 @@ public class AssimpFBXParser {
         AIScene scene = Assimp.aiImportFile(path.toAbsolutePath().toString(), flags);
         if (scene == null) {
             lastStatus = "assimp import failed";
-            AllTheSkins.LOGGER.warn("Assimp failed to import FBX {}: {}", path, Assimp.aiGetErrorString());
+            FBXPlayerModelsMod.LOGGER.warn("Assimp failed to import FBX {}: {}", path, Assimp.aiGetErrorString());
             return null;
         }
 
@@ -509,7 +509,7 @@ public class AssimpFBXParser {
             this.scene = scene;
             this.sourcePath = sourcePath;
             this.modelKey = Integer.toHexString(sourcePath.toAbsolutePath().normalize().toString().hashCode());
-            AllTheSkins.LOGGER.info("Assimp FBX materials={} textures={} embeddedMedia={}", scene.mNumMaterials(), scene.mNumTextures(), scene.mNumTextures());
+            FBXPlayerModelsMod.LOGGER.info("Assimp FBX materials={} textures={} embeddedMedia={}", scene.mNumMaterials(), scene.mNumTextures(), scene.mNumTextures());
             lastMaterialStatus = "FBX materials=" + scene.mNumMaterials() + ", textures=" + scene.mNumTextures() + ", embedded=" + scene.mNumTextures();
             lastMaterialDiagnostics = new ArrayList<>(List.of(
                     "Material count: " + scene.mNumMaterials(),
@@ -534,7 +534,7 @@ public class AssimpFBXParser {
             Identifier texture = loadTexture(material);
             int color = loadColor(material);
             if (texture == null) {
-                AllTheSkins.LOGGER.info("Assimp FBX material {} uses fallback diffuse/base color", index);
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX material {} uses fallback diffuse/base color", index);
             }
             return new MeshAppearance(texture != null ? texture : WHITE, color);
         }
@@ -577,17 +577,17 @@ public class AssimpFBXParser {
                         updateTextureSource("embedded");
                         return embedded;
                     }
-                    AllTheSkins.LOGGER.warn("Missing Assimp FBX texture file {} and no embedded match was found", value);
+                    FBXPlayerModelsMod.LOGGER.warn("Missing Assimp FBX texture file {} and no embedded match was found", value);
                     appendDiagnostic("Missing texture: " + value);
                     return null;
                 }
 
                 Identifier id = DynamicTextureLoader.load(texturePath, "fbx/assimp/file/" + modelKey + "/" + texturePath.getFileName());
                 updateTextureSource(Path.of(value.replace('\\', '/')).isAbsolute() ? "absolute file" : "relative file");
-                AllTheSkins.LOGGER.info("Assimp FBX file texture {}", texturePath);
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX file texture {}", texturePath);
                 return id;
             } catch (Exception e) {
-                AllTheSkins.LOGGER.warn("Failed to load Assimp FBX texture", e);
+                FBXPlayerModelsMod.LOGGER.warn("Failed to load Assimp FBX texture", e);
                 appendDiagnostic("Failed texture load: " + e.getClass().getSimpleName());
                 return null;
             }
@@ -617,10 +617,10 @@ public class AssimpFBXParser {
 
             try {
                 Identifier id = DynamicTextureLoader.load(bytes, "fbx/assimp/embedded/" + modelKey + "/" + value);
-                AllTheSkins.LOGGER.info("Assimp FBX embedded texture {}", value);
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX embedded texture {}", value);
                 return id;
             } catch (Exception e) {
-                AllTheSkins.LOGGER.warn("Failed to load embedded Assimp FBX texture {}", value, e);
+                FBXPlayerModelsMod.LOGGER.warn("Failed to load embedded Assimp FBX texture {}", value, e);
                 appendDiagnostic("Failed embedded texture decode: " + e.getClass().getSimpleName());
                 return null;
             }
@@ -643,7 +643,7 @@ public class AssimpFBXParser {
             }
 
             if (fallbackIndex >= 0) {
-                AllTheSkins.LOGGER.info("Assimp FBX external texture {} missing; using sole embedded texture", value);
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX external texture {} missing; using sole embedded texture", value);
                 return loadEmbeddedTextureIndex(fallbackIndex, value);
             }
             return null;
@@ -663,10 +663,10 @@ public class AssimpFBXParser {
 
             try {
                 Identifier id = DynamicTextureLoader.load(bytes, "fbx/assimp/embedded/" + modelKey + "/" + sourceName);
-                AllTheSkins.LOGGER.info("Assimp FBX embedded texture {} matched {}", texture.mFilename().dataString(), sourceName);
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX embedded texture {} matched {}", texture.mFilename().dataString(), sourceName);
                 return id;
             } catch (Exception e) {
-                AllTheSkins.LOGGER.warn("Failed to load embedded Assimp FBX texture matched from {}", sourceName, e);
+                FBXPlayerModelsMod.LOGGER.warn("Failed to load embedded Assimp FBX texture matched from {}", sourceName, e);
                 appendDiagnostic("Failed embedded texture decode: " + e.getClass().getSimpleName());
                 return null;
             }

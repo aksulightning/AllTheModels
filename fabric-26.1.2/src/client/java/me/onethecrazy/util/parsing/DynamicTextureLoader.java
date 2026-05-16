@@ -2,7 +2,7 @@ package me.onethecrazy.util.parsing;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.onethecrazy.AllTheModels;
+import me.onethecrazy.FBXPlayerModels;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
@@ -65,7 +65,7 @@ public final class DynamicTextureLoader {
     }
 
     private static Identifier uploadOnRenderThread(NativeImage image, String stableName) throws Exception {
-        final Identifier id = Identifier.fromNamespaceAndPath(AllTheModels.MOD_ID, "dynamic/" + identifierPath(stableName));
+        final Identifier id = Identifier.fromNamespaceAndPath(FBXPlayerModels.MOD_ID, "dynamic/" + identifierPath(stableName));
         final Minecraft mc = Minecraft.getInstance();
 
         if (RenderSystem.isOnRenderThread()) {

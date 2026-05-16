@@ -1,7 +1,7 @@
 package me.onethecrazy.util.network;
 
 import com.google.gson.*;
-import me.onethecrazy.AllTheSkins;
+import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.util.objects.LookupSkin;
 import me.onethecrazy.util.parsing.ParsingFormat;
 
@@ -54,7 +54,7 @@ public class BackendInteractor {
                     return result;
                 })
                 .exceptionally(ex -> {
-                    AllTheSkins.LOGGER.error("Error while getting Skin Ids: ", ex);
+                    FBXPlayerModelsMod.LOGGER.error("Error while getting Skin Ids: ", ex);
                     return Map.of();
                 });
     }
@@ -73,7 +73,7 @@ public class BackendInteractor {
                     return null;
                 })
                 .exceptionally(ex -> {
-                    AllTheSkins.LOGGER.error("Error while getting files:", ex);
+                    FBXPlayerModelsMod.LOGGER.error("Error while getting files:", ex);
                     return "";
                 });
     }
@@ -100,7 +100,7 @@ public class BackendInteractor {
 
         client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
                 .exceptionally(ex -> {
-                    AllTheSkins.LOGGER.error("Error while settings self skin: {0}", ex);
+                    FBXPlayerModelsMod.LOGGER.error("Error while settings self skin: {0}", ex);
                     return null;
                 });
     }
@@ -118,11 +118,11 @@ public class BackendInteractor {
                     if (status >= 200 && status < 300)
                         return response.body();
 
-                    AllTheSkins.LOGGER.error("Banner request failed with HTTP {}", status);
+                    FBXPlayerModelsMod.LOGGER.error("Banner request failed with HTTP {}", status);
                     return ""; // Fallback
                 })
                 .exceptionally(ex -> {
-                    AllTheSkins.LOGGER.error("Error while getting banner String: ", ex);
+                    FBXPlayerModelsMod.LOGGER.error("Error while getting banner String: ", ex);
                     return "";
                 });
     }

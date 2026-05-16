@@ -1,6 +1,6 @@
 package me.onethecrazy.util.parsing;
 
-import me.onethecrazy.AllTheSkins;
+import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.util.objects.Float2;
 import me.onethecrazy.util.objects.Float3;
 import me.onethecrazy.util.objects.Vertex;
@@ -18,7 +18,7 @@ public class OBJParser implements IParser{
             return parse(content);
         }
         catch (Exception e){
-            AllTheSkins.LOGGER.error("Ran into error while reading OBJ File: ", e);
+            FBXPlayerModelsMod.LOGGER.error("Ran into error while reading OBJ File: ", e);
             return Optional.empty();
         }
     }

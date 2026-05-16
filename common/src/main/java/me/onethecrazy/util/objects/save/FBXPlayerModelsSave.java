@@ -1,10 +1,10 @@
 package me.onethecrazy.util.objects.save;
 
-public class AllTheSkinsSave {
+public class FBXPlayerModelsSave {
     public ClientSkin selectedSkin;
     public boolean isEnabled;
 
-    public AllTheSkinsSave(){
+    public FBXPlayerModelsSave(){
         this.selectedSkin = new ClientSkin();
         this.isEnabled = true;
     }

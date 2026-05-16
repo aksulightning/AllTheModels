@@ -1,7 +1,7 @@
 package me.onethecrazy.util.parsing;
 
-import me.onethecrazy.AllTheSkins;
-import me.onethecrazy.AllTheModels;
+import me.onethecrazy.FBXPlayerModelsMod;
+import me.onethecrazy.FBXPlayerModels;
 import me.onethecrazy.util.objects.Float2;
 import me.onethecrazy.util.objects.Float3;
 import me.onethecrazy.util.objects.SkinnedModel;
@@ -32,7 +32,7 @@ import java.util.zip.Inflater;
 
 public class FBXParser implements IParser {
     private static final Pattern NUMBER_PATTERN = Pattern.compile("[-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?");
-    private static final Identifier WHITE = Identifier.of(AllTheModels.MOD_ID, "textures/white_pixel.png");
+    private static final Identifier WHITE = Identifier.of(FBXPlayerModels.MOD_ID, "textures/white_pixel.png");
     private static final AssimpFBXParser ASSIMP = new AssimpFBXParser();
     private static String lastRigStatus = "not checked";
     private static String lastMaterialStatus = "not checked";
@@ -63,7 +63,7 @@ public class FBXParser implements IParser {
 
             Optional<List<Vertex>> fallback = parseBinaryFallback(path);
             if (fallback.isPresent() && hasBoundTexture(fallback.get())) {
-                AllTheSkins.LOGGER.info("Assimp FBX import produced no bound texture; using internal FBX embedded/material parser result");
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX import produced no bound texture; using internal FBX embedded/material parser result");
                 return fallback;
             }
             return assimp;
@@ -77,7 +77,7 @@ public class FBXParser implements IParser {
 
             return parse(new String(bytes, StandardCharsets.UTF_8));
         } catch (Exception e) {
-            AllTheSkins.LOGGER.error("Ran into error while reading FBX File: ", e);
+            FBXPlayerModelsMod.LOGGER.error("Ran into error while reading FBX File: ", e);
             return Optional.empty();
         }
     }
@@ -114,13 +114,13 @@ public class FBXParser implements IParser {
 
             Optional<SkinnedModel> fallback = parseSkinnedBinaryFallback(path);
             if (fallback.isPresent() && hasBoundSkinnedTexture(fallback.get())) {
-                AllTheSkins.LOGGER.info("Assimp FBX skinned import produced no bound texture; using internal FBX embedded/material parser result");
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX skinned import produced no bound texture; using internal FBX embedded/material parser result");
                 return fallback;
             }
 
             Optional<List<Vertex>> staticFallback = parseBinaryFallback(path);
             if (staticFallback.isPresent() && hasBoundTexture(staticFallback.get())) {
-                AllTheSkins.LOGGER.info("Assimp FBX skinned import produced no bound texture; using static internal FBX material path so embedded textures render");
+                FBXPlayerModelsMod.LOGGER.info("Assimp FBX skinned import produced no bound texture; using static internal FBX material path so embedded textures render");
                 return Optional.empty();
             }
             return assimp;
@@ -162,7 +162,7 @@ public class FBXParser implements IParser {
             return Optional.empty();
         } catch (Exception e) {
             lastRigStatus = "error: " + e.getClass().getSimpleName();
-            AllTheSkins.LOGGER.warn("Failed to parse skinned FBX model", e);
+            FBXPlayerModelsMod.LOGGER.warn("Failed to parse skinned FBX model", e);
             return Optional.empty();
         }
     }
@@ -175,7 +175,7 @@ public class FBXParser implements IParser {
             }
             return parseBinary(bytes, path);
         } catch (Exception e) {
-            AllTheSkins.LOGGER.warn("Failed to parse internal FBX material fallback", e);
+            FBXPlayerModelsMod.LOGGER.warn("Failed to parse internal FBX material fallback", e);
             return Optional.empty();
         }
     }
@@ -189,7 +189,7 @@ public class FBXParser implements IParser {
                 setRigStatus("geometry " + geometryId + " has no Skin deformer");
                 return Optional.empty();
             }
-            AllTheSkins.LOGGER.info("FBX rig: geometry {} has no direct Skin deformer, trying fallback Skin {}", geometryId, skinId);
+            FBXPlayerModelsMod.LOGGER.info("FBX rig: geometry {} has no direct Skin deformer, trying fallback Skin {}", geometryId, skinId);
         }
 
         List<BinaryNode> clusters = index.connectedOfType(skinId, "Deformer", "Cluster");
@@ -199,7 +199,7 @@ public class FBXParser implements IParser {
                 setRigStatus("skin " + skinId + " has no clusters");
                 return Optional.empty();
             }
-            AllTheSkins.LOGGER.info("FBX rig: skin {} has no direct clusters, trying {} fallback clusters", skinId, clusters.size());
+            FBXPlayerModelsMod.LOGGER.info("FBX rig: skin {} has no direct clusters, trying {} fallback clusters", skinId, clusters.size());
         }
 
         List<Long> boneModelIds = new ArrayList<>();
@@ -261,7 +261,7 @@ public class FBXParser implements IParser {
 
     private static void setRigStatus(String status) {
         lastRigStatus = status;
-        AllTheSkins.LOGGER.info("FBX rig: {}", status);
+        FBXPlayerModelsMod.LOGGER.info("FBX rig: {}", status);
     }
 
     private Optional<SkinnedModel> buildArmatureFallbackModel(SceneIndex index, BinaryNode geometry, MaterialResolver materials) {
@@ -549,7 +549,7 @@ public class FBXParser implements IParser {
 
             return vertices.isEmpty() ? Optional.empty() : Optional.of(vertices);
         } catch (Exception e) {
-            AllTheSkins.LOGGER.error("Ran into error while parsing binary FBX File: ", e);
+            FBXPlayerModelsMod.LOGGER.error("Ran into error while parsing binary FBX File: ", e);
             return Optional.empty();
         }
     }
@@ -992,11 +992,11 @@ public class FBXParser implements IParser {
 
             boolean allSame = !indexData.isByPolygon() || appearances.size() <= 1;
             if (indexData.isByPolygon() && appearances.size() > 1) {
-                AllTheSkins.LOGGER.info("FBX mesh {} uses {} material slots with per-polygon assignments", geometryId, appearances.size());
+                FBXPlayerModelsMod.LOGGER.info("FBX mesh {} uses {} material slots with per-polygon assignments", geometryId, appearances.size());
             } else if (appearances.size() > 1) {
-                AllTheSkins.LOGGER.warn("FBX mesh {} has {} material slots but no per-polygon assignments; using the first slot", geometryId, appearances.size());
+                FBXPlayerModelsMod.LOGGER.warn("FBX mesh {} has {} material slots but no per-polygon assignments; using the first slot", geometryId, appearances.size());
             }
-            AllTheSkins.LOGGER.info("FBX mesh {} -> material ids {}", geometryId, ids);
+            FBXPlayerModelsMod.LOGGER.info("FBX mesh {} -> material ids {}", geometryId, ids);
 
             return new MaterialLayer(appearances, indexData.indices(), allSame);
         }
@@ -1127,7 +1127,7 @@ public class FBXParser implements IParser {
                     }
                     if (textureName.equals(normalizeFileKey(media.originalFileName)) || textureName.equals(normalizeFileKey(media.name))) {
                         texture.embeddedMediaId = media.id;
-                        AllTheSkins.LOGGER.info("FBX texture {} matched embedded media {}", texture.displayName(), media.originalFileName);
+                        FBXPlayerModelsMod.LOGGER.info("FBX texture {} matched embedded media {}", texture.displayName(), media.originalFileName);
                         break;
                     }
                 }
@@ -1194,12 +1194,12 @@ public class FBXParser implements IParser {
                 Identifier id = DynamicTextureLoader.load(media.bytes, stableTextureId("fbx/embedded", material.name, textureName, media.originalFileName));
                 mediaCache.put(media.id, id);
                 material.textureSource = "embedded";
-                AllTheSkins.LOGGER.info("FBX material {} -> embedded texture {}", material.name, media.originalFileName);
+                FBXPlayerModelsMod.LOGGER.info("FBX material {} -> embedded texture {}", material.name, media.originalFileName);
                 return id;
             } catch (Exception e) {
                 String warning = "Failed to decode embedded FBX texture " + media.originalFileName + ": " + e.getClass().getSimpleName();
                 warnings.add(warning);
-                AllTheSkins.LOGGER.warn(warning, e);
+                FBXPlayerModelsMod.LOGGER.warn(warning, e);
                 return null;
             }
         }
@@ -1214,19 +1214,19 @@ public class FBXParser implements IParser {
                 Path imagePath = resolveTexturePath(filename);
                 if (imagePath == null) {
                     warnings.add("Missing FBX texture file " + filename + " for material " + material.name);
-                    AllTheSkins.LOGGER.warn("Missing FBX texture file {} for material {}", filename, material.name);
+                    FBXPlayerModelsMod.LOGGER.warn("Missing FBX texture file {} for material {}", filename, material.name);
                     continue;
                 }
 
                 try {
                     Identifier id = DynamicTextureLoader.load(imagePath, stableTextureId("fbx/file", material.name, texture.displayName(), imagePath.getFileName().toString()));
                     material.textureSource = Path.of(filename.replace('\\', '/')).isAbsolute() ? "absolute file" : "relative file";
-                    AllTheSkins.LOGGER.info("FBX material {} -> file texture {}", material.name, imagePath);
+                    FBXPlayerModelsMod.LOGGER.info("FBX material {} -> file texture {}", material.name, imagePath);
                     return id;
                 } catch (Exception e) {
                     String warning = "Failed to decode FBX texture " + imagePath + ": " + e.getClass().getSimpleName();
                     warnings.add(warning);
-                    AllTheSkins.LOGGER.warn(warning, e);
+                    FBXPlayerModelsMod.LOGGER.warn(warning, e);
                 }
             }
 
@@ -1273,9 +1273,9 @@ public class FBXParser implements IParser {
                     embeddedCount++;
                 }
             }
-            AllTheSkins.LOGGER.info("FBX materials={} textures={} embeddedMedia={}", materials.size(), textures.size(), embeddedCount);
+            FBXPlayerModelsMod.LOGGER.info("FBX materials={} textures={} embeddedMedia={}", materials.size(), textures.size(), embeddedCount);
             for (FbxMaterialInfo material : materials.values()) {
-                AllTheSkins.LOGGER.info("FBX material {} ({}) textureChannels={}", material.id, material.name, material.textureIdsByChannel);
+                FBXPlayerModelsMod.LOGGER.info("FBX material {} ({}) textureChannels={}", material.id, material.name, material.textureIdsByChannel);
             }
             lastMaterialStatus = "FBX materials=" + materials.size() + ", textures=" + textures.size() + ", embedded=" + embeddedCount;
             List<String> diagnostics = new ArrayList<>();
@@ -1292,7 +1292,7 @@ public class FBXParser implements IParser {
         }
 
         private void logFallback(String message) {
-            AllTheSkins.LOGGER.info("FBX fallback material: {}", message);
+            FBXPlayerModelsMod.LOGGER.info("FBX fallback material: {}", message);
         }
 
         private static boolean isNodeType(BinaryNode node, String type) {

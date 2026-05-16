@@ -1,4 +1,4 @@
-# All The Models Code Guide
+# FBX Player Models Code Guide
 
 ## Fabric-only support
 
@@ -54,22 +54,22 @@ root/
     src/main/java/...
     src/client/java/...
     src/main/resources/fabric.mod.json
-    src/main/resources/all-the-models.mixins.json
-    src/client/resources/all-the-models.client.mixins.json
+    src/main/resources/fbx-player-models.mixins.json
+    src/client/resources/fbx-player-models.client.mixins.json
   fabric-26.1.2/
     build.gradle
     src/main/java/...
     src/client/java/...
     src/main/resources/fabric.mod.json
-    src/main/resources/all-the-models.mixins.json
-    src/client/resources/all-the-models.client.mixins.json
+    src/main/resources/fbx-player-models.mixins.json
+    src/client/resources/fbx-player-models.client.mixins.json
 ```
 
 ## Common code
 
 Put version-independent code in `common`, including:
 
-- Constants such as `AllTheModels.MOD_ID`.
+- Constants such as `FBXPlayerModels.MOD_ID`.
 - Config/save model classes.
 - Pure Java utilities and model data structures.
 - Shared assets that are valid for every configured Fabric target.
@@ -96,16 +96,16 @@ Fabric platform implementations live under `com.aksulightning.platform.fabric`.
 
 `fabric-1.21.1/src/main/resources/fabric.mod.json` declares:
 
-- `main`: `me.onethecrazy.AllTheSkins`
-- `client`: `me.onethecrazy.AllTheSkinsClient`
+- `main`: `me.onethecrazy.FBXPlayerModelsMod`
+- `client`: `me.onethecrazy.FBXPlayerModelsClient`
 - `modmenu`: `me.onethecrazy.ModMenuIntegration`
 
 ## Mixins and access wideners
 
 The current mixin configs are version-specific:
 
-- `all-the-models.mixins.json`
-- `all-the-models.client.mixins.json`
+- `fbx-player-models.mixins.json`
+- `fbx-player-models.client.mixins.json`
 
 The client mixins are:
 

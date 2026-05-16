@@ -17,5 +17,5 @@ public record CustomSkinRenderData(
         int light
 ) {
     public static final RenderStateDataKey<CustomSkinRenderData> KEY =
-            RenderStateDataKey.create(() -> "all_the_models:custom_skin_render_data");
+            RenderStateDataKey.create(() -> "fbx_player_models:custom_skin_render_data");
 }

@@ -14,8 +14,8 @@ public class ToastUtil {
                 SystemToast.create(
                         client,
                         SystemToast.Type.FILE_DROP_FAILURE,
-                        Text.translatable("gui.alltheskins.title.file_too_large"),
-                        Text.translatable("gui.alltheskins.description.file_too_large")
+                        Text.translatable("gui.fbxplayermodels.title.file_too_large"),
+                        Text.translatable("gui.fbxplayermodels.description.file_too_large")
                 )
         );
     }
@@ -29,8 +29,8 @@ public class ToastUtil {
                 SystemToast.create(
                         client,
                         SystemToast.Type.UNSECURE_SERVER_WARNING,
-                        Text.translatable("gui.alltheskins.title.moderation_notice"),
-                        Text.translatable("gui.alltheskins.description.moderation_notice")
+                        Text.translatable("gui.fbxplayermodels.title.moderation_notice"),
+                        Text.translatable("gui.fbxplayermodels.description.moderation_notice")
                 )
         );
     }

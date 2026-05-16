@@ -1,6 +1,6 @@
 package me.onethecrazy.util.objects;
 
-import me.onethecrazy.AllTheSkins;
+import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.model.rig.LogicalBodyPart;
 import me.onethecrazy.util.model.rig.LogicalRigBinding;
@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SkinnedModel {
-    private static final boolean DEBUG_SKINNING = Boolean.getBoolean("alltheskins.debugSkinning");
+    private static final boolean DEBUG_SKINNING = Boolean.getBoolean("fbxplayermodels.debugSkinning");
     private static final Set<String> MISSING_HEAD_WARNING_KEYS = ConcurrentHashMap.newKeySet();
     private static boolean skinningDebugLogged;
 
@@ -341,19 +341,19 @@ public class SkinnedModel {
 
         String key = String.join("|", bones.stream().map(Bone::name).toList());
         if (MISSING_HEAD_WARNING_KEYS.add(key)) {
-            AllTheSkins.LOGGER.warn("No FBX head bone found or bound; Minecraft head look rotation cannot be applied.");
+            FBXPlayerModelsMod.LOGGER.warn("No FBX head bone found or bound; Minecraft head look rotation cannot be applied.");
         }
     }
 
     private void logSkinningDebug(float seconds, Animation animation, Matrix4f[] skin) {
-        AllTheSkins.LOGGER.info("Skinning debug seconds={}", seconds);
+        FBXPlayerModelsMod.LOGGER.info("Skinning debug seconds={}", seconds);
         for (int i = 0; i < bones.size(); i++) {
             Bone bone = bones.get(i);
             Vector3f bindPosition = bone.localBind.getTranslation(new Vector3f());
             Vector3f pivot = new Matrix4f(bone.inverseBind).invert().getTranslation(new Vector3f());
             Vector3f rotation = animation.rotationFor(i, seconds);
             String bounds = transformedBounds(i, skin[i]);
-            AllTheSkins.LOGGER.info(
+            FBXPlayerModelsMod.LOGGER.info(
                     "part={} bind={} pivot={} rotation={} bounds={}",
                     bone.name,
                     format(bindPosition),

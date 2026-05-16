@@ -51,7 +51,7 @@ public class SkinManager {
                         }
                     }
                     catch(Exception ex) {
-                        AllTheSkins.LOGGER.info("Ran into error while getting file size in client skin picker: {0}", ex);
+                        FBXPlayerModelsMod.LOGGER.info("Ran into error while getting file size in client skin picker: {0}", ex);
                         return;
                     }
 
@@ -70,17 +70,17 @@ public class SkinManager {
             ParsingFormat format = UniversalParser.getParsingFormat(dataPath);
 
             if (format != ParsingFormat.FBX) {
-                AllTheSkins.LOGGER.warn("Only FBX models are supported now: {}", dataPath);
+                FBXPlayerModelsMod.LOGGER.warn("Only FBX models are supported now: {}", dataPath);
                 return;
             }
 
             FileUtil.createFileIfNotPresent(FileUtil.getSkinPath(hash, format), data3D);
 
             ClientSkin skin = new ClientSkin(hash, name, format);
-            AllTheSkinsClient.options().selectedSkin = skin;
+            FBXPlayerModelsClient.options().selectedSkin = skin;
 
             // Save the updated options:
-            FileUtil.writeSave(AllTheSkinsClient.options());
+            FileUtil.writeSave(FBXPlayerModelsClient.options());
 
             // Reload self skin
             loadSelfSkin();
@@ -91,20 +91,20 @@ public class SkinManager {
             }
         }
         catch(Exception ex){
-            AllTheSkins.LOGGER.info("Ran into error while setting self skin: {0}", ex);
+            FBXPlayerModelsMod.LOGGER.info("Ran into error while setting self skin: {0}", ex);
         }
     }
 
     public static void resetSelfSkin(){
         String sessionUuid = PlatformServices.client().currentSessionUuid();
 
-        AllTheSkinsClient.options().selectedSkin = new ClientSkin();
+        FBXPlayerModelsClient.options().selectedSkin = new ClientSkin();
 
         // Reload self skin
         loadSelfSkin();
 
         // Save in options
-        FileUtil.writeSave(AllTheSkinsClient.options());
+        FileUtil.writeSave(FBXPlayerModelsClient.options());
 
         // Send update to server
         if (sessionUuid != null) {
@@ -121,7 +121,7 @@ public class SkinManager {
         String uuid = sessionUuid;
 
         // Set self skin to empty if we don't have a selected skin
-        var selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        var selectedSkin = FBXPlayerModelsClient.options().selectedSkin;
 
         if(Objects.equals(selectedSkin.hash, "")){
             putLookupEntry(uuid, new LookupSkin("", null));
@@ -141,12 +141,12 @@ public class SkinManager {
             skinCache.put(uuid, cacheSkin);
         }
         catch(Exception e){
-            AllTheSkins.LOGGER.info("Ran into error while loading self skin data3D content:", e);
+            FBXPlayerModelsMod.LOGGER.info("Ran into error while loading self skin data3D content:", e);
         }
     }
 
     public static @Nullable CacheSkin loadSelectedSkinPreview() {
-        ClientSkin selectedSkin = AllTheSkinsClient.options().selectedSkin;
+        ClientSkin selectedSkin = FBXPlayerModelsClient.options().selectedSkin;
         if (selectedSkin == null || Objects.equals(selectedSkin.hash, "") || selectedSkin.format == null) {
             return null;
         }
@@ -162,7 +162,7 @@ public class SkinManager {
                     .<CacheSkin>map(model -> new CacheSkin(model, selectedSkin.format))
                     .orElseGet(() -> new CacheSkin(vertices, selectedSkin.format));
         } catch (Exception e) {
-            AllTheSkins.LOGGER.info("Ran into error while loading selected skin preview:", e);
+            FBXPlayerModelsMod.LOGGER.info("Ran into error while loading selected skin preview:", e);
             return null;
         }
     }
@@ -242,7 +242,7 @@ public class SkinManager {
                     putCacheEntry(uuid, (List<Vertex>) null, null);
                 }
 
-                AllTheSkins.LOGGER.error("Ran into error while loading skin from I/O Cache: {0}", e);
+                FBXPlayerModelsMod.LOGGER.error("Ran into error while loading skin from I/O Cache: {0}", e);
             }
         }
         // Request from Server
@@ -265,7 +265,7 @@ public class SkinManager {
                     try {
                         FileUtil.createFileIfNotPresent(FileUtil.getSkinPath(hash, lookupResult.format), data3D);
                     } catch (IOException e) {
-                        AllTheSkins.LOGGER.error("Ran into error while saving skin to I/O cache: ", e);
+                        FBXPlayerModelsMod.LOGGER.error("Ran into error while saving skin to I/O cache: ", e);
                     }
 
                     Path path = FileUtil.getSkinPath(hash, lookupResult.format);
@@ -331,7 +331,7 @@ public class SkinManager {
     }
 
     public static void saveCurrentBinding() {
-        FileUtil.writeSave(AllTheSkinsClient.options());
+        FileUtil.writeSave(FBXPlayerModelsClient.options());
         loadSelfSkin();
     }
 

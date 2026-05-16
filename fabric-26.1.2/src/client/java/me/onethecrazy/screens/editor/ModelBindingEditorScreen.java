@@ -1,6 +1,6 @@
 package me.onethecrazy.screens.editor;
 
-import me.onethecrazy.AllTheSkinsClient;
+import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.model.rig.LogicalBodyPart;
 import me.onethecrazy.util.model.rig.LogicalRigBinding;
@@ -49,7 +49,7 @@ public class ModelBindingEditorScreen extends Screen {
         }
 
         addRenderableWidget(Button.builder(Component.nullToEmpty("Auto Bind"), button -> {
-            AllTheSkinsClient.options().selectedSkin.logicalRigBinding = LogicalRigBinding.autoBind(boneNames);
+            FBXPlayerModelsClient.options().selectedSkin.logicalRigBinding = LogicalRigBinding.autoBind(boneNames);
             SkinManager.saveCurrentBinding();
             Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(parent));
         }).bounds(x, y + MARGIN, width / 2 - 3, 20).build());
@@ -58,7 +58,7 @@ public class ModelBindingEditorScreen extends Screen {
                 .bounds(x + width / 2 + 3, y + MARGIN, width / 2 - 3, 20).build());
 
         addRenderableWidget(Button.builder(animationToggleText(), button -> {
-            AllTheSkinsClient.options().selectedSkin.setAnimationsEnabled(!AllTheSkinsClient.options().selectedSkin.animationsEnabled());
+            FBXPlayerModelsClient.options().selectedSkin.setAnimationsEnabled(!FBXPlayerModelsClient.options().selectedSkin.animationsEnabled());
             SkinManager.saveCurrentBinding();
             button.setMessage(animationToggleText());
         }).bounds(x, y + MARGIN + ROW_HEIGHT, width, 20).build());
@@ -105,7 +105,7 @@ public class ModelBindingEditorScreen extends Screen {
             pivotRow++;
         }
 
-        List<String> warnings = AllTheSkinsClient.options().selectedSkin.warnings();
+        List<String> warnings = FBXPlayerModelsClient.options().selectedSkin.warnings();
         if (!warnings.isEmpty()) {
             int warningY = this.height - 56 - Math.min(2, warnings.size()) * 10;
             for (int i = 0; i < Math.min(2, warnings.size()); i++) {
@@ -134,7 +134,7 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private void cycleBinding(LogicalBodyPart part) {
-        LogicalRigBinding binding = AllTheSkinsClient.options().selectedSkin.binding();
+        LogicalRigBinding binding = FBXPlayerModelsClient.options().selectedSkin.binding();
         if (boneNames.isEmpty()) {
             binding.setSingle(part, "");
             SkinManager.saveCurrentBinding();
@@ -152,33 +152,33 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private Component buttonText(LogicalBodyPart part) {
-        String value = AllTheSkinsClient.options().selectedSkin.binding().firstName(part);
+        String value = FBXPlayerModelsClient.options().selectedSkin.binding().firstName(part);
         return Component.nullToEmpty(part.displayName + ": " + (value.isBlank() ? "Unbound" : value));
     }
 
     private Component animationToggleText() {
-        return Component.nullToEmpty("Animations: " + (AllTheSkinsClient.options().selectedSkin.animationsEnabled() ? "ON" : "OFF"));
+        return Component.nullToEmpty("Animations: " + (FBXPlayerModelsClient.options().selectedSkin.animationsEnabled() ? "ON" : "OFF"));
     }
 
     private void cycleClip(String state) {
         if (clipNames.isEmpty()) {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().remove(state);
+            FBXPlayerModelsClient.options().selectedSkin.clipMappings().remove(state);
             SkinManager.saveCurrentBinding();
             return;
         }
 
-        String current = AllTheSkinsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
+        String current = FBXPlayerModelsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
         int next = current.isBlank() ? 0 : clipNames.indexOf(current) + 1;
         if (next < 0 || next >= clipNames.size()) {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().remove(state);
+            FBXPlayerModelsClient.options().selectedSkin.clipMappings().remove(state);
         } else {
-            AllTheSkinsClient.options().selectedSkin.clipMappings().put(state, clipNames.get(next));
+            FBXPlayerModelsClient.options().selectedSkin.clipMappings().put(state, clipNames.get(next));
         }
         SkinManager.saveCurrentBinding();
     }
 
     private Component clipButtonText(String state) {
-        String value = AllTheSkinsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
+        String value = FBXPlayerModelsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
         return Component.nullToEmpty(state + " Clip: " + (value.isBlank() ? "Procedural/default" : value));
     }
 
@@ -213,7 +213,7 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private String pivotText(LogicalBodyPart part) {
-        String bound = AllTheSkinsClient.options().selectedSkin.binding().firstName(part);
+        String bound = FBXPlayerModelsClient.options().selectedSkin.binding().firstName(part);
         if (bound.isBlank()) {
             return "Unbound";
         }

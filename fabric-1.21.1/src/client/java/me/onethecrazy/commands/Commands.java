@@ -14,7 +14,7 @@ public class Commands {
         SKINS_COMMAND = ClientCommandManager.literal("skin")
                         .executes(context -> waypointsCommandHandler());
                 //.then(ClientCommandManager.literal("copy")
-                //       .then(ClientCommandManager.argument("name", StringArgumentType.string()).executes(context -> waypointsCommandHandler(context, AllTheSkinsCommandType.COPY)))
+                //       .then(ClientCommandManager.argument("name", StringArgumentType.string()).executes(context -> waypointsCommandHandler(context, FBXPlayerModelsCommandType.COPY)))
                 //);
     }
 

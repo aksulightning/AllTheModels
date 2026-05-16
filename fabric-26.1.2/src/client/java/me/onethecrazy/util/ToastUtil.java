@@ -14,8 +14,8 @@ public class ToastUtil {
                 SystemToast.multiline(
                         client,
                         SystemToast.SystemToastId.FILE_DROP_FAILURE,
-                        Component.translatable("gui.alltheskins.title.file_too_large"),
-                        Component.translatable("gui.alltheskins.description.file_too_large")
+                        Component.translatable("gui.fbxplayermodels.title.file_too_large"),
+                        Component.translatable("gui.fbxplayermodels.description.file_too_large")
                 )
         );
     }
@@ -29,8 +29,8 @@ public class ToastUtil {
                 SystemToast.multiline(
                         client,
                         SystemToast.SystemToastId.UNSECURE_SERVER_WARNING,
-                        Component.translatable("gui.alltheskins.title.moderation_notice"),
-                        Component.translatable("gui.alltheskins.description.moderation_notice")
+                        Component.translatable("gui.fbxplayermodels.title.moderation_notice"),
+                        Component.translatable("gui.fbxplayermodels.description.moderation_notice")
                 )
         );
     }

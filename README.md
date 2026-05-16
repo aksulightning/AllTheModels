@@ -1,10 +1,10 @@
-# AllTheModels
+# FBX Player Models
 **Use any 3D model as your Minecraft skin.**
 
 ## Overview
-All The Models is an AI-assisted fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+FBX Player Models is an AI-assisted fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
 
-Tired of vanilla skins? *All The Models* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+Tired of vanilla skins? *FBX Player Models* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
 
 ##### Disclaimer
 
@@ -16,9 +16,9 @@ Use it at your own risk, and please do not expect polished support or guaranteed
 
 ## Releases
 
-[Download nightly for 1.21.1](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-1.21.1) (Supported, experimental.)
+[Download nightly for 1.21.1](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1) (Supported, experimental.)
 
-[Download nightly for 26.1.2](https://github.com/aksulightning/AllTheModels/releases/tag/nightly-26.1.2) (Fully supported, experimental.) 
+[Download nightly for 26.1.2](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.1.2) (Fully supported, experimental.) 
 
 ## Features
 - 🧍‍♂️ **Custom 3D Skins** – Upload your own `.fbx` models, complete with textures where supported.
@@ -73,16 +73,16 @@ Nothing is moderated — any player can upload any model, including inappropriat
 - 🔄 Subject to change without notice.
 
 ## 👥 Community & Contribution
-*All The Models* is open source — contributions and feedback are always welcome!
+*FBX Player Models* is open source — contributions and feedback are always welcome!
 
 - 🐛 **Have a feature idea?**  
-  → [Open an issue](https://github.com/aksulightning/AllTheModels/issues)
+  → [Open an issue](https://github.com/aksulightning/FBXPlayerModels/issues)
 
 - 💡 **Want to contribute?**  
-  → [Submit a pull request](https://github.com/aksulightning/AllTheModels/pulls)
+  → [Submit a pull request](https://github.com/aksulightning/FBXPlayerModels/pulls)
 
 
-Your creativity shapes this project — thank you for helping make *All The Models* better for everyone!
+Your creativity shapes this project — thank you for helping make *FBX Player Models* better for everyone!
 
 ## Links
 - 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)

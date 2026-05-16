@@ -2,9 +2,9 @@ package me.onethecrazy.util;
 
 
 import com.google.gson.Gson;
-import me.onethecrazy.AllTheSkins;
+import me.onethecrazy.FBXPlayerModelsMod;
 import com.aksulightning.platform.PlatformServices;
-import me.onethecrazy.util.objects.save.AllTheSkinsSave;
+import me.onethecrazy.util.objects.save.FBXPlayerModelsSave;
 import me.onethecrazy.util.parsing.ParsingFormat;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,12 +35,12 @@ public class FileUtil {
         Files.writeString(file, content);
     }
 
-    public static AllTheSkinsSave loadSave() throws IOException {
+    public static FBXPlayerModelsSave loadSave() throws IOException {
         String saveContents = readJSONObjectFileContents(getSavePath());
 
         Gson gson = new Gson();
 
-        return gson.fromJson(saveContents, AllTheSkinsSave.class);
+        return gson.fromJson(saveContents, FBXPlayerModelsSave.class);
     }
 
     public static void createFileIfNotPresent(Path file, byte[] emptyFileContent) throws IOException {
@@ -66,12 +66,12 @@ public class FileUtil {
             if(e instanceof FileAlreadyExistsException)
                 return;
 
-            AllTheSkins.LOGGER.error("Ran into error while creating default path: {0}", e);
+            FBXPlayerModelsMod.LOGGER.error("Ran into error while creating default path: {0}", e);
         }
     }
 
     public static Path getDefaultPath(){
-        return PlatformServices.config().gameDirectory().resolve(".alltheskins");
+        return PlatformServices.config().gameDirectory().resolve(".fbxplayermodels");
     }
 
     public static Path getSavePath(){
@@ -123,7 +123,7 @@ public class FileUtil {
         } catch (Exception e) {
             // Ignore NoSuchElementException
             if(e instanceof IOException)
-                AllTheSkins.LOGGER.error("Failed to iterate local I/O skin cache: ", e);
+                FBXPlayerModelsMod.LOGGER.error("Failed to iterate local I/O skin cache: ", e);
 
             // Fallback
             return null;
@@ -134,7 +134,7 @@ public class FileUtil {
         return Files.exists(filePath);
     }
 
-    public static void writeSave(AllTheSkinsSave save){
+    public static void writeSave(FBXPlayerModelsSave save){
         try{
             Gson gson = new Gson();
             String json = gson.toJson(save);
@@ -142,7 +142,7 @@ public class FileUtil {
             writeFile(getSavePath(), json);
         }
         catch(Exception ex){
-            AllTheSkins.LOGGER.error("Failed to save config: ", ex);
+            FBXPlayerModelsMod.LOGGER.error("Failed to save config: ", ex);
         }
     }
 }

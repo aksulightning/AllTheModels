@@ -8,7 +8,7 @@ import com.aksulightning.platform.fabric.FabricPlatformEvents;
 import com.aksulightning.platform.fabric.FabricPlatformLogger;
 import me.onethecrazy.util.FileUtil;
 import me.onethecrazy.util.network.BackendInteractor;
-import me.onethecrazy.util.objects.save.AllTheSkinsSave;
+import me.onethecrazy.util.objects.save.FBXPlayerModelsSave;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
@@ -18,17 +18,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-public class AllTheSkinsClient implements ClientModInitializer {
-	@Nullable private static AllTheSkinsSave options;
+public class FBXPlayerModelsClient implements ClientModInitializer {
+	@Nullable private static FBXPlayerModelsSave options;
 	public static String bannerText;
 	public static boolean isFirstStartup;
 
-	public static AllTheSkinsSave options(){
+	public static FBXPlayerModelsSave options(){
 		try{
 			if(options == null)
 				options = FileUtil.loadSave();
 		} catch (IOException e) {
-            AllTheSkins.LOGGER.error("Error while getting save: {0}", e);
+            FBXPlayerModelsMod.LOGGER.error("Error while getting save: {0}", e);
         }
 
 		return options;
@@ -37,7 +37,7 @@ public class AllTheSkinsClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		PlatformServices.initialize(
-				new FabricPlatformLogger(AllTheSkins.LOGGER),
+				new FabricPlatformLogger(FBXPlayerModelsMod.LOGGER),
 				new FabricPlatformConfig(),
 				new FabricPlatformClient(),
 				new FabricPlatformEvents()
