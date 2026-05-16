@@ -64,18 +64,17 @@ Known limitations:
 The binding, source format, scale field, and animation clip mappings are saved with the selected skin in the existing config JSON.
 
 ## About custom backends
+
+⚠️ **Use at your own risk.**  
+Nothing is moderated — any player can upload any model, including inappropriate ones.
+- 📁 File size is limited to **20 MB** to allow free use.
+- 🔄 Subject to change without notice.
+
 Default builds always point to a local backend at `http://127.0.0.1:6969` / `localhost`. They are intended to talk only to a backend process running on your own machine, such as the included development emulator.
 
 Community-made custom backends are not official, not moderated by this project, and are used entirely at your own risk. A custom backend can see uploaded skin files and request metadata, serve altered or unsafe model data, log identifying information, disappear without warning, or block accounts for any reason. Only use a backend run by someone you trust, and avoid uploading private, sensitive, copyrighted, or personally identifying content.
 
 If you intentionally change the source to use a remote backend, review that backend's code, hosting, moderation policy, data retention, and abuse controls first. Do not expose a local emulator to the internet unless you understand the security implications and have added proper access controls.
-
-## Constraints
-⚠️ **Use at your own risk.**  
-Nothing is moderated — any player can upload any model, including inappropriate ones.
-
-- 📁 File size is limited to **20 MB** to allow free use.
-- 🔄 Subject to change without notice.
 
 ## 👥 Community & Contribution
 *FBX Player Models* is open source — contributions and feedback are always welcome!
