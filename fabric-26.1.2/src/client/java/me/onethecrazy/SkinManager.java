@@ -2,6 +2,7 @@ package me.onethecrazy;
 
 import com.aksulightning.platform.PlatformServices;
 import me.onethecrazy.util.*;
+import me.onethecrazy.network.ModelPackets;
 import me.onethecrazy.util.network.BackendInteractor;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.LookupSkin;
@@ -42,10 +43,7 @@ public class SkinManager {
                     try{
                         long fileSize = Files.size(Path.of(f));
 
-                        long MAX_FILE_SIZE = 20L * 1024 * 1024;
-
-                        // Restrict File size to 20mb
-                        if(fileSize > MAX_FILE_SIZE){
+                        if(fileSize > ModelPackets.MAX_MODEL_BYTES){
                             ToastUtil.showFileTooLargeToast();
                             return;
                         }
@@ -87,7 +85,7 @@ public class SkinManager {
 
             // Send update to server
             if (sessionUuid != null) {
-                BackendInteractor.setSkinData(sessionUuid, data3D, format);
+                BackendInteractor.setSkinData(sessionUuid, name, data3D, format);
             }
         }
         catch(Exception ex){
@@ -109,6 +107,40 @@ public class SkinManager {
         // Send update to server
         if (sessionUuid != null) {
             BackendInteractor.setSkinData(sessionUuid, new byte[0], ParsingFormat.FBX);
+        }
+    }
+
+    public static void uploadSelectedSkin(boolean quietWhenUnsupported) {
+        String sessionUuid = PlatformServices.client().currentSessionUuid();
+        if (sessionUuid == null) {
+            return;
+        }
+
+        ClientSkin selectedSkin = FBXPlayerModelsClient.options().selectedSkin;
+        if (selectedSkin == null || selectedSkin.hash == null || selectedSkin.hash.isBlank() || selectedSkin.format == null) {
+            if (!quietWhenUnsupported) {
+                BackendInteractor.setSkinData(sessionUuid, new byte[0], ParsingFormat.FBX);
+            }
+            return;
+        }
+
+        try {
+            Path dataPath = FileUtil.getSkinPath(selectedSkin.hash, selectedSkin.format);
+            if (!Files.exists(dataPath) || !Files.isRegularFile(dataPath)) {
+                FBXPlayerModelsMod.LOGGER.warn("Invalid file: selected model cache is missing: {}", dataPath);
+                return;
+            }
+            long fileSize = Files.size(dataPath);
+            if (fileSize > ModelPackets.MAX_MODEL_BYTES) {
+                ToastUtil.showFileTooLargeToast();
+                return;
+            }
+
+            byte[] data3D = FileUtil.read3DDataFile(dataPath);
+            String fileName = selectedSkin.name == null || selectedSkin.name.isBlank() ? selectedSkin.hash + ".fbx" : selectedSkin.name;
+            BackendInteractor.setSkinData(sessionUuid, fileName, data3D, selectedSkin.format, quietWhenUnsupported);
+        } catch (Exception ex) {
+            FBXPlayerModelsMod.LOGGER.info("Ran into error while uploading selected skin:", ex);
         }
     }
 
@@ -328,6 +360,17 @@ public class SkinManager {
 
     public static void putLookupEntry(String uuid, LookupSkin lookupSkin){
         skinLookup.put(uuid, lookupSkin);
+    }
+
+    public static void acceptServerLookup(String uuid, LookupSkin lookupSkin) {
+        putLookupEntry(uuid, lookupSkin);
+        if (lookupSkin == null || lookupSkin.hash == null || lookupSkin.hash.isBlank() || lookupSkin.format == null) {
+            putCacheEntry(uuid, (List<Vertex>) null, null);
+            return;
+        }
+
+        skinCache.remove(uuid);
+        loadSkinIntoCache(uuid, worldSkinGeneration.get());
     }
 
     public static void saveCurrentBinding() {
