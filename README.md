@@ -42,7 +42,6 @@ FBX support is an MVP importer/editor workflow intended for Blender-exported mod
 - Basic imported clip detection. In the model rig editor, clips can be mapped to `Idle`, `Walk`, and `Sneak`.
 
 Known limitations:
-- The rigging menu is still to-do. Specific features may not work.
 - FBX is a broad format. Blender FBX exports are the main target.
 - Shape keys/blend shapes, advanced material graphs, constraints, IK, and complex animation stacks are not fully supported yet.
 - If a model has no usable skin weights, the fallback is best-effort and may need manual rig binding.
@@ -52,7 +51,7 @@ Known limitations:
 ## Blender FBX export notes
 - Apply transforms before export when possible.
 - Use a simple armature and clear bone names.
-- Keep the model under the mod upload limit of **20 MB**.
+- Keep the model under the mod upload limit of **3 MB**.
 - Export with UVs and materials enabled.
 - Prefer embedded textures or clearly referenced texture files next to the FBX.
 - Names like `head`, `neck`, `spine`, `chest`, `torso`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` help the auto-binder.

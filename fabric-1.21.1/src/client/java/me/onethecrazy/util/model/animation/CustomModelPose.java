@@ -72,6 +72,14 @@ public class CustomModelPose {
             return pitchRadians == 0f && yawRadians == 0f && rollRadians == 0f;
         }
 
+        public BodyPartRotation add(BodyPartRotation other) {
+            return new BodyPartRotation(
+                    pitchRadians + other.pitchRadians,
+                    yawRadians + other.yawRadians,
+                    rollRadians + other.rollRadians
+            );
+        }
+
         public Matrix4f globalPivotDelta(Vector3f pivot) {
             return new Matrix4f()
                     .translation(pivot)
@@ -94,5 +102,26 @@ public class CustomModelPose {
                 BodyPartRotation.NONE,
                 BodyPartRotation.NONE
         );
+
+        public boolean isNone() {
+            return rightArm.isNone() && leftArm.isNone() && rightLeg.isNone() && leftLeg.isNone();
+        }
+
+        public LimbPose withRightArm(BodyPartRotation rotation) {
+            return new LimbPose(rotation, leftArm, rightLeg, leftLeg);
+        }
+
+        public LimbPose withLeftArm(BodyPartRotation rotation) {
+            return new LimbPose(rightArm, rotation, rightLeg, leftLeg);
+        }
+
+        public LimbPose withArmAction(LimbPose actionPose) {
+            return new LimbPose(
+                    rightArm.add(actionPose.rightArm),
+                    leftArm.add(actionPose.leftArm),
+                    rightLeg,
+                    leftLeg
+            );
+        }
     }
 }

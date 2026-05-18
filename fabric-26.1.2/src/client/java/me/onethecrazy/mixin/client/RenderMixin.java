@@ -11,6 +11,7 @@ import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.Vertex;
 import me.onethecrazy.util.render.CustomSkinRenderData;
+import net.minecraft.core.Direction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -22,7 +23,9 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -75,9 +78,7 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
             CustomModelPose.HeadLookRotation headLookRotation = idle
                     ? CustomModelPose.computeHeadLookRotation(renderedPlayer, tickDelta)
                     : CustomModelPose.HeadLookRotation.NONE;
-            CustomModelPose.LimbPose limbPose = "Walk".equals(animation) || "Sneak".equals(animation)
-                    ? fbx_player_models$computeMinecraftLimbPose(renderedPlayer, tickDelta, "Sneak".equals(animation))
-                    : CustomModelPose.LimbPose.NONE;
+            CustomModelPose.LimbPose limbPose = fbx_player_models$computeMinecraftLimbPose(renderedPlayer, tickDelta, animation);
             fbx_player_models$logHeadLookDebug(animation, renderedPlayer, tickDelta, idle);
             vertices = cacheResult.skinnedModel.render(animation, seconds, headLookRotation, limbPose);
         }
@@ -99,10 +100,10 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
         PoseStack customPose = poseStack;
         customPose.pushPose();
         if (renderData.pose() == Pose.SLEEPING && renderData.bedOrientation() != null) {
-            float offset = renderData.eyeHeight() - 0.1F;
+            float offset = renderData.eyeHeight() - 0.1F + 1.0F;
             customPose.translate((float) -renderData.bedOrientation().getStepX() * offset, 0.0F, (float) -renderData.bedOrientation().getStepZ() * offset);
         }
-        customPose.mulPose(Axis.YP.rotationDegrees(-renderData.bodyRot()));
+        fbx_player_models$applyBodyTransform(customPose, renderData);
 
         for (Vertex vertex : renderData.vertices()) {
             RenderType layer = RenderTypes.entityCutout(vertex.texture);
@@ -129,6 +130,32 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
     }
 
     @Unique
+    private static void fbx_player_models$applyBodyTransform(PoseStack poseStack, CustomSkinRenderData renderData) {
+        if (renderData.pose() == Pose.SLEEPING) {
+            float yaw = renderData.bedOrientation() == null
+                    ? renderData.bodyRot()
+                    : fbx_player_models$sleepDirectionToRotation(renderData.bedOrientation());
+            poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(90f));
+            poseStack.mulPose(Axis.YP.rotationDegrees(90f));
+            return;
+        }
+
+        poseStack.mulPose(Axis.YP.rotationDegrees(-renderData.bodyRot()));
+    }
+
+    @Unique
+    private static float fbx_player_models$sleepDirectionToRotation(Direction direction) {
+        return switch (direction) {
+            case SOUTH -> 90f;
+            case WEST -> 0f;
+            case NORTH -> 270f;
+            case EAST -> 180f;
+            default -> 0f;
+        };
+    }
+
+    @Unique
     private boolean fbx_player_models$isWalking(AbstractClientPlayer player) {
         Vec3 velocity = player.getDeltaMovement();
         return velocity.x * velocity.x + velocity.z * velocity.z > 0.0004;
@@ -136,6 +163,12 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
 
     @Unique
     private String fbx_player_models$currentAnimation(AbstractClientPlayer renderedPlayer) {
+        if (renderedPlayer.getPose() == Pose.SLEEPING) {
+            return "Sleep";
+        }
+        if (renderedPlayer.isPassenger()) {
+            return "Sit";
+        }
         if (renderedPlayer.isShiftKeyDown() || renderedPlayer.isCrouching()) {
             return "Sneak";
         }
@@ -143,7 +176,15 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
     }
 
     @Unique
-    private CustomModelPose.LimbPose fbx_player_models$computeMinecraftLimbPose(AbstractClientPlayer renderedPlayer, float tickDelta, boolean sneaking) {
+    private CustomModelPose.LimbPose fbx_player_models$computeMinecraftLimbPose(AbstractClientPlayer renderedPlayer, float tickDelta, String animation) {
+        if ("Sit".equals(animation)) {
+            return fbx_player_models$sittingLimbPose();
+        }
+        if (!"Walk".equals(animation) && !"Sneak".equals(animation)) {
+            return CustomModelPose.LimbPose.NONE;
+        }
+
+        boolean sneaking = "Sneak".equals(animation);
         float limbProgress = renderedPlayer.walkAnimation.position(tickDelta);
         float limbAmplitude = renderedPlayer.walkAnimation.speed(tickDelta);
         float armAmplitude = limbAmplitude;
@@ -155,7 +196,64 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
                 new CustomModelPose.BodyPartRotation(Mth.cos(limbProgress * 0.6662f) * armAmplitude + sneakArmPitch, 0f, 0f),
                 new CustomModelPose.BodyPartRotation(Mth.cos(limbProgress * 0.6662f) * legAmplitude, 0.005f, 0.005f),
                 new CustomModelPose.BodyPartRotation(Mth.cos(limbProgress * 0.6662f + Mth.PI) * legAmplitude, -0.005f, -0.005f)
+        ).withArmAction(fbx_player_models$handActionPose(renderedPlayer, tickDelta));
+    }
+
+    @Unique
+    private CustomModelPose.LimbPose fbx_player_models$sittingLimbPose() {
+        return new CustomModelPose.LimbPose(
+                new CustomModelPose.BodyPartRotation(-0.62831855f, 0f, 0f),
+                new CustomModelPose.BodyPartRotation(-0.62831855f, 0f, 0f),
+                CustomModelPose.BodyPartRotation.NONE,
+                CustomModelPose.BodyPartRotation.NONE
         );
+    }
+
+    @Unique
+    private CustomModelPose.LimbPose fbx_player_models$handActionPose(AbstractClientPlayer renderedPlayer, float tickDelta) {
+        Minecraft minecraft = Minecraft.getInstance();
+        boolean breakingBlock = renderedPlayer == minecraft.player
+                && minecraft.gameMode != null
+                && minecraft.gameMode.isDestroying();
+
+        if (breakingBlock) {
+            float phase = ((renderedPlayer.tickCount + tickDelta) % 8f) / 8f;
+            InteractionHand hand = renderedPlayer.swinging ? renderedPlayer.swingingArm : InteractionHand.MAIN_HAND;
+            return fbx_player_models$singleArmPose(renderedPlayer, hand, fbx_player_models$breakingRotation(phase));
+        }
+
+        float swing = renderedPlayer.getAttackAnim(tickDelta);
+        if (swing <= 0f) {
+            return CustomModelPose.LimbPose.NONE;
+        }
+
+        return fbx_player_models$singleArmPose(renderedPlayer, renderedPlayer.swingingArm, fbx_player_models$placingRotation(swing));
+    }
+
+    @Unique
+    private CustomModelPose.LimbPose fbx_player_models$singleArmPose(AbstractClientPlayer player, InteractionHand hand, CustomModelPose.BodyPartRotation rotation) {
+        boolean rightArm = fbx_player_models$isRightArm(player, hand);
+        return rightArm
+                ? CustomModelPose.LimbPose.NONE.withRightArm(rotation)
+                : CustomModelPose.LimbPose.NONE.withLeftArm(rotation);
+    }
+
+    @Unique
+    private boolean fbx_player_models$isRightArm(AbstractClientPlayer player, InteractionHand hand) {
+        boolean mainArmRight = player.getMainArm() == HumanoidArm.RIGHT;
+        return hand == InteractionHand.MAIN_HAND == mainArmRight;
+    }
+
+    @Unique
+    private CustomModelPose.BodyPartRotation fbx_player_models$breakingRotation(float phase) {
+        float chop = Mth.sin(phase * Mth.TWO_PI);
+        return new CustomModelPose.BodyPartRotation(-1.15f - 0.55f * chop, 0.18f * chop, 0.12f * chop);
+    }
+
+    @Unique
+    private CustomModelPose.BodyPartRotation fbx_player_models$placingRotation(float swing) {
+        float ease = Mth.sin(Mth.sqrt(swing) * Mth.PI);
+        return new CustomModelPose.BodyPartRotation(-0.45f - 0.85f * ease, 0f, 0.18f * ease);
     }
 
     @Unique

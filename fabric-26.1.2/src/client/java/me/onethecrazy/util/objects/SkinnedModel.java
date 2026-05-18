@@ -106,23 +106,20 @@ public class SkinnedModel {
         Animation animation = animations.get(animationName);
         if (animation == null) {
             if ("Idle".equals(animationName)) {
-                return renderPose(null, seconds, headLookRotation, true, CustomModelPose.LimbPose.NONE, hideHead);
+                return renderPose(null, seconds, headLookRotation, true, limbPose, hideHead);
             }
             return staticVertices(hideHead);
         }
 
         boolean logicalRigDriven = animation.logicalRigDriven();
-        boolean minecraftLimbs = logicalRigDriven && ("Walk".equals(animationName) || "Sneak".equals(animationName));
-        return renderPose(animation, seconds, headLookRotation, logicalRigDriven && "Idle".equals(animationName), minecraftLimbs ? limbPose : CustomModelPose.LimbPose.NONE, hideHead);
+        return renderPose(animation, seconds, headLookRotation, logicalRigDriven && "Idle".equals(animationName), logicalRigDriven ? limbPose : CustomModelPose.LimbPose.NONE, hideHead);
     }
 
     private List<Vertex> renderPose(Animation animation, float seconds, CustomModelPose.HeadLookRotation headLookRotation, boolean applyIdleHeadLook, CustomModelPose.LimbPose limbPose, boolean hideHead) {
         Matrix4f[] globals = new Matrix4f[bones.size()];
         Matrix4f[] skin = new Matrix4f[bones.size()];
-        boolean applyWalkLimbs = limbPose != CustomModelPose.LimbPose.NONE;
-
         for (int i = 0; i < bones.size(); i++) {
-            globalTransform(i, animation, seconds, applyWalkLimbs, globals);
+            globalTransform(i, animation, seconds, limbPose, globals);
         }
 
         if (applyIdleHeadLook && headBoneIndex >= 0) {
@@ -142,28 +139,27 @@ public class SkinnedModel {
         return renderSkinnedVertices(skin, hideHead);
     }
 
-    private Matrix4f globalTransform(int boneIndex, Animation animation, float seconds, boolean applyWalkLimbs, Matrix4f[] globals) {
+    private Matrix4f globalTransform(int boneIndex, Animation animation, float seconds, CustomModelPose.LimbPose limbPose, Matrix4f[] globals) {
         if (globals[boneIndex] != null) {
             return globals[boneIndex];
         }
 
         Bone bone = bones.get(boneIndex);
-        Matrix4f local = animation == null || isOverriddenPartBone(boneIndex, applyWalkLimbs)
+        Matrix4f local = animation == null || isOverriddenPartBone(boneIndex, limbPose)
                 ? new Matrix4f(bone.localBind)
                 : animation.localTransform(boneIndex, seconds, bone.localBind);
         globals[boneIndex] = bone.parentIndex >= 0
-                ? new Matrix4f(globalTransform(bone.parentIndex, animation, seconds, applyWalkLimbs, globals)).mul(local)
+                ? new Matrix4f(globalTransform(bone.parentIndex, animation, seconds, limbPose, globals)).mul(local)
                 : local;
         return globals[boneIndex];
     }
 
-    private boolean isOverriddenPartBone(int boneIndex, boolean applyWalkLimbs) {
-        return boneIndex == headBoneIndex || applyWalkLimbs && (
-                boneIndex == rightArmBoneIndex
-                        || boneIndex == leftArmBoneIndex
-                        || boneIndex == rightLegBoneIndex
-                        || boneIndex == leftLegBoneIndex
-        );
+    private boolean isOverriddenPartBone(int boneIndex, CustomModelPose.LimbPose limbPose) {
+        return boneIndex == headBoneIndex
+                || boneIndex == rightArmBoneIndex && !limbPose.rightArm().isNone()
+                || boneIndex == leftArmBoneIndex && !limbPose.leftArm().isNone()
+                || boneIndex == rightLegBoneIndex && !limbPose.rightLeg().isNone()
+                || boneIndex == leftLegBoneIndex && !limbPose.leftLeg().isNone();
     }
 
     private void applyHeadLookToSubtree(Matrix4f[] globals, CustomModelPose.HeadLookRotation headLookRotation) {

@@ -70,7 +70,7 @@ public class ModelBindingEditorScreen extends Screen {
         }).dimensions(x, y + MARGIN + ROW_HEIGHT, width, 20).build());
 
         int clipY = y + MARGIN + ROW_HEIGHT * 2;
-        for (String state : List.of("Walk", "Sneak")) {
+        for (String state : List.of("Walk", "Sneak", "Sit", "Sleep")) {
             String logicalState = state;
             addDrawableChild(ButtonWidget.builder(clipButtonText(logicalState), button -> {
                 cycleClip(logicalState);
