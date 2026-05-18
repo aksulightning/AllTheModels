@@ -2,6 +2,7 @@ package me.onethecrazy.screens.editor;
 
 import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
+import me.onethecrazy.util.FileUtil;
 import me.onethecrazy.util.model.rig.LogicalBodyPart;
 import me.onethecrazy.util.model.rig.LogicalRigBinding;
 import me.onethecrazy.util.objects.CacheSkin;
@@ -10,6 +11,7 @@ import me.onethecrazy.util.parsing.FBXParser;
 import me.onethecrazy.util.parsing.ParsingFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -18,10 +20,14 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 
 public class ModelBindingEditorScreen extends Screen {
     private static final int MARGIN = 12;
     private static final int ROW_HEIGHT = 22;
+    private static final double CAMERA_OFFSET_MIN = -1.5;
+    private static final double CAMERA_OFFSET_MAX = 1.5;
     private final Screen parent;
     private List<String> boneNames = List.of();
     private List<String> clipNames = List.of();
@@ -72,6 +78,23 @@ public class ModelBindingEditorScreen extends Screen {
             }).bounds(x, clipY, width, 20).build());
             clipY += ROW_HEIGHT;
         }
+
+        int firstPersonY = clipY + MARGIN;
+        addRenderableWidget(Button.builder(firstPersonSelfModelText(), button -> {
+            FBXPlayerModelsClient.options().renderSelfModelInFirstPerson = !FBXPlayerModelsClient.options().renderSelfModelInFirstPerson;
+            FileUtil.writeSave(FBXPlayerModelsClient.options());
+            button.setMessage(firstPersonSelfModelText());
+        }).bounds(x, firstPersonY, width, 20).build());
+
+        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT, width, 20, "X",
+                () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetX,
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetX = (float) value));
+        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT * 2, width, 20, "Y",
+                () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetY,
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetY = (float) value));
+        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT * 3, width, 20, "Z",
+                () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetZ,
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetZ = (float) value));
     }
 
     @Override
@@ -160,6 +183,13 @@ public class ModelBindingEditorScreen extends Screen {
         return Component.nullToEmpty("Animations: " + (FBXPlayerModelsClient.options().selectedSkin.animationsEnabled() ? "ON" : "OFF"));
     }
 
+    private Component firstPersonSelfModelText() {
+        String translationKey = FBXPlayerModelsClient.options().renderSelfModelInFirstPerson
+                ? "gui.fbxplayermodels.first_person_self_model_enabled"
+                : "gui.fbxplayermodels.first_person_self_model_disabled";
+        return Component.translatable(translationKey);
+    }
+
     private void cycleClip(String state) {
         if (clipNames.isEmpty()) {
             FBXPlayerModelsClient.options().selectedSkin.clipMappings().remove(state);
@@ -237,5 +267,39 @@ public class ModelBindingEditorScreen extends Screen {
     private CacheSkin currentCache() {
         var uuid = Minecraft.getInstance().getUser().getProfileId();
         return uuid == null ? null : SkinManager.skinCache.get(uuid.toString());
+    }
+
+    private static final class CameraOffsetSlider extends AbstractSliderButton {
+        private final String axis;
+        private final DoubleSupplier getter;
+        private final DoubleConsumer setter;
+
+        private CameraOffsetSlider(int x, int y, int width, int height, String axis, DoubleSupplier getter, DoubleConsumer setter) {
+            super(x, y, width, height, Component.empty(), toSliderValue(getter.getAsDouble()));
+            this.axis = axis;
+            this.getter = getter;
+            this.setter = setter;
+            updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            setMessage(Component.translatable("gui.fbxplayermodels.first_person_camera_" + axis.toLowerCase(Locale.ROOT), getter.getAsDouble()));
+        }
+
+        @Override
+        protected void applyValue() {
+            setter.accept(fromSliderValue(value));
+            FileUtil.writeSave(FBXPlayerModelsClient.options());
+            updateMessage();
+        }
+
+        private static double toSliderValue(double value) {
+            return Math.max(0.0, Math.min(1.0, (value - CAMERA_OFFSET_MIN) / (CAMERA_OFFSET_MAX - CAMERA_OFFSET_MIN)));
+        }
+
+        private static double fromSliderValue(double value) {
+            return CAMERA_OFFSET_MIN + (CAMERA_OFFSET_MAX - CAMERA_OFFSET_MIN) * value;
+        }
     }
 }

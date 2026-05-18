@@ -4,7 +4,6 @@ import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.screens.editor.ModelBindingEditorScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
-import me.onethecrazy.util.FileUtil;
 import me.onethecrazy.util.objects.CacheSkin;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -33,7 +32,6 @@ public class ConfigScreen extends Screen {
     private ButtonWidget toggleButton;
     private ButtonWidget uploadAgainButton;
     private ButtonWidget editorButton;
-    private ButtonWidget firstPersonSelfModelButton;
     private ButtonWidget doneButton;
     private final Screen parent;
     private boolean rotating = false;
@@ -77,16 +75,10 @@ public class ConfigScreen extends Screen {
                 MinecraftClient.getInstance().setScreen(new ModelBindingEditorScreen(this))
         ).dimensions(getContentOriginX() + getHalfButtonWidth() + MARGIN, resetButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
-        firstPersonSelfModelButton = ButtonWidget.builder(Text.empty(), (button) -> {
-            FBXPlayerModelsClient.options().renderSelfModelInFirstPerson = !FBXPlayerModelsClient.options().renderSelfModelInFirstPerson;
-            FileUtil.writeSave(FBXPlayerModelsClient.options());
-            updateFirstPersonSelfModelButtonText();
-        }).dimensions(getContentOriginX(), editorButton.getY() + Y_SPACING, getContentWidth(), BUTTON_HEIGHT).build();
-
         doneButton = ButtonWidget.builder(
                 Text.translatable("gui.done"),
                 (button) -> close())
-                .dimensions(getContentOriginX(), firstPersonSelfModelButton.getY() + Y_SPACING + textRenderer.fontHeight + 2 * MARGIN, getContentWidth(), BUTTON_HEIGHT).build();
+                .dimensions(getContentOriginX(), editorButton.getY() + Y_SPACING + textRenderer.fontHeight + 2 * MARGIN, getContentWidth(), BUTTON_HEIGHT).build();
 
         this.addDrawable((context, mouseX, mouseY, delta) -> skinPreviewRenderer.renderPreview(context, delta));
         this.addDrawableChild(selectSkinButton);
@@ -94,7 +86,6 @@ public class ConfigScreen extends Screen {
         this.addDrawableChild(toggleButton);
         this.addDrawableChild(uploadAgainButton);
         this.addDrawableChild(editorButton);
-        this.addDrawableChild(firstPersonSelfModelButton);
         this.addDrawableChild(doneButton);
         this.addDrawable(this::renderText);
 
@@ -103,7 +94,6 @@ public class ConfigScreen extends Screen {
         updateResetButtonText();
         updateUploadAgainButtonText();
         updateEnabledButtonText();
-        updateFirstPersonSelfModelButtonText();
     }
 
     @Override
@@ -219,8 +209,6 @@ public class ConfigScreen extends Screen {
                 + BUTTON_HEIGHT
                 + Y_SPACING
                 + BUTTON_HEIGHT
-                + Y_SPACING
-                + BUTTON_HEIGHT
                 + textRenderer.fontHeight
                 + 2 * MARGIN
                 + BUTTON_HEIGHT;
@@ -255,13 +243,6 @@ public class ConfigScreen extends Screen {
         Text text = FBXPlayerModelsClient.options().isEnabled ? Text.translatable("gui.fbxplayermodels.mod_enabled") : Text.translatable("gui.fbxplayermodels.mod_disabled");
 
         toggleButton.setMessage(text);
-    }
-
-    @Unique private void updateFirstPersonSelfModelButtonText(){
-        String translationKey = FBXPlayerModelsClient.options().renderSelfModelInFirstPerson
-                ? "gui.fbxplayermodels.first_person_self_model_enabled"
-                : "gui.fbxplayermodels.first_person_self_model_disabled";
-        firstPersonSelfModelButton.setMessage(Text.of(trimmed(Text.translatable(translationKey).getString(), firstPersonSelfModelButton.getWidth() - 12)));
     }
 
     @Unique private String trimmed(String text, int maxWidth) {

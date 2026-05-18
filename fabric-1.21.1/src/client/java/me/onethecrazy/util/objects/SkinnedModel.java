@@ -100,7 +100,7 @@ public class SkinnedModel {
 
     private List<Vertex> render(String animationName, float seconds, CustomModelPose.HeadLookRotation headLookRotation, CustomModelPose.LimbPose limbPose, boolean hideHead) {
         if (!animationsEnabled) {
-            return staticVertices();
+            return staticVertices(hideHead);
         }
 
         Animation animation = animations.get(animationName);
@@ -108,7 +108,7 @@ public class SkinnedModel {
             if ("Idle".equals(animationName)) {
                 return renderPose(null, seconds, headLookRotation, true, CustomModelPose.LimbPose.NONE, hideHead);
             }
-            return staticVertices();
+            return staticVertices(hideHead);
         }
 
         boolean logicalRigDriven = animation.logicalRigDriven();
@@ -210,7 +210,12 @@ public class SkinnedModel {
 
     private List<Vertex> renderSkinnedVertices(Matrix4f[] skin, boolean hideHead) {
         List<Vertex> out = new ArrayList<>(vertices.size());
-        for (SkinnedVertex skinned : vertices) {
+        for (int vertexIndex = 0; vertexIndex < vertices.size(); vertexIndex++) {
+            if (hideHead && isHeadTriangleVertex(vertexIndex)) {
+                continue;
+            }
+
+            SkinnedVertex skinned = vertices.get(vertexIndex);
             Vector3f p = new Vector3f();
             Vector3f n = new Vector3f();
             Vector3f basePos = new Vector3f(skinned.vertex.position.x, skinned.vertex.position.y, skinned.vertex.position.z);
@@ -248,12 +253,27 @@ public class SkinnedModel {
                     new Float3(n.x, n.y, n.z),
                     new Float2(skinned.vertex.textureUV.u, skinned.vertex.textureUV.v),
                     skinned.vertex.texture,
-                    hideHead && isWeightedToHead(skinned) ? 0x00FFFFFF : skinned.vertex.color
+                    skinned.vertex.color
             );
             out.add(v);
         }
 
         return out;
+    }
+
+    private boolean isHeadTriangleVertex(int vertexIndex) {
+        if (headBoneIndex < 0) {
+            return false;
+        }
+
+        int faceStart = vertexIndex - vertexIndex % 4;
+        int faceEnd = Math.min(faceStart + 4, vertices.size());
+        for (int i = faceStart; i < faceEnd; i++) {
+            if (isWeightedToHead(vertices.get(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isWeightedToHead(SkinnedVertex skinned) {
@@ -416,9 +436,16 @@ public class SkinnedModel {
     }
 
     public List<Vertex> staticVertices() {
+        return staticVertices(false);
+    }
+
+    private List<Vertex> staticVertices(boolean hideHead) {
         List<Vertex> out = new ArrayList<>(vertices.size());
-        for (SkinnedVertex skinned : vertices) {
-            out.add(skinned.vertex);
+        for (int vertexIndex = 0; vertexIndex < vertices.size(); vertexIndex++) {
+            if (hideHead && isHeadTriangleVertex(vertexIndex)) {
+                continue;
+            }
+            out.add(vertices.get(vertexIndex).vertex);
         }
         return out;
     }
