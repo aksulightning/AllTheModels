@@ -181,7 +181,7 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
             return fbx_player_models$sittingLimbPose();
         }
         if (!"Walk".equals(animation) && !"Sneak".equals(animation)) {
-            return CustomModelPose.LimbPose.NONE;
+            return fbx_player_models$handActionPose(renderedPlayer, tickDelta);
         }
 
         boolean sneaking = "Sneak".equals(animation);

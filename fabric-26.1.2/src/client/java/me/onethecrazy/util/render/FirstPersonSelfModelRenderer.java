@@ -137,7 +137,7 @@ public final class FirstPersonSelfModelRenderer {
             return sittingLimbPose();
         }
         if (!"Walk".equals(animation) && !"Sneak".equals(animation)) {
-            return CustomModelPose.LimbPose.NONE;
+            return handActionPose(player, tickDelta);
         }
 
         boolean sneaking = "Sneak".equals(animation);
