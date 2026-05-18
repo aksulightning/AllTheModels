@@ -7,6 +7,7 @@ import com.aksulightning.platform.fabric.FabricPlatformConfig;
 import com.aksulightning.platform.fabric.FabricPlatformEvents;
 import com.aksulightning.platform.fabric.FabricPlatformLogger;
 import me.onethecrazy.util.FileUtil;
+import me.onethecrazy.util.render.FirstPersonSelfModelRenderer;
 import me.onethecrazy.util.network.BackendInteractor;
 import me.onethecrazy.util.objects.save.FBXPlayerModelsSave;
 import net.fabricmc.api.ClientModInitializer;
@@ -54,6 +55,7 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 		registerDisconnectCallback();
 		// Queue a self skin load
 		queueLoadSelf();
+		FirstPersonSelfModelRenderer.register();
 	}
 
 	public void registerCommands(){

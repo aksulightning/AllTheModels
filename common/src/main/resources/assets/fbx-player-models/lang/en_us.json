@@ -6,6 +6,8 @@
   "gui.fbxplayermodels.description.moderation_notice" : "The skins uploaded to FBX Player Models are NOT moderated and may contain inappropriate content. By using this mod you agree that you're using the mod at your own risk.",
   "gui.fbxplayermodels.mod_enabled" : "Enabled",
   "gui.fbxplayermodels.mod_disabled" : "Disabled",
+  "gui.fbxplayermodels.first_person_self_model_enabled" : "First Person Model: On",
+  "gui.fbxplayermodels.first_person_self_model_disabled" : "First Person Model: Off",
   "gui.fbxplayermodels.reset" : "Reset Skin",
   "gui.fbxplayermodels.upload_again" : "Upload Again"
 }
