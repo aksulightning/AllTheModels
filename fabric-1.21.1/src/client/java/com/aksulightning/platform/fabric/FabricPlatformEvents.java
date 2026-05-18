@@ -11,6 +11,11 @@ public class FabricPlatformEvents implements PlatformEvents {
     }
 
     @Override
+    public void registerClientJoined(Runnable callback) {
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> client.execute(callback));
+    }
+
+    @Override
     public void registerClientDisconnected(Runnable callback) {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> callback.run());
     }

@@ -1,129 +1,170 @@
 package me.onethecrazy.util.network;
 
-import com.google.gson.*;
 import me.onethecrazy.FBXPlayerModelsMod;
+import me.onethecrazy.SkinManager;
+import me.onethecrazy.network.ModelPackets;
 import me.onethecrazy.util.objects.LookupSkin;
 import me.onethecrazy.util.parsing.ParsingFormat;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class BackendInteractor {
-    private static final HttpClient client = HttpClient.newHttpClient();
-    private static final String BASE_URL = "http://127.0.0.1:";
-    private static final String PORT = "6969";
-    private static final String URL = BASE_URL + PORT;
+public final class BackendInteractor {
+    private static final Map<String, List<CompletableFuture<Map<String, LookupSkin>>>> LOOKUP_WAITERS = new HashMap<>();
+    private static final Map<String, List<Consumer<byte[]>>> MODEL_WAITERS = new HashMap<>();
+    private static boolean initialized;
 
-    public static CompletableFuture<Map<String, LookupSkin>> getSkinIDs(List<String> uuids){
-        Map<String, List<String>> wrapper = new HashMap<>();
-        wrapper.put("uuids", uuids);
-
-        Gson gson = new Gson();
-        String payload = gson.toJson(wrapper);
-
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(URL + "/getSkins"))
-                .header("Content-Type", "application/json")
-                // GET doesn't usually support bodies, but I like GET for an endpoint called getSkins (duh~)
-                .method("GET", HttpRequest.BodyPublishers.ofString(payload))
-                .build();
-
-        return client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
-                .thenApply(res -> {
-                    String body = res.body();
-
-                    JsonArray array = JsonParser.parseString(body).getAsJsonArray();
-
-                    Map<String,LookupSkin> result = new HashMap<>();
-
-                    for(JsonElement elmt : array){
-                        JsonObject obj = elmt.getAsJsonObject();
-
-                        String uuid = obj.get("uuid").getAsString();
-                        String id = obj.get("id").getAsString();
-                        ParsingFormat format = ParsingFormat.valueOf(obj.get("format").getAsString().toUpperCase());
-
-                        result.put(uuid, new LookupSkin(id, format));
-                    }
-
-                    return result;
-                })
-                .exceptionally(ex -> {
-                    FBXPlayerModelsMod.LOGGER.error("Error while getting Skin Ids: ", ex);
-                    return Map.of();
-                });
+    private BackendInteractor() {
     }
 
+    public static void initializeClient() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
 
-    public static void getSkinData(LookupSkin skin, Consumer<byte[]> onArrive){
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(URL + "/files/" + skin.hash + "." + skin.format.name().toLowerCase()))
-                .GET()
-                .build();
-
-        client.sendAsync(req, HttpResponse.BodyHandlers.ofByteArray())
-                .thenApply(res -> {
-                    onArrive.accept(res.body());
-
-                    return null;
-                })
-                .exceptionally(ex -> {
-                    FBXPlayerModelsMod.LOGGER.error("Error while getting files:", ex);
-                    return "";
-                });
+        ClientPlayNetworking.registerGlobalReceiver(ModelPackets.LookupResponsePayload.TYPE, (payload, context) ->
+                context.client().execute(() -> receiveLookup(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(ModelPackets.ModelDataPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> receiveModel(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(ModelPackets.UploadResultPayload.TYPE, (payload, context) ->
+                context.client().execute(() -> showMessage(payload.message())));
     }
 
+    public static CompletableFuture<Map<String, LookupSkin>> getSkinIDs(List<String> uuids) {
+        CompletableFuture<Map<String, LookupSkin>> future = new CompletableFuture<>();
+        if (!canSend(ModelPackets.RequestLookupPayload.TYPE)) {
+            future.complete(Map.of());
+            return future;
+        }
 
-    public static void setSkinData(String uuid, byte[] data3d, ParsingFormat format){
-        // Create Http Body
-        JsonObject json = new JsonObject();
-        json.addProperty("uuid", uuid);
+        synchronized (LOOKUP_WAITERS) {
+            for (String uuid : uuids) {
+                LOOKUP_WAITERS.computeIfAbsent(uuid, ignored -> new ArrayList<>()).add(future);
+            }
+        }
+        ClientPlayNetworking.send(new ModelPackets.RequestLookupPayload(List.copyOf(uuids)));
+        return future;
+    }
 
-        JsonObject data3dBody = new JsonObject();
-        data3dBody.addProperty("base64", Base64.getEncoder().encodeToString(data3d));
-        data3dBody.addProperty("format", format.name().toLowerCase());
+    public static void getSkinData(LookupSkin skin, Consumer<byte[]> onArrive) {
+        if (skin == null || skin.hash == null || skin.hash.isBlank() || skin.format == null) {
+            onArrive.accept(new byte[0]);
+            return;
+        }
+        if (!canSend(ModelPackets.RequestModelPayload.TYPE)) {
+            onArrive.accept(new byte[0]);
+            return;
+        }
 
-        json.add("data3d", data3dBody);
+        String key = modelKey(skin.hash, skin.format.name());
+        synchronized (MODEL_WAITERS) {
+            MODEL_WAITERS.computeIfAbsent(key, ignored -> new ArrayList<>()).add(onArrive);
+        }
+        ClientPlayNetworking.send(new ModelPackets.RequestModelPayload(skin.hash, skin.format.name()));
+    }
 
-        String payload = new Gson().toJson(json);
+    public static void setSkinData(String uuid, byte[] data3d, ParsingFormat format) {
+        setSkinData(uuid, "model.fbx", data3d, format);
+    }
 
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(URL + "/setSkin"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .build();
+    public static void setSkinData(String uuid, String fileName, byte[] data3d, ParsingFormat format) {
+        setSkinData(uuid, fileName, data3d, format, false);
+    }
 
-        client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
-                .exceptionally(ex -> {
-                    FBXPlayerModelsMod.LOGGER.error("Error while settings self skin: {0}", ex);
-                    return null;
-                });
+    public static void setSkinData(String uuid, String fileName, byte[] data3d, ParsingFormat format, boolean quietWhenUnsupported) {
+        if (!canSend(ModelPackets.UploadModelPayload.TYPE)) {
+            if (!quietWhenUnsupported) {
+                showMessage("Upload denied: this server does not support FBX Player Models uploads.");
+            }
+            return;
+        }
+        if (data3d != null && data3d.length > ModelPackets.MAX_MODEL_BYTES) {
+            showMessage("Upload too large: model files must be 3 MB or smaller.");
+            return;
+        }
+        String formatName = format == null ? ParsingFormat.FBX.name() : format.name();
+        ClientPlayNetworking.send(new ModelPackets.UploadModelPayload(fileName, formatName, data3d == null ? new byte[0] : data3d));
     }
 
     public static CompletableFuture<String> getBannerTextAsync() {
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(URL + "/banner"))
-                .GET()
-                .build();
+        return CompletableFuture.completedFuture("");
+    }
 
-        return client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    int status = response.statusCode();
+    private static void receiveLookup(ModelPackets.LookupResponsePayload payload) {
+        Map<String, LookupSkin> result = new HashMap<>();
+        for (Map.Entry<String, ModelPackets.ModelLookup> entry : payload.models().entrySet()) {
+            ParsingFormat format = parseFormat(entry.getValue().format());
+            if (format != null) {
+                result.put(entry.getKey(), new LookupSkin(entry.getValue().hash(), format));
+            }
+        }
 
-                    if (status >= 200 && status < 300)
-                        return response.body();
+        synchronized (LOOKUP_WAITERS) {
+            for (Map.Entry<String, ModelPackets.ModelLookup> entry : payload.models().entrySet()) {
+                String uuid = entry.getKey();
+                List<CompletableFuture<Map<String, LookupSkin>>> waiters = LOOKUP_WAITERS.remove(uuid);
+                if (waiters != null) {
+                    for (CompletableFuture<Map<String, LookupSkin>> waiter : waiters) {
+                        waiter.complete(result);
+                    }
+                } else {
+                    SkinManager.acceptServerLookup(uuid, result.getOrDefault(uuid, new LookupSkin("", null)));
+                }
+            }
+        }
+    }
 
-                    FBXPlayerModelsMod.LOGGER.error("Banner request failed with HTTP {}", status);
-                    return ""; // Fallback
-                })
-                .exceptionally(ex -> {
-                    FBXPlayerModelsMod.LOGGER.error("Error while getting banner String: ", ex);
-                    return "";
-                });
+    private static void receiveModel(ModelPackets.ModelDataPayload payload) {
+        if (payload.data().length == 0 && payload.message() != null && !payload.message().isBlank()) {
+            FBXPlayerModelsMod.LOGGER.info(payload.message());
+        }
+
+        String key = modelKey(payload.hash(), payload.format());
+        List<Consumer<byte[]>> waiters;
+        synchronized (MODEL_WAITERS) {
+            waiters = MODEL_WAITERS.remove(key);
+        }
+        if (waiters != null) {
+            for (Consumer<byte[]> waiter : waiters) {
+                waiter.accept(payload.data());
+            }
+        }
+    }
+
+    private static boolean canSend(CustomPacketPayload.Type<?> type) {
+        try {
+            return Minecraft.getInstance().getConnection() != null && ClientPlayNetworking.canSend(type);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    private static String modelKey(String hash, String format) {
+        return hash + "." + format.toUpperCase(Locale.ROOT);
+    }
+
+    private static ParsingFormat parseFormat(String format) {
+        try {
+            return ParsingFormat.valueOf(format.toUpperCase(Locale.ROOT));
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private static void showMessage(String message) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null) {
+            client.player.sendSystemMessage(Component.literal(message));
+        }
     }
 }

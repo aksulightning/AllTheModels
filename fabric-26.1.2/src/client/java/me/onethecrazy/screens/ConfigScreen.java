@@ -31,6 +31,7 @@ public class ConfigScreen extends Screen {
     private Button selectSkinButton;
     private Button resetButton;
     private Button toggleButton;
+    private Button uploadAgainButton;
     private Button editorButton;
     private Button doneButton;
     private final Screen parent;
@@ -67,9 +68,13 @@ public class ConfigScreen extends Screen {
             updateEnabledButtonText();
         }).bounds(getContentOriginX() + getHalfButtonWidth() + MARGIN, selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
+        uploadAgainButton = Button.builder(Component.empty(), (button) ->
+                SkinManager.uploadSelectedSkin(false)
+        ).bounds(getContentOriginX(), resetButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+
         editorButton = Button.builder(Component.nullToEmpty("Settings"), (button) ->
                 Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(this))
-        ).bounds(getContentOriginX(), resetButton.getY() + Y_SPACING, getContentWidth(), BUTTON_HEIGHT).build();
+        ).bounds(getContentOriginX() + getHalfButtonWidth() + MARGIN, resetButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         doneButton = Button.builder(
                 Component.translatable("gui.done"),
@@ -80,6 +85,7 @@ public class ConfigScreen extends Screen {
         this.addRenderableWidget(selectSkinButton);
         this.addRenderableWidget(resetButton);
         this.addRenderableWidget(toggleButton);
+        this.addRenderableWidget(uploadAgainButton);
         this.addRenderableWidget(editorButton);
         this.addRenderableWidget(doneButton);
         this.addRenderableOnly(this::renderText);
@@ -87,6 +93,7 @@ public class ConfigScreen extends Screen {
         // Set Button Texts
         updateSelectButtonText();
         updateResetButtonText();
+        updateUploadAgainButtonText();
         updateEnabledButtonText();
     }
 
@@ -94,6 +101,7 @@ public class ConfigScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Update Text
         updateSelectButtonText();
+        updateUploadAgainButtonText();
 
         super.extractRenderState(context, mouseX, mouseY, delta);
     }
@@ -200,6 +208,8 @@ public class ConfigScreen extends Screen {
                 + BUTTON_HEIGHT
                 + Y_SPACING
                 + BUTTON_HEIGHT
+                + Y_SPACING
+                + BUTTON_HEIGHT
                 + font.lineHeight
                 + 2 * MARGIN
                 + BUTTON_HEIGHT;
@@ -223,6 +233,11 @@ public class ConfigScreen extends Screen {
 
     @Unique private void updateResetButtonText(){
         resetButton.setMessage(Component.nullToEmpty(trimmed(Component.translatable("gui.fbxplayermodels.reset").getString(), resetButton.getWidth() - 12)));
+    }
+
+    @Unique private void updateUploadAgainButtonText(){
+        uploadAgainButton.active = !Objects.equals(FBXPlayerModelsClient.options().selectedSkin.hash, "");
+        uploadAgainButton.setMessage(Component.nullToEmpty(trimmed(Component.translatable("gui.fbxplayermodels.upload_again").getString(), uploadAgainButton.getWidth() - 12)));
     }
 
     @Unique private void updateEnabledButtonText(){

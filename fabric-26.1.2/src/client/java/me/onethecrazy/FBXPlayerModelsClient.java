@@ -42,13 +42,14 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 				new FabricPlatformClient(),
 				new FabricPlatformEvents()
 		);
+		BackendInteractor.initializeClient();
 		firstStartupSetup();
-		// Load Banner text
 		BackendInteractor.getBannerTextAsync().thenAccept(text -> bannerText = text);
 		// Initialize Commands
 		registerCommands();
 		// Register player join world callback
 		registerPlayerJoinCallback();
+		registerAutoUploadCallback();
 		// Clear world-scoped skin state when leaving a world/server.
 		registerDisconnectCallback();
 		// Queue a self skin load
@@ -70,6 +71,10 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 				SkinManager.loadSkin(other.getUUID().toString());
 			}
 		});
+	}
+
+	public void registerAutoUploadCallback(){
+		PlatformServices.events().registerClientJoined(() -> SkinManager.uploadSelectedSkin(true));
 	}
 
 	public void registerDisconnectCallback(){

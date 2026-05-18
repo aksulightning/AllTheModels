@@ -68,8 +68,6 @@ dependencies {
 	runtimeOnly "org.lwjgl:lwjgl-assimp:${lwjglVersion}:natives-linux-arm64"
 	runtimeOnly "org.lwjgl:lwjgl-assimp:${lwjglVersion}:natives-macos"
 	runtimeOnly "org.lwjgl:lwjgl-assimp:${lwjglVersion}:natives-macos-arm64"
-	runtimeOnly "org.apache.httpcomponents:httpclient:4.5.14"
-
 	api "com.terraformersmc:modmenu:18.0.0-beta.1"
 }
 
