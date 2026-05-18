@@ -27,6 +27,10 @@ Use it at your own risk, and please do not expect polished support or guaranteed
 - 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
 - 📦 **Lightweight & Client-Side** – No server installation required.
 
+## Server storage
+
+Model uploads are handled by the Fabric server. Operators can upload by default, and operators can grant players upload access with `/fbxplayermodels uploadperm <playername> yes` or remove upload access from players with `/fbxplayermodels uploadperm <playername> no`. Uploaded files are limited to **3 MB** and are stored in the server world's `fbx-player-models` data directory.
+
 ## FBX support
 FBX support is an MVP importer/editor workflow intended for Blender-exported models. This feature is truly experimental, low poly models are recommended and include a single material with texture.
 
@@ -63,10 +67,6 @@ Known limitations:
 
 The binding, source format, scale field, and animation clip mappings are saved with the selected skin in the existing config JSON.
 
-## Server storage
-
-Model uploads are handled by the Fabric server. Operators can upload by default, and operators can grant or remove upload access with `/fbxplayermodels uploadperm <playername> yes` or `/fbxplayermodels uploadperm <playername> no`. Uploaded files are limited to **3 MB** and are stored in the server world's `fbx-player-models` data directory.
-
 ## 👥 Community & Contribution
 *FBX Player Models* is open source — contributions and feedback are always welcome!
 
@@ -80,5 +80,4 @@ Model uploads are handled by the Fabric server. Operators can upload by default,
 Your creativity shapes this project — thank you for helping make *FBX Player Models* better for everyone!
 
 ## Links
-- 🧾 [AllTheSkins GitHub Repository](https://github.com/1TheCrazy/AllTheSkins)
-- [Support 1TheCrazy on Ko-Fi](https://ko-fi.com/1TheCrazy)
+- 🧾 [Based on AllTheSkins, by 1TheCrazy](https://github.com/1TheCrazy/AllTheSkins).
