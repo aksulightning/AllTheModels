@@ -91,6 +91,14 @@ public class SkinnedModel {
     }
 
     public List<Vertex> render(String animationName, float seconds, CustomModelPose.HeadLookRotation headLookRotation, CustomModelPose.LimbPose limbPose) {
+        return render(animationName, seconds, headLookRotation, limbPose, false);
+    }
+
+    public List<Vertex> renderWithHiddenHead(String animationName, float seconds, CustomModelPose.HeadLookRotation headLookRotation, CustomModelPose.LimbPose limbPose) {
+        return render(animationName, seconds, headLookRotation, limbPose, true);
+    }
+
+    private List<Vertex> render(String animationName, float seconds, CustomModelPose.HeadLookRotation headLookRotation, CustomModelPose.LimbPose limbPose, boolean hideHead) {
         if (!animationsEnabled) {
             return staticVertices();
         }
@@ -98,17 +106,17 @@ public class SkinnedModel {
         Animation animation = animations.get(animationName);
         if (animation == null) {
             if ("Idle".equals(animationName)) {
-                return renderPose(null, seconds, headLookRotation, true, CustomModelPose.LimbPose.NONE);
+                return renderPose(null, seconds, headLookRotation, true, CustomModelPose.LimbPose.NONE, hideHead);
             }
             return staticVertices();
         }
 
         boolean logicalRigDriven = animation.logicalRigDriven();
         boolean minecraftLimbs = logicalRigDriven && ("Walk".equals(animationName) || "Sneak".equals(animationName));
-        return renderPose(animation, seconds, headLookRotation, logicalRigDriven && "Idle".equals(animationName), minecraftLimbs ? limbPose : CustomModelPose.LimbPose.NONE);
+        return renderPose(animation, seconds, headLookRotation, logicalRigDriven && "Idle".equals(animationName), minecraftLimbs ? limbPose : CustomModelPose.LimbPose.NONE, hideHead);
     }
 
-    private List<Vertex> renderPose(Animation animation, float seconds, CustomModelPose.HeadLookRotation headLookRotation, boolean applyIdleHeadLook, CustomModelPose.LimbPose limbPose) {
+    private List<Vertex> renderPose(Animation animation, float seconds, CustomModelPose.HeadLookRotation headLookRotation, boolean applyIdleHeadLook, CustomModelPose.LimbPose limbPose, boolean hideHead) {
         Matrix4f[] globals = new Matrix4f[bones.size()];
         Matrix4f[] skin = new Matrix4f[bones.size()];
         boolean applyWalkLimbs = limbPose != CustomModelPose.LimbPose.NONE;
@@ -131,7 +139,7 @@ public class SkinnedModel {
             skinningDebugLogged = true;
         }
 
-        return renderSkinnedVertices(skin);
+        return renderSkinnedVertices(skin, hideHead);
     }
 
     private Matrix4f globalTransform(int boneIndex, Animation animation, float seconds, boolean applyWalkLimbs, Matrix4f[] globals) {
@@ -200,7 +208,7 @@ public class SkinnedModel {
         return false;
     }
 
-    private List<Vertex> renderSkinnedVertices(Matrix4f[] skin) {
+    private List<Vertex> renderSkinnedVertices(Matrix4f[] skin, boolean hideHead) {
         List<Vertex> out = new ArrayList<>(vertices.size());
         for (SkinnedVertex skinned : vertices) {
             Vector3f p = new Vector3f();
@@ -209,9 +217,9 @@ public class SkinnedModel {
             Vector3f baseNormal = new Vector3f(skinned.vertex.normals.x, skinned.vertex.normals.y, skinned.vertex.normals.z);
 
             float totalWeight = 0f;
-            for (int i = 0; i < skinned.boneIds.length; i++) {
-                int boneId = skinned.boneIds[i];
-                float weight = skinned.weights[i];
+            for (int weightIndex = 0; weightIndex < skinned.boneIds.length; weightIndex++) {
+                int boneId = skinned.boneIds[weightIndex];
+                float weight = skinned.weights[weightIndex];
                 if (boneId < 0 || boneId >= skin.length || weight <= 0f) {
                     continue;
                 }
@@ -240,12 +248,26 @@ public class SkinnedModel {
                     new Float3(n.x, n.y, n.z),
                     new Float2(skinned.vertex.textureUV.u, skinned.vertex.textureUV.v),
                     skinned.vertex.texture,
-                    skinned.vertex.color
+                    hideHead && isWeightedToHead(skinned) ? 0x00FFFFFF : skinned.vertex.color
             );
             out.add(v);
         }
 
         return out;
+    }
+
+    private boolean isWeightedToHead(SkinnedVertex skinned) {
+        if (headBoneIndex < 0) {
+            return false;
+        }
+
+        for (int i = 0; i < skinned.boneIds.length; i++) {
+            int boneId = skinned.boneIds[i];
+            if (boneId >= 0 && boneId < bones.size() && skinned.weights[i] > 0f && (boneId == headBoneIndex || isDescendantOf(boneId, headBoneIndex))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int resolveHeadBoneIndex() {
