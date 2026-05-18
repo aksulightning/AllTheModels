@@ -284,12 +284,12 @@ public class ModelBindingEditorScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            setMessage(Text.translatable("gui.fbxplayermodels.first_person_camera_" + axis.toLowerCase(Locale.ROOT), getter.getAsDouble()));
+            setMessage(Text.translatable("gui.fbxplayermodels.first_person_camera_" + axis.toLowerCase(Locale.ROOT), formattedValue()));
         }
 
         @Override
         protected void applyValue() {
-            setter.accept(fromSliderValue(value));
+            setter.accept(roundedOffsetValue());
             FileUtil.writeSave(FBXPlayerModelsClient.options());
             updateMessage();
         }
@@ -300,6 +300,14 @@ public class ModelBindingEditorScreen extends Screen {
 
         private static double fromSliderValue(double value) {
             return CAMERA_OFFSET_MIN + (CAMERA_OFFSET_MAX - CAMERA_OFFSET_MIN) * value;
+        }
+
+        private String formattedValue() {
+            return String.format(Locale.ROOT, "%.2f", getter.getAsDouble());
+        }
+
+        private double roundedOffsetValue() {
+            return Math.round(fromSliderValue(value) * 100.0) / 100.0;
         }
     }
 }
