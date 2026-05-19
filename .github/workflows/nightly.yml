@@ -118,7 +118,8 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: ${{ vars.MODRINTH_ID }}
-          version: ${{ matrix.branch }}-snapshot-${{ steps.date_step.outputs.date }}
+          channel: "alpha"
+          version: ${{ matrix.branch }}-nightly-${{ steps.date_step.outputs.date }}
           loaders: ${{ matrix.mod_launcher }}
           game-versions: ${{ matrix.minecraft_version }}
           files: ${{ matrix.artifact_path }}/${{ matrix.release_file }}
