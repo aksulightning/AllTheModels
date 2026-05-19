@@ -28,7 +28,10 @@ jobs:
             artifact_name: all-the-models-26.1.2
             artifact_path: "fabric-26.1.2/build/libs"
             gradlew_build: "./gradlew :fabric-26.1.2:build"
+            release_file: "fbx-player-models-v2.0.0+26.1.2+mc26.1.2.jar"
             java_version: "25"
+            minecraft_version: "26.1.2"
+            mod_launcher: "fabric"
 
           - branch: main
             tag: nightly-1.21.1
@@ -36,9 +39,16 @@ jobs:
             artifact_name: all-the-models-1.21.1
             artifact_path: "fabric-1.21.1/build/libs"
             gradlew_build: "./gradlew :fabric-1.21.1:build"
+            release_file: "fbx-player-models-v2.0.0+1.21.1+mc1.21.1.jar"
             java_version: "21"
+            minecraft_version: "1.21.1"
+            mod_launcher: "fabric"
 
     steps:
+      - name: Get current date
+        id: date_step
+        run: echo "date=$(date -u +'%y-%m-%d-%H-%m')" >> $GITHUB_OUTPUT
+        
       - name: checkout repository
         uses: actions/checkout@v6
         with:
@@ -101,3 +111,15 @@ jobs:
           Commit: $COMMIT_SHA" \
             --prerelease \
             --verify-tag
+
+
+      - name: create modrinth release
+        uses: cloudnode-pro/modrinth-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: ${{ vars.MODRINTH_ID }}
+          version: ${{ matrix.branch }}-snapshot-${{ steps.date_step.outputs.date }}
+          loaders: ${{ matrix.mod_launcher }}
+          game-versions: ${{ matrix.minecraft_version }}
+          files: ${{ matrix.artifact_path }}/${{ matrix.release_file }}
+            
