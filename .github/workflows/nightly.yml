@@ -119,6 +119,7 @@ jobs:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: ${{ vars.MODRINTH_ID }}
           channel: "alpha"
+          changelog: "Automatic nightly build from [GitHub repo](https://github.com/aksulightning/FBXPlayerModels)."
           version: ${{ matrix.branch }}-nightly-${{ steps.date_step.outputs.date }}
           loaders: ${{ matrix.mod_launcher }}
           game-versions: ${{ matrix.minecraft_version }}
