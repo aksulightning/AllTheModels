@@ -25,7 +25,6 @@ Use it at your own risk, and please do not expect polished support or guaranteed
 - ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.
 - 🎨 **Main Menu Preview** – Instantly see your model right in the title screen.
 - 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
-- 📦 **Lightweight & Client-Side** – No server installation required.
 
 ## Server storage
 

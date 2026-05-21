@@ -29,6 +29,8 @@ import org.joml.Matrix4f;
 import java.util.List;
 
 public final class FirstPersonSelfModelRenderer {
+    private static final int FULL_BRIGHT_LIGHT = 0xF000F0;
+
     private FirstPersonSelfModelRenderer() {
     }
 
@@ -55,8 +57,8 @@ public final class FirstPersonSelfModelRenderer {
 
         Vec3 playerPos = player.getPosition(tickDelta);
         Vec3 cameraPos = context.levelState().cameraRenderState.pos;
-        int light = minecraft.level == null
-                ? 0xF000F0
+        int light = "Sit".equals(currentAnimation(player)) || minecraft.level == null
+                ? FULL_BRIGHT_LIGHT
                 : LevelRenderer.getLightCoords(minecraft.level, BlockPos.containing(playerPos));
 
         PoseStack poseStack = context.poseStack();

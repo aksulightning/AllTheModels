@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
@@ -30,6 +29,8 @@ import org.joml.Matrix4f;
 import java.util.List;
 
 public final class FirstPersonSelfModelRenderer {
+    private static final int FULL_BRIGHT_LIGHT = 0xF000F0;
+
     private FirstPersonSelfModelRenderer() {
     }
 
@@ -58,8 +59,8 @@ public final class FirstPersonSelfModelRenderer {
 
         Vec3d playerPos = player.getLerpedPos(tickDelta);
         Vec3d cameraPos = context.camera().getPos();
-        int light = client.world == null
-                ? LightmapTextureManager.pack(15, 15)
+        int light = "Sit".equals(currentAnimation(player)) || client.world == null
+                ? FULL_BRIGHT_LIGHT
                 : WorldRenderer.getLightmapCoordinates(client.world, BlockPos.ofFloored(playerPos));
 
         matrices.push();
