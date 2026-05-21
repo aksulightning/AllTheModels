@@ -227,8 +227,8 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
         return new CustomModelPose.LimbPose(
                 new CustomModelPose.BodyPartRotation(-0.62831855f, 0f, 0f),
                 new CustomModelPose.BodyPartRotation(-0.62831855f, 0f, 0f),
-                CustomModelPose.BodyPartRotation.NONE,
-                CustomModelPose.BodyPartRotation.NONE
+                new CustomModelPose.BodyPartRotation(-1.5707964f, 0f, 0f),
+                new CustomModelPose.BodyPartRotation(-1.5707964f, 0f, 0f)
         );
     }
 

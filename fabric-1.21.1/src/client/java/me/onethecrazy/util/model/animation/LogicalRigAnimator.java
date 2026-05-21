@@ -21,7 +21,7 @@ public class LogicalRigAnimator {
         Map<Integer, SkinnedModel.BoneTrack> sleep = new HashMap<>();
 
         for (int i = 0; i < bones.size(); i++) {
-            LogicalBodyPart part = partForBone(bones.get(i).name(), binding);
+            LogicalBodyPart part = boundPartForBone(bones.get(i).name(), binding);
             if (part == null) {
                 continue;
             }
@@ -36,12 +36,10 @@ public class LogicalRigAnimator {
 
             if (part == LogicalBodyPart.RIGHT_ARM || part == LogicalBodyPart.LEFT_ARM) {
                 sneak.put(i, rotationTrack(1f, part == LogicalBodyPart.RIGHT_ARM ? 8f : -8f, part == LogicalBodyPart.RIGHT_ARM ? 8f : -8f, part == LogicalBodyPart.RIGHT_ARM ? 8f : -8f));
-                sit.put(i, staticRotationTrack(-36f, 0f, 0f));
             } else if (part == LogicalBodyPart.HEAD) {
                 sneak.put(i, staticRotationTrack(5f, 0f, 0f));
             } else if (part == LogicalBodyPart.RIGHT_LEG || part == LogicalBodyPart.LEFT_LEG) {
                 sneak.put(i, staticRotationTrack(part == LogicalBodyPart.RIGHT_LEG ? -6f : 6f, 0f, 0f));
-                sit.put(i, staticRotationTrack(-81f, 180f, 180f));
             } else if (part == LogicalBodyPart.CHEST) {
                 sit.put(i, staticRotationTrack(0f, 0f, 0f));
             }
@@ -75,7 +73,7 @@ public class LogicalRigAnimator {
         );
     }
 
-    private static LogicalBodyPart partForBone(String boneName, LogicalRigBinding binding) {
+    private static LogicalBodyPart boundPartForBone(String boneName, LogicalRigBinding binding) {
         String normalizedBone = LogicalRigBinding.normalize(boneName);
         for (LogicalBodyPart part : LogicalBodyPart.values()) {
             for (String boundName : binding.namesFor(part)) {
@@ -84,6 +82,6 @@ public class LogicalRigAnimator {
                 }
             }
         }
-        return LogicalRigBinding.suggestPart(boneName);
+        return null;
     }
 }
