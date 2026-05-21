@@ -40,14 +40,12 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
     @Unique private static final boolean fbx_player_models$debugHeadLook = Boolean.getBoolean("fbxplayermodels.debugHeadLook");
     @Unique private static boolean fbx_player_models$headLookDebugLogged;
     @Unique private AbstractClientPlayerEntity player;
-    @Unique private float fbx_player_models$tickDelta;
 
     @Inject(method="render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at=@At("HEAD"), cancellable = true)
     private void onPlayerRender(T livingEntity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci){
         // We only want to hook the player rendering
         if(livingEntity instanceof AbstractClientPlayerEntity renderedPlayer){
             player = renderedPlayer;
-            fbx_player_models$tickDelta = tickDelta;
 
             if(!FBXPlayerModelsClient.options().isEnabled)
                 return;
@@ -89,7 +87,7 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
 
             @Nullable List<Vertex> vertices = cacheResult.vertices;
             if(cacheResult.skinnedModel != null){
-                String animation = fbx_player_models$currentAnimation(renderedPlayer);
+                String animation = fbx_player_models$currentAnimation(renderedPlayer, tickDelta);
                 float seconds = (renderedPlayer.age + tickDelta) / 20f;
                 boolean idle = "Idle".equals(animation);
                 CustomModelPose.HeadLookRotation headLookRotation = idle && player != null
@@ -148,12 +146,25 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
     }
 
     @Unique
-    private boolean fbx_player_models$isWalking(){
-        if(player == null)
-            return false;
+    private boolean fbx_player_models$isWalking(AbstractClientPlayerEntity renderedPlayer, float tickDelta) {
+        float limbSpeed = renderedPlayer.limbAnimator.getSpeed(tickDelta);
+        if (limbSpeed > 0.01f) {
+            return true;
+        }
 
-        Vec3d velocity = player.getVelocity();
+        if (fbx_player_models$horizontalMovementSquared(renderedPlayer) > 0.0004) {
+            return true;
+        }
+
+        Vec3d velocity = renderedPlayer.getVelocity();
         return velocity.x * velocity.x + velocity.z * velocity.z > 0.0004;
+    }
+
+    @Unique
+    private double fbx_player_models$horizontalMovementSquared(AbstractClientPlayerEntity renderedPlayer) {
+        double dx = renderedPlayer.getX() - renderedPlayer.prevX;
+        double dz = renderedPlayer.getZ() - renderedPlayer.prevZ;
+        return dx * dx + dz * dz;
     }
 
     @Unique
@@ -185,7 +196,7 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
     }
 
     @Unique
-    private String fbx_player_models$currentAnimation(AbstractClientPlayerEntity renderedPlayer) {
+    private String fbx_player_models$currentAnimation(AbstractClientPlayerEntity renderedPlayer, float tickDelta) {
         if (renderedPlayer.isInPose(EntityPose.SLEEPING)) {
             return "Sleep";
         }
@@ -195,7 +206,7 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
         if (renderedPlayer.isSneaking() || renderedPlayer.isInSneakingPose()) {
             return "Sneak";
         }
-        return fbx_player_models$isWalking() ? "Walk" : "Idle";
+        return fbx_player_models$isWalking(renderedPlayer, tickDelta) ? "Walk" : "Idle";
     }
 
     @Unique
@@ -210,6 +221,10 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
         boolean sneaking = "Sneak".equals(animation);
         float limbProgress = renderedPlayer.limbAnimator.getPos(tickDelta);
         float limbAmplitude = renderedPlayer.limbAnimator.getSpeed(tickDelta);
+        if (limbAmplitude <= 0.01f && fbx_player_models$horizontalMovementSquared(renderedPlayer) > 0.0004) {
+            limbProgress = (renderedPlayer.age + tickDelta) * 0.9f;
+            limbAmplitude = sneaking ? 0.45f : 1.0f;
+        }
         float armAmplitude = limbAmplitude;
         float legAmplitude = 1.4f * limbAmplitude;
         float sneakArmPitch = sneaking ? 0.4f : 0f;

@@ -71,7 +71,7 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
         }
 
         @Nullable List<Vertex> vertices = cacheResult.vertices;
-        String animation = fbx_player_models$currentAnimation(renderedPlayer);
+        String animation = fbx_player_models$currentAnimation(renderedPlayer, tickDelta);
         if (cacheResult.skinnedModel != null) {
             float seconds = (renderedPlayer.tickCount + tickDelta) / 20f;
             boolean idle = "Idle".equals(animation);
@@ -156,13 +156,29 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
     }
 
     @Unique
-    private boolean fbx_player_models$isWalking(AbstractClientPlayer player) {
+    private boolean fbx_player_models$isWalking(AbstractClientPlayer player, float tickDelta) {
+        float walkSpeed = player.walkAnimation.speed(tickDelta);
+        if (walkSpeed > 0.01f) {
+            return true;
+        }
+
+        if (fbx_player_models$horizontalMovementSquared(player) > 0.0004) {
+            return true;
+        }
+
         Vec3 velocity = player.getDeltaMovement();
         return velocity.x * velocity.x + velocity.z * velocity.z > 0.0004;
     }
 
     @Unique
-    private String fbx_player_models$currentAnimation(AbstractClientPlayer renderedPlayer) {
+    private double fbx_player_models$horizontalMovementSquared(AbstractClientPlayer player) {
+        double dx = player.getX() - player.xo;
+        double dz = player.getZ() - player.zo;
+        return dx * dx + dz * dz;
+    }
+
+    @Unique
+    private String fbx_player_models$currentAnimation(AbstractClientPlayer renderedPlayer, float tickDelta) {
         if (renderedPlayer.getPose() == Pose.SLEEPING) {
             return "Sleep";
         }
@@ -172,7 +188,7 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
         if (renderedPlayer.isShiftKeyDown() || renderedPlayer.isCrouching()) {
             return "Sneak";
         }
-        return fbx_player_models$isWalking(renderedPlayer) ? "Walk" : "Idle";
+        return fbx_player_models$isWalking(renderedPlayer, tickDelta) ? "Walk" : "Idle";
     }
 
     @Unique
@@ -187,6 +203,10 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
         boolean sneaking = "Sneak".equals(animation);
         float limbProgress = renderedPlayer.walkAnimation.position(tickDelta);
         float limbAmplitude = renderedPlayer.walkAnimation.speed(tickDelta);
+        if (limbAmplitude <= 0.01f && fbx_player_models$horizontalMovementSquared(renderedPlayer) > 0.0004) {
+            limbProgress = (renderedPlayer.tickCount + tickDelta) * 0.9f;
+            limbAmplitude = sneaking ? 0.45f : 1.0f;
+        }
         float armAmplitude = limbAmplitude;
         float legAmplitude = 1.4f * limbAmplitude;
         float sneakArmPitch = sneaking ? 0.4f : 0f;
