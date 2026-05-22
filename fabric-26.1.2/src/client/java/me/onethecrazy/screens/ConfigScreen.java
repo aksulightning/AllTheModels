@@ -19,9 +19,11 @@ public class ConfigScreen extends Screen {
     // Constants
     private static final int MAX_SKIN_PREVIEW_DIMENSIONS = 300;
     private static final int MIN_SKIN_PREVIEW_DIMENSIONS = 120;
+    private static final int COMPACT_MIN_SKIN_PREVIEW_DIMENSIONS = 72;
     private static final int MAX_CONTENT_WIDTH = 300;
     private static final int MARGIN = 6;
     private static final int BUTTON_HEIGHT = 20;
+    private static final int BUTTON_SPACING = 2;
     private static final int Y_SPACING = 24;
     private static final float YAW_SENS   = 0.6f;
     private static final float PITCH_SENS = 0.6f;
@@ -66,27 +68,27 @@ public class ConfigScreen extends Screen {
         resetButton = Button.builder(
                     Component.empty(),
                     (button) -> SkinManager.resetSelfSkin())
-                    .bounds(getContentOriginX(), selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+                    .bounds(getContentOriginX(), selectSkinButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         toggleButton = Button.builder(Component.empty(), (button) -> {
             FBXPlayerModelsClient.options().isEnabled = !FBXPlayerModelsClient.options().isEnabled;
 
             // Update Text
             updateEnabledButtonText();
-        }).bounds(getContentOriginX() + getHalfButtonWidth() + MARGIN, selectSkinButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+        }).bounds(getContentOriginX() + getHalfButtonWidth() + BUTTON_SPACING, selectSkinButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         uploadAgainButton = Button.builder(Component.empty(), (button) ->
                 SkinManager.uploadSelectedSkin(false)
-        ).bounds(getContentOriginX(), resetButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+        ).bounds(getContentOriginX(), resetButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         editorButton = Button.builder(Component.nullToEmpty("Settings"), (button) ->
                 Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(this))
-        ).bounds(getContentOriginX() + getHalfButtonWidth() + MARGIN, resetButton.getY() + Y_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+        ).bounds(getContentOriginX() + getHalfButtonWidth() + BUTTON_SPACING, resetButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
         doneButton = Button.builder(
                 Component.translatable("gui.done"),
                 (button) -> onClose())
-                .bounds(getContentOriginX(), editorButton.getY() + Y_SPACING + font.lineHeight + 2 * MARGIN, getContentWidth(), BUTTON_HEIGHT).build();
+                .bounds(getContentOriginX(), getDoneButtonY(), getContentWidth(), BUTTON_HEIGHT).build();
 
         this.addRenderableOnly((context, mouseX, mouseY, delta) -> skinPreviewRenderer.renderPreview(context, delta));
         this.addRenderableWidget(selectSkinButton);
@@ -118,8 +120,9 @@ public class ConfigScreen extends Screen {
         context.text(font, trimmed(FBXPlayerModelsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
 
         CacheSkin cacheSkin = getSelfCacheSkin();
-        if(cacheSkin != null)
-            context.text(font, trimmed(cacheSkin.debugStatus(), getContentWidth()), getContentOriginX(), editorButton.getY() + BUTTON_HEIGHT + MARGIN, 0xFFFFFFFF, true);
+        int statusY = editorButton.getY() + BUTTON_HEIGHT + MARGIN;
+        if(cacheSkin != null && statusY + font.lineHeight < doneButton.getY())
+            context.text(font, trimmed(cacheSkin.debugStatus(), getContentWidth()), getContentOriginX(), statusY, 0xFFFFFFFF, true);
 
         // Render Mod Title
         String title = "FBX Player Models";
@@ -184,7 +187,11 @@ public class ConfigScreen extends Screen {
     @Unique private int getScreenFriendlyDimensions(){
         int availableHeight = this.height - getCellOriginY() - getControlsHeight() - MARGIN;
         int availableWidth = this.width - 2 * MARGIN;
-        return Math.max(MIN_SKIN_PREVIEW_DIMENSIONS, Math.min(MAX_SKIN_PREVIEW_DIMENSIONS, Math.min(availableHeight, availableWidth)));
+        int available = Math.min(MAX_SKIN_PREVIEW_DIMENSIONS, Math.min(availableHeight, availableWidth));
+        int minimum = availableHeight >= MIN_SKIN_PREVIEW_DIMENSIONS
+                ? MIN_SKIN_PREVIEW_DIMENSIONS
+                : COMPACT_MIN_SKIN_PREVIEW_DIMENSIONS;
+        return Math.max(minimum, available);
     }
 
     @Unique private float getScreenFriendlyScale(){
@@ -201,25 +208,35 @@ public class ConfigScreen extends Screen {
     }
 
     @Unique private int getButtonsStartY(){
-        return getCellOriginY() + getScreenFriendlyDimensions() + Y_SPACING;
+        return getCellOriginY() + getScreenFriendlyDimensions() + getVerticalSpacing();
     }
 
     @Unique private int getHalfButtonWidth(){
-        return (getContentWidth() - MARGIN) / 2;
+        return (getContentWidth() - BUTTON_SPACING) / 2;
     }
 
     @Unique private int getControlsHeight(){
-        return Y_SPACING
+        int spacing = getVerticalSpacing();
+        return spacing
                 + BUTTON_HEIGHT
-                + Y_SPACING
+                + BUTTON_SPACING
                 + BUTTON_HEIGHT
-                + Y_SPACING
+                + BUTTON_SPACING
                 + BUTTON_HEIGHT
-                + Y_SPACING
-                + BUTTON_HEIGHT
+                + spacing
                 + font.lineHeight
                 + 2 * MARGIN
                 + BUTTON_HEIGHT;
+    }
+
+    @Unique private int getVerticalSpacing() {
+        return this.height < 520 ? Math.max(14, Y_SPACING - (520 - this.height) / 12) : Y_SPACING;
+    }
+
+    @Unique private int getDoneButtonY() {
+        int flowY = editorButton.getY() + getVerticalSpacing() + font.lineHeight + 2 * MARGIN;
+        int footerY = this.height - BUTTON_HEIGHT - MARGIN;
+        return Math.min(flowY, footerY);
     }
 
     private boolean isInsideCell(double x, double y) {

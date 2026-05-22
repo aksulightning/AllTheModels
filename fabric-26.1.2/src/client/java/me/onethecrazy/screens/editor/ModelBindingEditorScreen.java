@@ -12,8 +12,10 @@ import me.onethecrazy.util.parsing.ParsingFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.joml.Vector3f;
 
@@ -26,11 +28,22 @@ import java.util.function.DoubleSupplier;
 public class ModelBindingEditorScreen extends Screen {
     private static final int MARGIN = 12;
     private static final int ROW_HEIGHT = 22;
+    private static final int SECTION_SPACING = 10;
+    private static final int LABEL_WIDTH = 150;
+    private static final int CONTROL_WIDTH = 160;
+    private static final int COLUMN_GAP = 12;
+    private static final int CONTENT_WIDTH = LABEL_WIDTH + COLUMN_GAP + CONTROL_WIDTH;
+    private static final int SCROLLBAR_WIDTH = 6;
+    private static final int SCROLL_STEP = 22;
     private static final double CAMERA_OFFSET_MIN = -1.5;
     private static final double CAMERA_OFFSET_MAX = 1.5;
     private final Screen parent;
     private List<String> boneNames = List.of();
     private List<String> clipNames = List.of();
+    private final List<ScrollableControl> scrollableControls = new ArrayList<>();
+    private int scrollOffset;
+    private boolean draggingScrollbar;
+    private int scrollbarGrabOffset;
 
     public ModelBindingEditorScreen(Screen parent) {
         super(Component.nullToEmpty("Settings"));
@@ -41,96 +54,106 @@ public class ModelBindingEditorScreen extends Screen {
     protected void init() {
         boneNames = currentBones();
         clipNames = currentClips();
-        int x = MARGIN;
-        int y = 36;
-        int width = Math.min(300, this.width - MARGIN * 2);
+        scrollableControls.clear();
+        clampScrollOffset();
+        int labelX = contentX();
+        int controlX = controlX();
+        int y = 56;
 
         for (LogicalBodyPart part : LogicalBodyPart.values()) {
             LogicalBodyPart target = part;
-            addRenderableWidget(Button.builder(buttonText(target), button -> {
+            addScrollableWidget(Button.builder(bindingValueText(target), button -> {
                 cycleBinding(target);
-                button.setMessage(buttonText(target));
-            }).bounds(x, y, width, 20).build());
+                button.setMessage(bindingValueText(target));
+            }).bounds(controlX, y, CONTROL_WIDTH, 20).build(), y);
             y += ROW_HEIGHT;
         }
 
-        addRenderableWidget(Button.builder(Component.nullToEmpty("Auto Bind"), button -> {
+        y += SECTION_SPACING;
+        addScrollableWidget(Button.builder(Component.nullToEmpty("Auto Bind"), button -> {
             FBXPlayerModelsClient.options().selectedSkin.logicalRigBinding = LogicalRigBinding.autoBind(boneNames);
             SkinManager.saveCurrentBinding();
             Minecraft.getInstance().setScreen(new ModelBindingEditorScreen(parent));
-        }).bounds(x, y + MARGIN, width / 2 - 3, 20).build());
+        }).bounds(labelX, y, LABEL_WIDTH, 20).build(), y);
 
         addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> onClose())
-                .bounds(x + width / 2 + 3, y + MARGIN, width / 2 - 3, 20).build());
+                .bounds(controlX, this.height - 32, CONTROL_WIDTH, 20).build());
 
-        addRenderableWidget(Button.builder(animationToggleText(), button -> {
+        y += ROW_HEIGHT + SECTION_SPACING * 2;
+        addScrollableWidget(Button.builder(animationToggleText(), button -> {
             FBXPlayerModelsClient.options().selectedSkin.setAnimationsEnabled(!FBXPlayerModelsClient.options().selectedSkin.animationsEnabled());
             SkinManager.saveCurrentBinding();
             button.setMessage(animationToggleText());
-        }).bounds(x, y + MARGIN + ROW_HEIGHT, width, 20).build());
+        }).bounds(controlX, y, CONTROL_WIDTH, 20).build(), y);
 
-        int clipY = y + MARGIN + ROW_HEIGHT * 2;
+        int clipY = y + ROW_HEIGHT;
         for (String state : List.of("Walk", "Sneak", "Sit", "Sleep")) {
             String logicalState = state;
-            addRenderableWidget(Button.builder(clipButtonText(logicalState), button -> {
+            addScrollableWidget(Button.builder(clipValueText(logicalState), button -> {
                 cycleClip(logicalState);
-                button.setMessage(clipButtonText(logicalState));
-            }).bounds(x, clipY, width, 20).build());
+                button.setMessage(clipValueText(logicalState));
+            }).bounds(controlX, clipY, CONTROL_WIDTH, 20).build(), clipY);
             clipY += ROW_HEIGHT;
         }
 
-        int firstPersonY = clipY + MARGIN;
-        addRenderableWidget(Button.builder(firstPersonSelfModelText(), button -> {
+        int firstPersonY = clipY + SECTION_SPACING * 2;
+        addScrollableWidget(Button.builder(firstPersonSelfModelText(), button -> {
             FBXPlayerModelsClient.options().renderSelfModelInFirstPerson = !FBXPlayerModelsClient.options().renderSelfModelInFirstPerson;
             FileUtil.writeSave(FBXPlayerModelsClient.options());
             button.setMessage(firstPersonSelfModelText());
-        }).bounds(x, firstPersonY, width, 20).build());
+        }).bounds(controlX, firstPersonY, CONTROL_WIDTH, 20).build(), firstPersonY);
 
-        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT, width, 20, "X",
+        addScrollableWidget(new CameraOffsetSlider(controlX, firstPersonY + ROW_HEIGHT, CONTROL_WIDTH, 20, "X",
                 () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetX,
-                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetX = (float) value));
-        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT * 2, width, 20, "Y",
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetX = (float) value), firstPersonY + ROW_HEIGHT);
+        addScrollableWidget(new CameraOffsetSlider(controlX, firstPersonY + ROW_HEIGHT * 2, CONTROL_WIDTH, 20, "Y",
                 () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetY,
-                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetY = (float) value));
-        addRenderableWidget(new CameraOffsetSlider(x, firstPersonY + ROW_HEIGHT * 3, width, 20, "Z",
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetY = (float) value), firstPersonY + ROW_HEIGHT * 2);
+        addScrollableWidget(new CameraOffsetSlider(controlX, firstPersonY + ROW_HEIGHT * 3, CONTROL_WIDTH, 20, "Z",
                 () -> FBXPlayerModelsClient.options().firstPersonCameraOffsetZ,
-                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetZ = (float) value));
+                value -> FBXPlayerModelsClient.options().firstPersonCameraOffsetZ = (float) value), firstPersonY + ROW_HEIGHT * 3);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         super.extractRenderState(context, mouseX, mouseY, delta);
-        context.text(font, title, MARGIN, MARGIN, 0xFFFFFFFF, true);
-        context.text(font, Component.nullToEmpty("Detected bones: " + boneNames.size()), MARGIN, 24, 0xFFCCCCCC, true);
+        context.text(font, title, this.width / 2 - font.width(title) / 2, MARGIN, 0xFFFFFFFF, true);
+        context.text(font, Component.nullToEmpty("Detected bones: " + boneNames.size()), contentX(), 24, 0xFFCCCCCC, true);
 
-        int x = Math.min(330, this.width / 2);
-        int y = 40;
-        context.text(font, Component.nullToEmpty("Bones / objects"), x, y - 16, 0xFFFFFFFF, true);
-        if (boneNames.isEmpty()) {
-            context.text(font, Component.nullToEmpty("No bindable bones detected."), x, y, 0xFFFFAAAA, true);
-        } else {
-            for (int i = 0; i < Math.min(18, boneNames.size()); i++) {
-                context.text(font, Component.nullToEmpty(boneNames.get(i)), x, y + i * 10, 0xFFCCCCCC, false);
+        renderSettingsLabels(context);
+        renderScrollbar(context);
+
+        boolean showSidePanel = this.width >= controlX() + CONTROL_WIDTH + 260;
+        int x = controlX() + CONTROL_WIDTH + 28;
+        int y = 56;
+        if (showSidePanel) {
+            context.text(font, Component.nullToEmpty("Bones / objects"), x, y - 16, 0xFFFFFFFF, true);
+            if (boneNames.isEmpty()) {
+                context.text(font, Component.nullToEmpty("No bindable bones detected."), x, y, 0xFFFFAAAA, true);
+            } else {
+                for (int i = 0; i < Math.min(18, boneNames.size()); i++) {
+                    context.text(font, Component.nullToEmpty(boneNames.get(i)), x, y + i * 10, 0xFFCCCCCC, false);
+                }
             }
-        }
 
-        int clipY = y + Math.min(18, Math.max(1, boneNames.size())) * 10 + 24;
-        context.text(font, Component.nullToEmpty("Animation clips: " + clipNames.size()), x, clipY, 0xFFFFFFFF, true);
-        for (int i = 0; i < Math.min(8, clipNames.size()); i++) {
-            context.text(font, Component.nullToEmpty(clipNames.get(i)), x, clipY + 12 + i * 10, 0xFFCCCCCC, false);
-        }
+            int clipY = y + Math.min(18, Math.max(1, boneNames.size())) * 10 + 24;
+            context.text(font, Component.nullToEmpty("Animation clips: " + clipNames.size()), x, clipY, 0xFFFFFFFF, true);
+            for (int i = 0; i < Math.min(8, clipNames.size()); i++) {
+                context.text(font, Component.nullToEmpty(clipNames.get(i)), x, clipY + 12 + i * 10, 0xFFCCCCCC, false);
+            }
 
-        int pivotY = Math.max(220, clipY + 112);
-        context.text(font, Component.nullToEmpty("Logical bind pivots"), x, pivotY, 0xFFFFFFFF, true);
-        int pivotRow = 0;
-        for (LogicalBodyPart part : LogicalBodyPart.values()) {
-            context.text(font, Component.nullToEmpty(part.displayName + ": " + pivotText(part)), x, pivotY + 12 + pivotRow * 10, 0xFFCCCCCC, false);
-            pivotRow++;
+            int pivotY = Math.max(220, clipY + 112);
+            context.text(font, Component.nullToEmpty("Logical bind pivots"), x, pivotY, 0xFFFFFFFF, true);
+            int pivotRow = 0;
+            for (LogicalBodyPart part : LogicalBodyPart.values()) {
+                context.text(font, Component.nullToEmpty(part.displayName + ": " + pivotText(part)), x, pivotY + 12 + pivotRow * 10, 0xFFCCCCCC, false);
+                pivotRow++;
+            }
         }
 
         List<String> warnings = FBXPlayerModelsClient.options().selectedSkin.warnings();
         if (!warnings.isEmpty()) {
-            int warningY = this.height - 56 - Math.min(2, warnings.size()) * 10;
+            int warningY = this.height - 82 - Math.min(2, warnings.size()) * 10;
             for (int i = 0; i < Math.min(2, warnings.size()); i++) {
                 context.text(font, Component.nullToEmpty(warnings.get(i)), MARGIN, warningY + i * 10, 0xFFFFFF88, false);
             }
@@ -138,10 +161,10 @@ public class ModelBindingEditorScreen extends Screen {
 
         CacheSkin cache = currentCache();
         String status = cache == null ? "Rig: none" : cache.debugStatus();
-        context.text(font, Component.nullToEmpty(status), MARGIN, this.height - 28, 0xFFCCCCCC, true);
-        context.text(font, Component.nullToEmpty("Rig binding controls procedural fallback movement only."), MARGIN, this.height - 16, 0xFFAAAAAA, true);
+        context.text(font, Component.nullToEmpty(status), MARGIN, this.height - 54, 0xFFCCCCCC, true);
+        context.text(font, Component.nullToEmpty("Rig binding controls procedural fallback movement only."), MARGIN, this.height - 42, 0xFFAAAAAA, true);
 
-        if (cache != null && cache.format == ParsingFormat.FBX) {
+        if (showSidePanel && cache != null && cache.format == ParsingFormat.FBX) {
             int materialY = Math.max(40, this.height - 110);
             int materialX = Math.min(this.width - 220, Math.max(330, this.width / 2));
             List<String> diagnostics = FBXParser.lastMaterialDiagnostics();
@@ -154,6 +177,49 @@ public class ModelBindingEditorScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(parent);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (maxScrollOffset() <= 0) {
+            return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        }
+
+        scrollOffset = clamp(scrollOffset - (int) Math.round(verticalAmount * SCROLL_STEP), 0, maxScrollOffset());
+        updateScrollableWidgets();
+        return true;
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == 0 && isOverScrollbar(event.x(), event.y())) {
+            draggingScrollbar = true;
+            scrollbarGrabOffset = (int) event.y() - scrollbarThumbTop();
+            updateScrollFromScrollbar((int) event.y() - scrollbarGrabOffset);
+            return true;
+        }
+
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingScrollbar && event.button() == 0) {
+            draggingScrollbar = false;
+            return true;
+        }
+
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double deltaX, double deltaY) {
+        if (draggingScrollbar) {
+            updateScrollFromScrollbar((int) event.y() - scrollbarGrabOffset);
+            return true;
+        }
+
+        return super.mouseDragged(event, deltaX, deltaY);
     }
 
     private void cycleBinding(LogicalBodyPart part) {
@@ -174,9 +240,9 @@ public class ModelBindingEditorScreen extends Screen {
         SkinManager.saveCurrentBinding();
     }
 
-    private Component buttonText(LogicalBodyPart part) {
+    private Component bindingValueText(LogicalBodyPart part) {
         String value = FBXPlayerModelsClient.options().selectedSkin.binding().firstName(part);
-        return Component.nullToEmpty(part.displayName + ": " + (value.isBlank() ? "Unbound" : value));
+        return Component.nullToEmpty(value.isBlank() ? "Unbound" : value);
     }
 
     private Component animationToggleText() {
@@ -207,9 +273,160 @@ public class ModelBindingEditorScreen extends Screen {
         SkinManager.saveCurrentBinding();
     }
 
-    private Component clipButtonText(String state) {
+    private Component clipValueText(String state) {
         String value = FBXPlayerModelsClient.options().selectedSkin.clipMappings().getOrDefault(state, "");
-        return Component.nullToEmpty(state + " Clip: " + (value.isBlank() ? "Procedural/default" : value));
+        return Component.nullToEmpty(value.isBlank() ? "Procedural/default" : value);
+    }
+
+    private void renderSettingsLabels(GuiGraphicsExtractor context) {
+        int labelX = contentX();
+        int y = scrolledY(42);
+        drawScrollableText(context, "Model Binding", this.width / 2 - font.width("Model Binding") / 2, y, 0xFFFFFFFF, true);
+        y = scrolledY(56);
+
+        for (LogicalBodyPart part : LogicalBodyPart.values()) {
+            drawScrollableText(context, part.displayName, labelX, y + 6, 0xFFFFFFFF, true);
+            y += ROW_HEIGHT;
+        }
+
+        y += SECTION_SPACING;
+        drawScrollableText(context, "Automatically match common bone names", controlX(), y + 6, 0xFFCCCCCC, false);
+
+        y += ROW_HEIGHT + SECTION_SPACING * 2;
+        drawScrollableText(context, "Animation Clips", this.width / 2 - font.width("Animation Clips") / 2, y - 14, 0xFFFFFFFF, true);
+        drawScrollableText(context, "Animations", labelX, y + 6, 0xFFFFFFFF, true);
+        y += ROW_HEIGHT;
+
+        for (String state : List.of("Walk", "Sneak", "Sit", "Sleep")) {
+            drawScrollableText(context, state + " Clip", labelX, y + 6, 0xFFFFFFFF, true);
+            y += ROW_HEIGHT;
+        }
+
+        y += SECTION_SPACING * 2;
+        drawScrollableText(context, "First Person", this.width / 2 - font.width("First Person") / 2, y - 14, 0xFFFFFFFF, true);
+        drawScrollableText(context, "Self Model", labelX, y + 6, 0xFFFFFFFF, true);
+        drawScrollableText(context, "Camera X Offset", labelX, y + ROW_HEIGHT + 6, 0xFFFFFFFF, true);
+        drawScrollableText(context, "Camera Y Offset", labelX, y + ROW_HEIGHT * 2 + 6, 0xFFFFFFFF, true);
+        drawScrollableText(context, "Camera Z Offset", labelX, y + ROW_HEIGHT * 3 + 6, 0xFFFFFFFF, true);
+    }
+
+    private int contentX() {
+        return this.width / 2 - CONTENT_WIDTH / 2;
+    }
+
+    private int controlX() {
+        return contentX() + LABEL_WIDTH + COLUMN_GAP;
+    }
+
+    private int scrollTop() {
+        return 40;
+    }
+
+    private int scrollBottom() {
+        return this.height - 64;
+    }
+
+    private int scrollHeight() {
+        return Math.max(1, scrollBottom() - scrollTop());
+    }
+
+    private int contentBottom() {
+        int y = 56;
+        y += LogicalBodyPart.values().length * ROW_HEIGHT;
+        y += SECTION_SPACING;
+        y += ROW_HEIGHT + SECTION_SPACING * 2;
+        y += ROW_HEIGHT;
+        y += 4 * ROW_HEIGHT;
+        y += SECTION_SPACING * 2;
+        y += 3 * ROW_HEIGHT;
+        return y + 20;
+    }
+
+    private int maxScrollOffset() {
+        return Math.max(0, contentBottom() - scrollBottom());
+    }
+
+    private int scrolledY(int baseY) {
+        return baseY - scrollOffset;
+    }
+
+    private void clampScrollOffset() {
+        scrollOffset = clamp(scrollOffset, 0, maxScrollOffset());
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private <T extends AbstractWidget> T addScrollableWidget(T widget, int baseY) {
+        scrollableControls.add(new ScrollableControl(widget, baseY));
+        updateScrollableWidget(widget, baseY);
+        return addRenderableWidget(widget);
+    }
+
+    private void updateScrollableWidgets() {
+        for (ScrollableControl control : scrollableControls) {
+            updateScrollableWidget(control.widget, control.baseY);
+        }
+    }
+
+    private void updateScrollableWidget(AbstractWidget widget, int baseY) {
+        int y = scrolledY(baseY);
+        widget.setY(y);
+        widget.visible = y >= scrollTop() && y + widget.getHeight() <= scrollBottom();
+    }
+
+    private void drawScrollableText(GuiGraphicsExtractor context, String text, int x, int y, int color, boolean shadow) {
+        if (y >= scrollTop() && y + font.lineHeight <= scrollBottom()) {
+            context.text(font, Component.nullToEmpty(text), x, y, color, shadow);
+        }
+    }
+
+    private void renderScrollbar(GuiGraphicsExtractor context) {
+        if (maxScrollOffset() <= 0) {
+            return;
+        }
+
+        int x = this.width / 2 + CONTENT_WIDTH / 2 + 12;
+        int top = scrollTop();
+        int bottom = scrollBottom();
+        context.fill(x, top, x + SCROLLBAR_WIDTH, bottom, 0x66000000);
+        int thumbTop = scrollbarThumbTop();
+        int thumbBottom = thumbTop + scrollbarThumbHeight();
+        context.fill(x, thumbTop, x + SCROLLBAR_WIDTH, thumbBottom, 0xFFAAAAAA);
+        context.fill(x + 1, thumbTop + 1, x + SCROLLBAR_WIDTH - 1, thumbBottom - 1, 0xFF666666);
+    }
+
+    private int scrollbarThumbHeight() {
+        return Math.max(24, scrollHeight() * scrollHeight() / contentBottom());
+    }
+
+    private int scrollbarThumbTop() {
+        int track = scrollHeight() - scrollbarThumbHeight();
+        if (track <= 0 || maxScrollOffset() <= 0) {
+            return scrollTop();
+        }
+        return scrollTop() + scrollOffset * track / maxScrollOffset();
+    }
+
+    private boolean isOverScrollbar(double mouseX, double mouseY) {
+        if (maxScrollOffset() <= 0) {
+            return false;
+        }
+        int x = this.width / 2 + CONTENT_WIDTH / 2 + 12;
+        return mouseX >= x && mouseX <= x + SCROLLBAR_WIDTH
+                && mouseY >= scrollTop() && mouseY <= scrollBottom();
+    }
+
+    private void updateScrollFromScrollbar(int thumbTop) {
+        int track = scrollHeight() - scrollbarThumbHeight();
+        if (track <= 0) {
+            scrollOffset = 0;
+        } else {
+            int relativeTop = clamp(thumbTop - scrollTop(), 0, track);
+            scrollOffset = relativeTop * maxScrollOffset() / track;
+        }
+        updateScrollableWidgets();
     }
 
     private List<String> currentBones() {
@@ -308,6 +525,16 @@ public class ModelBindingEditorScreen extends Screen {
 
         private double roundedOffsetValue() {
             return Math.round(fromSliderValue(value) * 100.0) / 100.0;
+        }
+    }
+
+    private static final class ScrollableControl {
+        private final AbstractWidget widget;
+        private final int baseY;
+
+        private ScrollableControl(AbstractWidget widget, int baseY) {
+            this.widget = widget;
+            this.baseY = baseY;
         }
     }
 }
