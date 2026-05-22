@@ -45,6 +45,13 @@ public class ConfigScreen extends Screen {
         this.parent = parent;
     }
 
+    public static Screen create(Screen parent) {
+        ConfigScreen configScreen = new ConfigScreen(parent);
+        return FBXPlayerModelsClient.options().hideCommunityServerDisclaimer
+                ? configScreen
+                : new CommunityServerDisclaimerScreen(parent, configScreen);
+    }
+
     @Override
     protected void init(){
         // init skinPreviewRenderer

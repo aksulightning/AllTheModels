@@ -17,7 +17,7 @@ public class Commands {
 
     private static int waypointsCommandHandler(){
         Minecraft.getInstance().execute(() ->
-                Minecraft.getInstance().setScreen(new ConfigScreen())
+                Minecraft.getInstance().setScreen(ConfigScreen.create(null))
         );
         return 1;
     }

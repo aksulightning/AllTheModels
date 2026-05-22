@@ -62,7 +62,7 @@ public abstract class MainMenuMixin extends Screen{
         double mouseY = event.y();
         // If we're inside the skin cell, open config screen
         if(mouseX > getCellOriginX() && mouseX < getCellOriginX() + SKIN_CELL_DIMENSIONS && mouseY > getCellOriginY() && mouseY < getCellOriginY() + SKIN_CELL_DIMENSIONS){
-            Minecraft.getInstance().setScreen(new ConfigScreen(this));
+            Minecraft.getInstance().setScreen(ConfigScreen.create(this));
 
             // We handled the click
             cir.setReturnValue(true);
