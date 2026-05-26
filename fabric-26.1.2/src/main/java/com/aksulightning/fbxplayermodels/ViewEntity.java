@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-public class ViewEntity extends Entity {
+public class ViewEntity extends Entity implements FbxModelEntity {
     public static final String MODEL_NBT_KEY = "Model";
     private static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(ViewEntity.class, EntityDataSerializers.STRING);
 

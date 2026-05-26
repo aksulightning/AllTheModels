@@ -64,6 +64,10 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 
 	private void registerEntityRenderers() {
 		EntityRendererRegistry.register(ModEntities.VIEW_ENTITY, ViewEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.PASSIVE_ENTITY, ViewEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.TAMEABLE_ENTITY, ViewEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.NEUTRAL_ENTITY, ViewEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.HOSTILE_ENTITY, ViewEntityRenderer::new);
 	}
 
 	public void registerCommands(){

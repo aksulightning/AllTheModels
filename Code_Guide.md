@@ -122,18 +122,30 @@ Shared code currently includes platform interfaces, constants, save/config model
 
 ## FBX view entity
 
-The mod registers one summonable inert entity for displaying an FBX model:
+The mod registers summonable FBX-backed entities for displaying an FBX model:
 
 ```text
 fbxplayermodels:view_entity
+fbxplayermodels:passive_entity
+fbxplayermodels:tameable_entity
+fbxplayermodels:neutral_entity
+fbxplayermodels:hostile_entity
 ```
 
-The entity is intentionally not a pathfinding mob. It extends the base Minecraft entity type in each Fabric target, has no AI goals, no attacks, no wandering, no fleeing, and no natural spawning for the MVP. It exists as a server-synced display entity with a client renderer.
+`view_entity` is intentionally not a pathfinding mob. It extends the base Minecraft entity type in each Fabric target, has no AI goals, no attacks, no wandering, no fleeing, and no natural spawning for the MVP. It exists as a server-synced display entity with a client renderer.
+
+The AI variants reuse the same FBX model NBT, server sync, cache, and renderer:
+
+- `passive_entity` wanders and looks at nearby players.
+- `tameable_entity` can be tamed with a bone, can sit, follows its owner, wanders, and looks at nearby players.
+- `neutral_entity` wanders and only fights back after being damaged.
+- `hostile_entity` wanders, targets players, and attacks in melee.
 
 Summon example:
 
 ```mcfunction
 /summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
 ```
 
 The `Model` NBT value is persisted on the entity and synced to clients with tracked entity data. The value must be a safe flat FBX filename. Absolute paths, nested paths, path traversal, blank values, and non-`.fbx` files are rejected by sanitizing to an empty model value.
@@ -158,6 +170,10 @@ Important classes, duplicated per Fabric target where mappings differ:
 
 - `com.aksulightning.fbxplayermodels.ModEntities`
 - `com.aksulightning.fbxplayermodels.ViewEntity`
+- `com.aksulightning.fbxplayermodels.FbxPassiveEntity`
+- `com.aksulightning.fbxplayermodels.FbxTameableEntity`
+- `com.aksulightning.fbxplayermodels.FbxNeutralEntity`
+- `com.aksulightning.fbxplayermodels.FbxHostileEntity`
 - `com.aksulightning.fbxplayermodels.ViewEntityModelPath`
 - `com.aksulightning.fbxplayermodels.client.ViewEntityRenderer`
 - `com.aksulightning.fbxplayermodels.client.ViewEntityModelCache`
@@ -166,7 +182,7 @@ Important classes, duplicated per Fabric target where mappings differ:
 - `me.onethecrazy.server.ServerModelNetworking`
 - `me.onethecrazy.util.network.BackendInteractor`
 
-Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNormalizer`, `CacheSkin`, static vertices, and `SkinnedModel.render("Idle", ...)`.
+Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNormalizer`, `CacheSkin`, static vertices, and `SkinnedModel.render(...)`. The renderer chooses `Idle` when an entity is still and `Walk` when a FBX mob variant is moving.
 
 ## Adding another Fabric Minecraft version
 

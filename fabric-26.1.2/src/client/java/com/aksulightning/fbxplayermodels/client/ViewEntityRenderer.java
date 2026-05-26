@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.aksulightning.fbxplayermodels.ViewEntity;
+import com.aksulightning.fbxplayermodels.FbxModelEntity;
 import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.Vertex;
@@ -14,11 +15,12 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.world.entity.Entity;
 import org.joml.Matrix4f;
 
 import java.util.List;
 
-public class ViewEntityRenderer extends EntityRenderer<ViewEntity, ViewEntityRenderState> {
+public class ViewEntityRenderer<T extends Entity & FbxModelEntity> extends EntityRenderer<T, ViewEntityRenderState> {
     public ViewEntityRenderer(EntityRendererProvider.Context context) {
         super(context);
         this.shadowRadius = 0.0f;
@@ -30,7 +32,7 @@ public class ViewEntityRenderer extends EntityRenderer<ViewEntity, ViewEntityRen
     }
 
     @Override
-    public void extractRenderState(ViewEntity entity, ViewEntityRenderState state, float tickDelta) {
+    public void extractRenderState(T entity, ViewEntityRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.yRot = entity.getYRot(tickDelta);
         state.vertices = List.of();
@@ -43,7 +45,7 @@ public class ViewEntityRenderer extends EntityRenderer<ViewEntity, ViewEntityRen
         List<Vertex> vertices = model.vertices;
         if (model.skinnedModel != null) {
             float seconds = (entity.tickCount + tickDelta) / 20f;
-            vertices = model.skinnedModel.render("Idle", seconds, CustomModelPose.HeadLookRotation.NONE, CustomModelPose.LimbPose.NONE);
+            vertices = model.skinnedModel.render(entity.getFbxAnimation(tickDelta), seconds, CustomModelPose.HeadLookRotation.NONE, CustomModelPose.LimbPose.NONE);
         }
         if (vertices != null && !vertices.isEmpty()) {
             state.vertices = vertices;

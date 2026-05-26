@@ -1,6 +1,7 @@
 package com.aksulightning.fbxplayermodels.client;
 
 import com.aksulightning.fbxplayermodels.ViewEntity;
+import com.aksulightning.fbxplayermodels.FbxModelEntity;
 import me.onethecrazy.FBXPlayerModels;
 import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.objects.CacheSkin;
@@ -12,13 +13,14 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Matrix4f;
 
 import java.util.List;
 
-public class ViewEntityRenderer extends EntityRenderer<ViewEntity> {
+public class ViewEntityRenderer<T extends Entity & FbxModelEntity> extends EntityRenderer<T> {
     private static final Identifier FALLBACK_TEXTURE = Identifier.of(FBXPlayerModels.MOD_ID, "textures/white_pixel.png");
 
     public ViewEntityRenderer(EntityRendererFactory.Context context) {
@@ -27,7 +29,7 @@ public class ViewEntityRenderer extends EntityRenderer<ViewEntity> {
     }
 
     @Override
-    public void render(ViewEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    public void render(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         CacheSkin model = ViewEntityModelCache.get(entity.getModel());
         if (model == null) {
             return;
@@ -36,7 +38,7 @@ public class ViewEntityRenderer extends EntityRenderer<ViewEntity> {
         List<Vertex> vertices = model.vertices;
         if (model.skinnedModel != null) {
             float seconds = (entity.age + tickDelta) / 20f;
-            vertices = model.skinnedModel.render("Idle", seconds, CustomModelPose.HeadLookRotation.NONE, CustomModelPose.LimbPose.NONE);
+            vertices = model.skinnedModel.render(entity.getFbxAnimation(tickDelta), seconds, CustomModelPose.HeadLookRotation.NONE, CustomModelPose.LimbPose.NONE);
         }
         if (vertices == null || vertices.isEmpty()) {
             return;
@@ -62,7 +64,7 @@ public class ViewEntityRenderer extends EntityRenderer<ViewEntity> {
     }
 
     @Override
-    public Identifier getTexture(ViewEntity entity) {
+    public Identifier getTexture(T entity) {
         return FALLBACK_TEXTURE;
     }
 }

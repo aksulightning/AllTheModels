@@ -8,7 +8,7 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 
-public class ViewEntity extends Entity {
+public class ViewEntity extends Entity implements FbxModelEntity {
     public static final String MODEL_NBT_KEY = "Model";
     private static final TrackedData<String> MODEL = DataTracker.registerData(ViewEntity.class, TrackedDataHandlerRegistry.STRING);
 
