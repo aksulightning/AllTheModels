@@ -6,6 +6,7 @@ import me.onethecrazy.network.ModelPackets;
 import me.onethecrazy.network.ModelPackets.LookupResponsePayload;
 import me.onethecrazy.network.ModelPackets.ModelDataPayload;
 import me.onethecrazy.network.ModelPackets.ModelLookup;
+import me.onethecrazy.network.ModelPackets.MobModelDataPayload;
 import me.onethecrazy.network.ModelPackets.UploadResultPayload;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -31,8 +32,10 @@ public final class ServerModelNetworking {
         PayloadTypeRegistry.playC2S().register(ModelPackets.UploadModelPayload.ID, ModelPackets.UploadModelPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModelPackets.RequestLookupPayload.ID, ModelPackets.RequestLookupPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ModelPackets.RequestModelPayload.ID, ModelPackets.RequestModelPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ModelPackets.RequestMobModelPayload.ID, ModelPackets.RequestMobModelPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModelPackets.LookupResponsePayload.ID, ModelPackets.LookupResponsePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModelPackets.ModelDataPayload.ID, ModelPackets.ModelDataPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ModelPackets.MobModelDataPayload.ID, ModelPackets.MobModelDataPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ModelPackets.UploadResultPayload.ID, ModelPackets.UploadResultPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(ModelPackets.UploadModelPayload.ID, (payload, context) ->
@@ -41,6 +44,8 @@ public final class ServerModelNetworking {
                 context.server().execute(() -> handleLookup(context.player(), payload)));
         ServerPlayNetworking.registerGlobalReceiver(ModelPackets.RequestModelPayload.ID, (payload, context) ->
                 context.server().execute(() -> handleModelRequest(context.player(), payload)));
+        ServerPlayNetworking.registerGlobalReceiver(ModelPackets.RequestMobModelPayload.ID, (payload, context) ->
+                context.server().execute(() -> handleMobModelRequest(context.player(), payload)));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(CommandManager.literal("fbxplayermodels")
@@ -83,6 +88,20 @@ public final class ServerModelNetworking {
         } catch (IOException e) {
             FBXPlayerModelsMod.LOGGER.error("Server-side failure while reading model", e);
             ServerPlayNetworking.send(player, new ModelDataPayload(payload.hash(), payload.format(), new byte[0], "Server-side failure: could not read model."));
+        }
+    }
+
+    private static void handleMobModelRequest(ServerPlayerEntity player, ModelPackets.RequestMobModelPayload payload) {
+        try {
+            byte[] data = store(player.getServer()).readMobModel(payload.model()).orElse(null);
+            if (data == null) {
+                ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), new byte[0], "Mob model not found."));
+                return;
+            }
+            ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), data, "Saved successfully."));
+        } catch (IOException e) {
+            FBXPlayerModelsMod.LOGGER.error("Server-side failure while reading mob model", e);
+            ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), new byte[0], "Server-side failure: could not read mob model."));
         }
     }
 

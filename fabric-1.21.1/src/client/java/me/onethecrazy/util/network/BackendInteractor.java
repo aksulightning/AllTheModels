@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 public final class BackendInteractor {
     private static final Map<String, List<CompletableFuture<Map<String, LookupSkin>>>> LOOKUP_WAITERS = new HashMap<>();
     private static final Map<String, List<Consumer<byte[]>>> MODEL_WAITERS = new HashMap<>();
+    private static final Map<String, List<Consumer<byte[]>>> MOB_MODEL_WAITERS = new HashMap<>();
     private static boolean initialized;
 
     private BackendInteractor() {
@@ -36,6 +37,8 @@ public final class BackendInteractor {
                 context.client().execute(() -> receiveLookup(payload)));
         ClientPlayNetworking.registerGlobalReceiver(ModelPackets.ModelDataPayload.ID, (payload, context) ->
                 context.client().execute(() -> receiveModel(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(ModelPackets.MobModelDataPayload.ID, (payload, context) ->
+                context.client().execute(() -> receiveMobModel(payload)));
         ClientPlayNetworking.registerGlobalReceiver(ModelPackets.UploadResultPayload.ID, (payload, context) ->
                 context.client().execute(() -> showMessage(payload.message())));
     }
@@ -71,6 +74,22 @@ public final class BackendInteractor {
             MODEL_WAITERS.computeIfAbsent(key, ignored -> new ArrayList<>()).add(onArrive);
         }
         ClientPlayNetworking.send(new ModelPackets.RequestModelPayload(skin.hash, skin.format.name()));
+    }
+
+    public static void getMobModelData(String model, Consumer<byte[]> onArrive) {
+        if (model == null || model.isBlank()) {
+            onArrive.accept(new byte[0]);
+            return;
+        }
+        if (!canSend(ModelPackets.RequestMobModelPayload.ID)) {
+            onArrive.accept(new byte[0]);
+            return;
+        }
+
+        synchronized (MOB_MODEL_WAITERS) {
+            MOB_MODEL_WAITERS.computeIfAbsent(model, ignored -> new ArrayList<>()).add(onArrive);
+        }
+        ClientPlayNetworking.send(new ModelPackets.RequestMobModelPayload(model));
     }
 
     public static void setSkinData(String uuid, byte[] data3d, ParsingFormat format) {
@@ -133,6 +152,22 @@ public final class BackendInteractor {
         List<Consumer<byte[]>> waiters;
         synchronized (MODEL_WAITERS) {
             waiters = MODEL_WAITERS.remove(key);
+        }
+        if (waiters != null) {
+            for (Consumer<byte[]> waiter : waiters) {
+                waiter.accept(payload.data());
+            }
+        }
+    }
+
+    private static void receiveMobModel(ModelPackets.MobModelDataPayload payload) {
+        if (payload.data().length == 0 && payload.message() != null && !payload.message().isBlank()) {
+            FBXPlayerModelsMod.LOGGER.info(payload.message());
+        }
+
+        List<Consumer<byte[]>> waiters;
+        synchronized (MOB_MODEL_WAITERS) {
+            waiters = MOB_MODEL_WAITERS.remove(payload.model());
         }
         if (waiters != null) {
             for (Consumer<byte[]> waiter : waiters) {

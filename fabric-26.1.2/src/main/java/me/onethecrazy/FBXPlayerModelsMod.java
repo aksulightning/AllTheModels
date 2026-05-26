@@ -1,6 +1,7 @@
 package me.onethecrazy;
 
 import net.fabricmc.api.ModInitializer;
+import com.aksulightning.fbxplayermodels.ModEntities;
 import me.onethecrazy.server.ServerModelNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ public class FBXPlayerModelsMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Initializing " + MOD_ID);
+		ModEntities.register();
 		ServerModelNetworking.initialize();
 	}
 }

@@ -61,6 +61,19 @@ public final class ModelPackets {
         }
     }
 
+    public record RequestMobModelPayload(String model) implements CustomPayload {
+        public static final Id<RequestMobModelPayload> ID = new Id<>(id("request_mob_model"));
+        public static final PacketCodec<RegistryByteBuf, RequestMobModelPayload> CODEC = PacketCodec.ofStatic(
+                ModelPackets::writeRequestMobModel,
+                ModelPackets::readRequestMobModel
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
     public record LookupResponsePayload(Map<String, ModelLookup> models) implements CustomPayload {
         public static final Id<LookupResponsePayload> ID = new Id<>(id("lookup_response"));
         public static final PacketCodec<RegistryByteBuf, LookupResponsePayload> CODEC = PacketCodec.ofStatic(
@@ -79,6 +92,19 @@ public final class ModelPackets {
         public static final PacketCodec<RegistryByteBuf, ModelDataPayload> CODEC = PacketCodec.ofStatic(
                 ModelPackets::writeModelData,
                 ModelPackets::readModelData
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
+    public record MobModelDataPayload(String model, byte[] data, String message) implements CustomPayload {
+        public static final Id<MobModelDataPayload> ID = new Id<>(id("mob_model_data"));
+        public static final PacketCodec<RegistryByteBuf, MobModelDataPayload> CODEC = PacketCodec.ofStatic(
+                ModelPackets::writeMobModelData,
+                ModelPackets::readMobModelData
         );
 
         @Override
@@ -144,6 +170,14 @@ public final class ModelPackets {
         buf.writeString(payload.format(), 16);
     }
 
+    private static RequestMobModelPayload readRequestMobModel(RegistryByteBuf buf) {
+        return new RequestMobModelPayload(buf.readString(160));
+    }
+
+    private static void writeRequestMobModel(RegistryByteBuf buf, RequestMobModelPayload payload) {
+        buf.writeString(payload.model(), 160);
+    }
+
     private static LookupResponsePayload readLookupResponse(RegistryByteBuf buf) {
         int count = buf.readVarInt();
         if (count < 0 || count > 128) {
@@ -172,6 +206,16 @@ public final class ModelPackets {
     private static void writeModelData(RegistryByteBuf buf, ModelDataPayload payload) {
         buf.writeString(payload.hash(), 80);
         buf.writeString(payload.format(), 16);
+        buf.writeByteArray(payload.data());
+        buf.writeString(payload.message(), 256);
+    }
+
+    private static MobModelDataPayload readMobModelData(RegistryByteBuf buf) {
+        return new MobModelDataPayload(buf.readString(160), buf.readByteArray(MAX_MODEL_BYTES), buf.readString(256));
+    }
+
+    private static void writeMobModelData(RegistryByteBuf buf, MobModelDataPayload payload) {
+        buf.writeString(payload.model(), 160);
         buf.writeByteArray(payload.data());
         buf.writeString(payload.message(), 256);
     }

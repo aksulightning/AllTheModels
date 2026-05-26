@@ -58,14 +58,11 @@ public class FileUtil {
 
     public static void createPaths() {
         try{
-            Files.createDirectory(getDefaultPath());
+            Files.createDirectories(getDefaultPath());
             createFileIfNotPresent(getSavePath(), "{}".getBytes(StandardCharsets.UTF_8));
-            Files.createDirectory(getSkinsPath());
+            Files.createDirectories(getSkinsPath());
+            Files.createDirectories(getMobModelCachePath());
         } catch (IOException e) {
-            // Ignore FileAlreadyExistsException
-            if(e instanceof FileAlreadyExistsException)
-                return;
-
             FBXPlayerModelsMod.LOGGER.error("Ran into error while creating default path: {0}", e);
         }
     }
@@ -80,6 +77,14 @@ public class FileUtil {
 
     public static Path getSkinsPath(){
         return getDefaultPath().resolve("skins");
+    }
+
+    public static Path getMobModelCachePath(){
+        return getDefaultPath().resolve("mobskins-cache");
+    }
+
+    public static Path getMobModelCachePath(String model){
+        return getMobModelCachePath().resolve(model);
     }
 
     public static Path getSkinPath(String skin, ParsingFormat format){

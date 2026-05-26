@@ -6,6 +6,7 @@ import me.onethecrazy.network.ModelPackets;
 import me.onethecrazy.network.ModelPackets.LookupResponsePayload;
 import me.onethecrazy.network.ModelPackets.ModelDataPayload;
 import me.onethecrazy.network.ModelPackets.ModelLookup;
+import me.onethecrazy.network.ModelPackets.MobModelDataPayload;
 import me.onethecrazy.network.ModelPackets.UploadResultPayload;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -33,8 +34,10 @@ public final class ServerModelNetworking {
         PayloadTypeRegistry.serverboundPlay().registerLarge(ModelPackets.UploadModelPayload.TYPE, ModelPackets.UploadModelPayload.CODEC, ModelPackets.MAX_MODEL_BYTES + 512);
         PayloadTypeRegistry.serverboundPlay().register(ModelPackets.RequestLookupPayload.TYPE, ModelPackets.RequestLookupPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ModelPackets.RequestModelPayload.TYPE, ModelPackets.RequestModelPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModelPackets.RequestMobModelPayload.TYPE, ModelPackets.RequestMobModelPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ModelPackets.LookupResponsePayload.TYPE, ModelPackets.LookupResponsePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().registerLarge(ModelPackets.ModelDataPayload.TYPE, ModelPackets.ModelDataPayload.CODEC, ModelPackets.MAX_MODEL_BYTES + 512);
+        PayloadTypeRegistry.clientboundPlay().registerLarge(ModelPackets.MobModelDataPayload.TYPE, ModelPackets.MobModelDataPayload.CODEC, ModelPackets.MAX_MODEL_BYTES + 512);
         PayloadTypeRegistry.clientboundPlay().register(ModelPackets.UploadResultPayload.TYPE, ModelPackets.UploadResultPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(ModelPackets.UploadModelPayload.TYPE, (payload, context) ->
@@ -43,6 +46,8 @@ public final class ServerModelNetworking {
                 context.server().execute(() -> handleLookup(context.server(), context.player(), payload)));
         ServerPlayNetworking.registerGlobalReceiver(ModelPackets.RequestModelPayload.TYPE, (payload, context) ->
                 context.server().execute(() -> handleModelRequest(context.server(), context.player(), payload)));
+        ServerPlayNetworking.registerGlobalReceiver(ModelPackets.RequestMobModelPayload.TYPE, (payload, context) ->
+                context.server().execute(() -> handleMobModelRequest(context.server(), context.player(), payload)));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(Commands.literal("fbxplayermodels")
@@ -85,6 +90,20 @@ public final class ServerModelNetworking {
         } catch (IOException e) {
             FBXPlayerModelsMod.LOGGER.error("Server-side failure while reading model", e);
             ServerPlayNetworking.send(player, new ModelDataPayload(payload.hash(), payload.format(), new byte[0], "Server-side failure: could not read model."));
+        }
+    }
+
+    private static void handleMobModelRequest(MinecraftServer server, ServerPlayer player, ModelPackets.RequestMobModelPayload payload) {
+        try {
+            byte[] data = store(server).readMobModel(payload.model()).orElse(null);
+            if (data == null) {
+                ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), new byte[0], "Mob model not found."));
+                return;
+            }
+            ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), data, "Saved successfully."));
+        } catch (IOException e) {
+            FBXPlayerModelsMod.LOGGER.error("Server-side failure while reading mob model", e);
+            ServerPlayNetworking.send(player, new MobModelDataPayload(payload.model(), new byte[0], "Server-side failure: could not read mob model."));
         }
     }
 

@@ -120,6 +120,73 @@ Code that imports `net.minecraft.*`, `com.mojang.*`, `net.fabricmc.*`, Mixin, or
 
 Shared code currently includes platform interfaces, constants, save/config models, rig binding metadata, simple model structures, `Float2`, `Float3`, and shared resources.
 
+## FBX view entity
+
+The mod registers summonable FBX-backed entities for displaying an FBX model:
+
+```text
+fbxplayermodels:view_entity
+fbxplayermodels:passive_entity
+fbxplayermodels:tameable_entity
+fbxplayermodels:neutral_entity
+fbxplayermodels:hostile_entity
+```
+
+`view_entity` is intentionally not a pathfinding mob. It extends the base Minecraft entity type in each Fabric target, has no AI goals, no attacks, no wandering, no fleeing, and no natural spawning for the MVP. It exists as a server-synced display entity with a client renderer.
+
+The AI variants reuse the same FBX model NBT, server sync, cache, and renderer:
+
+- `passive_entity` wanders and looks at nearby players.
+- `tameable_entity` can be tamed with a bone, can sit, follows its owner, wanders, and looks at nearby players.
+- `neutral_entity` wanders and only fights back after being damaged.
+- `hostile_entity` wanders, targets players, and attacks in melee.
+
+Summon example:
+
+```mcfunction
+/summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:tameable_entity ~ ~ ~ {Model:"this_file.fbx",TameItem:"minecraft:apple"}
+```
+
+The `Model` NBT value is persisted on the entity and synced to clients with tracked entity data. The value must be a safe flat FBX filename. Absolute paths, nested paths, path traversal, blank values, and non-`.fbx` files are rejected by sanitizing to an empty model value.
+
+`tameable_entity` also supports a per-entity tame item NBT value. Use `TameItem:"minecraft:item_id"` in summon NBT. The lowercase alias `tame_item` is accepted when reading entity NBT. Missing or invalid item ids fall back to `minecraft:bone`.
+
+Server-side model storage:
+
+```text
+<world>/fbx-player-models/mobskins/this_file.fbx
+```
+
+Clients do not load `mobskins` as local source data. When a view entity renders, the client requests the named model from the server through the mod networking layer. The server validates the safe filename, reads only from its world-local `mobskins` directory, enforces the shared model size limit, and sends the FBX bytes back to that client.
+
+Client-side received model cache:
+
+```text
+.fbxplayermodels/mobskins-cache/
+```
+
+This cache is only a parsing cache for server-sent bytes. It is not the authoritative model folder.
+
+Important classes, duplicated per Fabric target where mappings differ:
+
+- `com.aksulightning.fbxplayermodels.ModEntities`
+- `com.aksulightning.fbxplayermodels.ViewEntity`
+- `com.aksulightning.fbxplayermodels.FbxPassiveEntity`
+- `com.aksulightning.fbxplayermodels.FbxTameableEntity`
+- `com.aksulightning.fbxplayermodels.FbxNeutralEntity`
+- `com.aksulightning.fbxplayermodels.FbxHostileEntity`
+- `com.aksulightning.fbxplayermodels.ViewEntityModelPath`
+- `com.aksulightning.fbxplayermodels.client.ViewEntityRenderer`
+- `com.aksulightning.fbxplayermodels.client.ViewEntityModelCache`
+- `me.onethecrazy.network.ModelPackets`
+- `me.onethecrazy.server.ServerModelStore`
+- `me.onethecrazy.server.ServerModelNetworking`
+- `me.onethecrazy.util.network.BackendInteractor`
+
+Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNormalizer`, `CacheSkin`, static vertices, and `SkinnedModel.render(...)`. The renderer chooses `Idle` when an entity is still and `Walk` when a FBX mob variant is moving.
+
 ## Adding another Fabric Minecraft version
 
 1. Confirm the actual Minecraft version, Yarn mappings, Fabric Loader version, and Fabric API version.
