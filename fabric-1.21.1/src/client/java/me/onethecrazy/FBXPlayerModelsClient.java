@@ -7,12 +7,15 @@ import com.aksulightning.platform.fabric.FabricPlatformConfig;
 import com.aksulightning.platform.fabric.FabricPlatformEvents;
 import com.aksulightning.platform.fabric.FabricPlatformLogger;
 import me.onethecrazy.util.FileUtil;
+import com.aksulightning.fbxplayermodels.ModEntities;
+import com.aksulightning.fbxplayermodels.client.ViewEntityRenderer;
 import me.onethecrazy.util.render.FirstPersonSelfModelRenderer;
 import me.onethecrazy.util.network.BackendInteractor;
 import me.onethecrazy.util.objects.save.FBXPlayerModelsSave;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,9 +56,14 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 		registerAutoUploadCallback();
 		// Clear world-scoped skin state when leaving a world/server.
 		registerDisconnectCallback();
+		registerEntityRenderers();
 		// Queue a self skin load
 		queueLoadSelf();
 		FirstPersonSelfModelRenderer.register();
+	}
+
+	private void registerEntityRenderers() {
+		EntityRendererRegistry.register(ModEntities.VIEW_ENTITY, ViewEntityRenderer::new);
 	}
 
 	public void registerCommands(){
@@ -86,9 +94,7 @@ public class FBXPlayerModelsClient implements ClientModInitializer {
 	public void firstStartupSetup(){
 		isFirstStartup = !FileUtil.doesFileExist(FileUtil.getSavePath());
 
-		if(isFirstStartup)
-			// Create Paths
-			FileUtil.createPaths();
+		FileUtil.createPaths();
 	}
 
 	public void queueLoadSelf(){

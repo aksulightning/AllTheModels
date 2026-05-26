@@ -60,6 +60,19 @@ public final class ModelPackets {
         }
     }
 
+    public record RequestMobModelPayload(String model) implements CustomPacketPayload {
+        public static final Type<RequestMobModelPayload> TYPE = new Type<>(id("request_mob_model"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, RequestMobModelPayload> CODEC = StreamCodec.of(
+                ModelPackets::writeRequestMobModel,
+                ModelPackets::readRequestMobModel
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     public record LookupResponsePayload(Map<String, ModelLookup> models) implements CustomPacketPayload {
         public static final Type<LookupResponsePayload> TYPE = new Type<>(id("lookup_response"));
         public static final StreamCodec<RegistryFriendlyByteBuf, LookupResponsePayload> CODEC = StreamCodec.of(
@@ -78,6 +91,19 @@ public final class ModelPackets {
         public static final StreamCodec<RegistryFriendlyByteBuf, ModelDataPayload> CODEC = StreamCodec.of(
                 ModelPackets::writeModelData,
                 ModelPackets::readModelData
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record MobModelDataPayload(String model, byte[] data, String message) implements CustomPacketPayload {
+        public static final Type<MobModelDataPayload> TYPE = new Type<>(id("mob_model_data"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, MobModelDataPayload> CODEC = StreamCodec.of(
+                ModelPackets::writeMobModelData,
+                ModelPackets::readMobModelData
         );
 
         @Override
@@ -140,6 +166,14 @@ public final class ModelPackets {
         buf.writeUtf(payload.format(), 16);
     }
 
+    private static RequestMobModelPayload readRequestMobModel(RegistryFriendlyByteBuf buf) {
+        return new RequestMobModelPayload(buf.readUtf(160));
+    }
+
+    private static void writeRequestMobModel(RegistryFriendlyByteBuf buf, RequestMobModelPayload payload) {
+        buf.writeUtf(payload.model(), 160);
+    }
+
     private static LookupResponsePayload readLookupResponse(RegistryFriendlyByteBuf buf) {
         int count = buf.readVarInt();
         if (count < 0 || count > 128) {
@@ -168,6 +202,16 @@ public final class ModelPackets {
     private static void writeModelData(RegistryFriendlyByteBuf buf, ModelDataPayload payload) {
         buf.writeUtf(payload.hash(), 80);
         buf.writeUtf(payload.format(), 16);
+        buf.writeByteArray(payload.data());
+        buf.writeUtf(payload.message(), 256);
+    }
+
+    private static MobModelDataPayload readMobModelData(RegistryFriendlyByteBuf buf) {
+        return new MobModelDataPayload(buf.readUtf(160), buf.readByteArray(MAX_MODEL_BYTES), buf.readUtf(256));
+    }
+
+    private static void writeMobModelData(RegistryFriendlyByteBuf buf, MobModelDataPayload payload) {
+        buf.writeUtf(payload.model(), 160);
         buf.writeByteArray(payload.data());
         buf.writeUtf(payload.message(), 256);
     }

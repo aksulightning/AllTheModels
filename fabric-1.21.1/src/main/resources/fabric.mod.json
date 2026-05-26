@@ -15,7 +15,7 @@
 	},
 	"license": "MIT",
 	"icon": "assets/fbx-player-models/icon.png",
-	"environment": "client",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"me.onethecrazy.FBXPlayerModelsMod"

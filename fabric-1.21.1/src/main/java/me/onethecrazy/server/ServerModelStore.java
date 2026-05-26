@@ -32,6 +32,7 @@ public final class ServerModelStore {
 
     private final Path root;
     private final Path modelsDir;
+    private final Path mobSkinsDir;
     private final Path permissionsPath;
     private final Path indexPath;
     private final Set<String> uploadPermissionNames = new HashSet<>();
@@ -40,6 +41,7 @@ public final class ServerModelStore {
     public ServerModelStore(MinecraftServer server) {
         this.root = server.getSavePath(WorldSavePath.ROOT).resolve(FBXPlayerModelsMod.MOD_ID).normalize();
         this.modelsDir = root.resolve("models").normalize();
+        this.mobSkinsDir = root.resolve("mobskins").normalize();
         this.permissionsPath = root.resolve(PERMISSIONS_FILE).normalize();
         this.indexPath = root.resolve(INDEX_FILE).normalize();
         load();
@@ -77,6 +79,22 @@ public final class ServerModelStore {
         long size = Files.size(path);
         if (size > ModelPackets.MAX_MODEL_BYTES) {
             FBXPlayerModelsMod.LOGGER.warn("Stored model exceeded size limit and will not be sent: {}", path);
+            return Optional.empty();
+        }
+        return Optional.of(Files.readAllBytes(path));
+    }
+
+    public synchronized Optional<byte[]> readMobModel(String model) throws IOException {
+        if (!isSafeFileName(model)) {
+            return Optional.empty();
+        }
+        Path path = resolveMobModelPath(model);
+        if (!Files.exists(path) || !Files.isRegularFile(path)) {
+            return Optional.empty();
+        }
+        long size = Files.size(path);
+        if (size > ModelPackets.MAX_MODEL_BYTES) {
+            FBXPlayerModelsMod.LOGGER.warn("Server mob model exceeded size limit and will not be sent: {}", path);
             return Optional.empty();
         }
         return Optional.of(Files.readAllBytes(path));
@@ -135,6 +153,7 @@ public final class ServerModelStore {
     private void load() {
         try {
             Files.createDirectories(modelsDir);
+            Files.createDirectories(mobSkinsDir);
             loadPermissions();
             loadIndex();
         } catch (IOException e) {
@@ -193,7 +212,15 @@ public final class ServerModelStore {
         return path;
     }
 
-    private static boolean isSafeFileName(String fileName) {
+    private Path resolveMobModelPath(String model) {
+        Path path = mobSkinsDir.resolve(model).normalize();
+        if (!path.startsWith(mobSkinsDir)) {
+            throw new InvalidPathException(path.toString(), "Path escapes mob model directory");
+        }
+        return path;
+    }
+
+    public static boolean isSafeFileName(String fileName) {
         if (fileName == null || !SAFE_FILE_NAME.matcher(fileName).matches()) {
             return false;
         }

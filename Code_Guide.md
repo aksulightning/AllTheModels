@@ -120,6 +120,54 @@ Code that imports `net.minecraft.*`, `com.mojang.*`, `net.fabricmc.*`, Mixin, or
 
 Shared code currently includes platform interfaces, constants, save/config models, rig binding metadata, simple model structures, `Float2`, `Float3`, and shared resources.
 
+## FBX view entity
+
+The mod registers one summonable inert entity for displaying an FBX model:
+
+```text
+fbxplayermodels:view_entity
+```
+
+The entity is intentionally not a pathfinding mob. It extends the base Minecraft entity type in each Fabric target, has no AI goals, no attacks, no wandering, no fleeing, and no natural spawning for the MVP. It exists as a server-synced display entity with a client renderer.
+
+Summon example:
+
+```mcfunction
+/summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
+```
+
+The `Model` NBT value is persisted on the entity and synced to clients with tracked entity data. The value must be a safe flat FBX filename. Absolute paths, nested paths, path traversal, blank values, and non-`.fbx` files are rejected by sanitizing to an empty model value.
+
+Server-side model storage:
+
+```text
+<world>/fbx-player-models/mobskins/this_file.fbx
+```
+
+Clients do not load `mobskins` as local source data. When a view entity renders, the client requests the named model from the server through the mod networking layer. The server validates the safe filename, reads only from its world-local `mobskins` directory, enforces the shared model size limit, and sends the FBX bytes back to that client.
+
+Client-side received model cache:
+
+```text
+.fbxplayermodels/mobskins-cache/
+```
+
+This cache is only a parsing cache for server-sent bytes. It is not the authoritative model folder.
+
+Important classes, duplicated per Fabric target where mappings differ:
+
+- `com.aksulightning.fbxplayermodels.ModEntities`
+- `com.aksulightning.fbxplayermodels.ViewEntity`
+- `com.aksulightning.fbxplayermodels.ViewEntityModelPath`
+- `com.aksulightning.fbxplayermodels.client.ViewEntityRenderer`
+- `com.aksulightning.fbxplayermodels.client.ViewEntityModelCache`
+- `me.onethecrazy.network.ModelPackets`
+- `me.onethecrazy.server.ServerModelStore`
+- `me.onethecrazy.server.ServerModelNetworking`
+- `me.onethecrazy.util.network.BackendInteractor`
+
+Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNormalizer`, `CacheSkin`, static vertices, and `SkinnedModel.render("Idle", ...)`.
+
 ## Adding another Fabric Minecraft version
 
 1. Confirm the actual Minecraft version, Yarn mappings, Fabric Loader version, and Fabric API version.
