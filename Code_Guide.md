@@ -146,9 +146,12 @@ Summon example:
 ```mcfunction
 /summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
 /summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:tameable_entity ~ ~ ~ {Model:"this_file.fbx",TameItem:"minecraft:apple"}
 ```
 
 The `Model` NBT value is persisted on the entity and synced to clients with tracked entity data. The value must be a safe flat FBX filename. Absolute paths, nested paths, path traversal, blank values, and non-`.fbx` files are rejected by sanitizing to an empty model value.
+
+`tameable_entity` also supports a per-entity tame item NBT value. Use `TameItem:"minecraft:item_id"` in summon NBT. The lowercase alias `tame_item` is accepted when reading entity NBT. Missing or invalid item ids fall back to `minecraft:bone`.
 
 Server-side model storage:
 

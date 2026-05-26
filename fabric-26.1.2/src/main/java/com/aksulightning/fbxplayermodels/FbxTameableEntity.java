@@ -16,15 +16,22 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 
 public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
+    public static final String TAME_ITEM_NBT_KEY = "TameItem";
+    public static final String TAME_ITEM_NBT_ALIAS = "tame_item";
+    private static final String DEFAULT_TAME_ITEM = "minecraft:bone";
     private static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(FbxTameableEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> TAME_ITEM = SynchedEntityData.defineId(FbxTameableEntity.class, EntityDataSerializers.STRING);
 
     public FbxTameableEntity(EntityType<? extends FbxTameableEntity> entityType, Level level) {
         super(entityType, level);
@@ -49,6 +56,7 @@ public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(MODEL, "");
+        builder.define(TAME_ITEM, DEFAULT_TAME_ITEM);
     }
 
     @Override
@@ -58,6 +66,14 @@ public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
 
     public void setModel(String model) {
         getEntityData().set(MODEL, ViewEntityModelPath.safeModelOrEmpty(model));
+    }
+
+    public String getTameItemId() {
+        return getEntityData().get(TAME_ITEM);
+    }
+
+    public void setTameItemId(String itemId) {
+        getEntityData().set(TAME_ITEM, safeTameItemOrDefault(itemId));
     }
 
     @Override
@@ -79,14 +95,23 @@ public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!isTame() && stack.is(Items.BONE)) {
+        if (!isTame() && stack.is(getTameItem())) {
             if (!level().isClientSide()) {
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
                 }
                 tame(player);
-                setOrderedToSit(true);
+                setOrderedToSit(false);
+                setInSittingPose(false);
                 level().broadcastEntityEvent(this, (byte) 7);
+            }
+            return InteractionResult.SUCCESS;
+        }
+        if (isTame() && isOwnedBy(player)) {
+            if (!level().isClientSide()) {
+                boolean sitting = !isOrderedToSit();
+                setOrderedToSit(sitting);
+                setInSittingPose(sitting);
             }
             return InteractionResult.SUCCESS;
         }
@@ -97,6 +122,7 @@ public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         setModel(input.getStringOr(ViewEntity.MODEL_NBT_KEY, ""));
+        setTameItemId(input.getString(TAME_ITEM_NBT_KEY).or(() -> input.getString(TAME_ITEM_NBT_ALIAS)).orElse(DEFAULT_TAME_ITEM));
     }
 
     @Override
@@ -106,5 +132,25 @@ public class FbxTameableEntity extends TamableAnimal implements FbxModelEntity {
         if (!model.isBlank()) {
             output.putString(ViewEntity.MODEL_NBT_KEY, model);
         }
+        output.putString(TAME_ITEM_NBT_KEY, getTameItemId());
+    }
+
+    private Item getTameItem() {
+        Identifier id = Identifier.tryParse(getTameItemId());
+        if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) {
+            return Items.BONE;
+        }
+        return BuiltInRegistries.ITEM.getValue(id);
+    }
+
+    private static String safeTameItemOrDefault(String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            return DEFAULT_TAME_ITEM;
+        }
+        Identifier id = Identifier.tryParse(itemId.trim());
+        if (id == null || !BuiltInRegistries.ITEM.containsKey(id) || BuiltInRegistries.ITEM.getValue(id) == Items.AIR) {
+            return DEFAULT_TAME_ITEM;
+        }
+        return id.toString();
     }
 }
