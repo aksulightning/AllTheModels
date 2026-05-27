@@ -147,6 +147,8 @@ The AI variants reuse the same FBX model NBT, server sync, cache, and renderer:
 - `neutral_entity` wanders and only fights back after being damaged.
 - `hostile_entity` wanders, targets players, and attacks in melee.
 
+For the `fabric-26.1.2` target, the summonable FBX mob variants register floating, random strolling, player look-at, and random look-around goals explicitly. Their random strolling uses the four-argument `RandomStrollGoal` with no-action-time checks disabled so summoned display mobs do not stop wandering after being idle. Non-tameable FBX pathfinder mobs also use animal-like walk target scoring, preferring grass blocks and otherwise following light-level pathfinding cost, matching the movement behavior that made the tameable variant reliable. The hostile variant still uses normal Minecraft hostile targeting and melee damage rules, including peaceful mode preventing attacks.
+
 Summon example:
 
 ```mcfunction
