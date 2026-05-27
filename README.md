@@ -44,7 +44,7 @@ Good models usually have:
 - Clear bone names.
 - A file size under **3 MB**.
 
-Names like `head`, `chest`, `spine`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` can help the mod guess the right body parts.
+The rig names like `Head`, `Chest`, `Right Arm`, `Left Arm`, `Right Leg`, and `Left Leg` can help the mod guess the right body parts.
 
 ## Things That May Not Work
 
