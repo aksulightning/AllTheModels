@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommunityServerDisclaimerScreen extends Screen {
-    private static final int MARGIN = 50;
+    private static final int MAX_MARGIN = 50;
+    private static final int MIN_MARGIN = 12;
     private static final int BUTTON_WIDTH = 150;
     private static final int BUTTON_HEIGHT = 20;
     private static final int BUTTON_GAP = 20;
     private static final int CHECKBOX_SIZE = 20;
-    private static final int LINE_SPACING = 24;
+    private static final int CONTROL_GAP = 12;
 
     private final Screen parent;
     private final Screen proceedScreen;
@@ -32,20 +33,24 @@ public class CommunityServerDisclaimerScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonY = this.height - 52;
-        int totalButtonWidth = BUTTON_WIDTH * 2 + BUTTON_GAP;
+        int margin = getMargin();
+        int availableWidth = Math.max(1, this.width - margin * 2);
+        int buttonY = getButtonY();
+        int buttonGap = availableWidth >= BUTTON_WIDTH * 2 + BUTTON_GAP ? BUTTON_GAP : 8;
+        int buttonWidth = Math.min(BUTTON_WIDTH, Math.max(80, (availableWidth - buttonGap) / 2));
+        int totalButtonWidth = buttonWidth * 2 + buttonGap;
         int startX = this.width / 2 - totalButtonWidth / 2;
 
         this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.fbxplayermodels.proceed"),
                         button -> proceed())
-                .dimensions(startX, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT)
+                .dimensions(startX, buttonY, buttonWidth, BUTTON_HEIGHT)
                 .build());
 
         this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.back"),
                         button -> goBack())
-                .dimensions(startX + BUTTON_WIDTH + BUTTON_GAP, buttonY, BUTTON_WIDTH, BUTTON_HEIGHT)
+                .dimensions(startX + buttonWidth + buttonGap, buttonY, buttonWidth, BUTTON_HEIGHT)
                 .build());
     }
 
@@ -53,13 +58,20 @@ public class CommunityServerDisclaimerScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        String title = Text.translatable("gui.fbxplayermodels.title.community_server_disclaimer").getString();
-        context.drawText(textRenderer, title, MARGIN, MARGIN, 0xFFFFFFFF, true);
+        int margin = getMargin();
+        int lineSpacing = getLineSpacing();
 
-        int textY = MARGIN + LINE_SPACING * 3;
+        String title = Text.translatable("gui.fbxplayermodels.title.community_server_disclaimer").getString();
+        context.drawText(textRenderer, title, margin, margin, 0xFFFFFFFF, true);
+
+        int textY = margin + lineSpacing * 3;
+        int maxTextY = getCheckboxY() - lineSpacing;
         for (String line : wrap(Text.translatable("gui.fbxplayermodels.description.community_server_disclaimer").getString(), getTextWidth())) {
-            context.drawText(textRenderer, line, MARGIN, textY, 0xFFFFFFFF, true);
-            textY += LINE_SPACING;
+            if (textY > maxTextY) {
+                break;
+            }
+            context.drawText(textRenderer, line, margin, textY, 0xFFFFFFFF, true);
+            textY += lineSpacing;
         }
 
         drawCheckbox(context);
@@ -95,7 +107,7 @@ public class CommunityServerDisclaimerScreen extends Screen {
 
     private void drawCheckbox(DrawContext context) {
         int checkboxX = getCheckboxX();
-        int checkboxY = this.height - 88;
+        int checkboxY = getCheckboxY();
         int textX = checkboxX + CHECKBOX_SIZE + 8;
         String label = Text.translatable("gui.fbxplayermodels.do_not_show_again").getString();
 
@@ -110,19 +122,35 @@ public class CommunityServerDisclaimerScreen extends Screen {
 
     private boolean isInsideCheckbox(double mouseX, double mouseY) {
         int checkboxX = getCheckboxX();
-        int checkboxY = this.height - 88;
+        int checkboxY = getCheckboxY();
         int labelWidth = textRenderer.getWidth(Text.translatable("gui.fbxplayermodels.do_not_show_again"));
         return mouseX >= checkboxX && mouseX <= checkboxX + CHECKBOX_SIZE + 8 + labelWidth
                 && mouseY >= checkboxY && mouseY <= checkboxY + CHECKBOX_SIZE;
     }
 
     @Unique private int getTextWidth() {
-        return Math.max(1, this.width - MARGIN * 2);
+        return Math.max(1, this.width - getMargin() * 2);
     }
 
     @Unique private int getCheckboxX() {
         int labelWidth = textRenderer.getWidth(Text.translatable("gui.fbxplayermodels.do_not_show_again"));
         return this.width / 2 - (CHECKBOX_SIZE + 8 + labelWidth) / 2;
+    }
+
+    @Unique private int getCheckboxY() {
+        return getButtonY() - CHECKBOX_SIZE - CONTROL_GAP;
+    }
+
+    @Unique private int getButtonY() {
+        return this.height - BUTTON_HEIGHT - Math.max(12, getMargin() / 2);
+    }
+
+    @Unique private int getLineSpacing() {
+        return textRenderer.fontHeight + 5;
+    }
+
+    @Unique private int getMargin() {
+        return Math.max(MIN_MARGIN, Math.min(MAX_MARGIN, Math.min(this.width, this.height) / 8));
     }
 
     @Unique private List<String> wrap(String text, int maxWidth) {

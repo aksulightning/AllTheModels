@@ -92,6 +92,12 @@ Put Minecraft- and Fabric-sensitive code in a Fabric target module, such as `fab
 
 Fabric platform implementations live under `com.aksulightning.platform.fabric`.
 
+## Community server disclaimer screen
+
+`me.onethecrazy.screens.CommunityServerDisclaimerScreen` is duplicated in both Fabric target modules because the screen, button, text renderer, and mouse APIs differ by mappings.
+
+The disclaimer layout uses the scaled Minecraft GUI size, not raw window pixels. Keep its margins, text width, checkbox position, and button row derived from the current `width` and `height` so small windows do not let the disclaimer text overlap the checkbox or buttons.
+
 ## Current entrypoints
 
 `fabric-1.21.1/src/main/resources/fabric.mod.json` declares:
