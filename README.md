@@ -1,81 +1,102 @@
 # FBX Player Models
-**Use any 3D model as your Minecraft skin.**
 
-## Overview
-FBX Player Models is an AI-assisted fork of [AllTheSkins](https://github.com/1TheCrazy/AllTheSkins). 
+Use a 3D model as your Minecraft player skin.
 
-Tired of vanilla skins? *FBX Player Models* lets you upload any 3D model and use it as your player skin — fully visible to everyone using the mod, even in multiplayer.
+FBX Player Models lets you pick an `.fbx` model and show it on your player. Other players can see it too when they also have the mod installed.
 
-##### Disclaimer
+This mod is experimental. It was made for fun, so some models may not work perfectly.
 
-This mod is a fork and was made mostly for fun.
+## Download
 
-It is vibe-coded, experimental, and not meant to be a perfectly engineered project. Things may break, behave strangely, or be held together by optimism and questionable decisions.
+- [Minecraft 1.21.1 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1)
+- [Minecraft 26.1.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.1.2)
 
-Use it at your own risk, and please do not expect polished support or guaranteed compatibility.
+Both downloads are experimental builds.
 
-## Releases
+## What You Can Do
 
-[Download nightly for 1.21.1](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1) (Supported, experimental.)
+- Use an `.fbx` model instead of a normal Minecraft skin.
+- See your model on the main menu.
+- Change your model in game with `/skin`.
+- Use custom models on multiplayer servers.
+- Let server players upload models if they have permission.
 
-[Download nightly for 26.1.2](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.1.2) (Fully supported, experimental.) 
+## How To Use A Model
 
-## Features
-- 🧍‍♂️ **Custom 3D Skins** – Upload your own `.fbx` models, complete with textures where supported.
-- ⚙️ **In-Game Configuration** – Use the `/skin` command to open the config screen anytime.
-- 🎨 **Main Menu Preview** – Instantly see your model right in the title screen.
-- 🌐 **Multiplayer Support** – Other players using the mod can see your custom skin.
+1. Install the mod.
+2. Join a world or server.
+3. Run `/skin`.
+4. Choose your `.fbx` file.
+5. Open **Edit Model Rig** if the arms, legs, head, or body do not move correctly.
+6. Use **Auto Bind** first. If needed, click each body part and choose the right bone by hand.
 
-## Server storage
+Your settings are saved after you choose and edit your model.
 
-Model uploads are handled by the Fabric server. Operators can upload by default, and operators can grant players upload access with `/fbxplayermodels uploadperm <playername> yes` or remove upload access from players with `/fbxplayermodels uploadperm <playername> no`. Uploaded files are limited to **3 MB** and are stored in the server world's `fbx-player-models` data directory.
+## Best Model Type
 
-## FBX support
-FBX support is an MVP importer/editor workflow intended for Blender-exported models. This feature is truly experimental, low poly models are recommended and include a single material with texture.
+For the best chance of working, use a simple model exported from Blender.
 
-- Static and skinned FBX mesh import through LWJGL Assimp, with an internal binary/ascii parser fallback.
-- Mesh positions, normals, UVs, materials, diffuse colors, and referenced diffuse textures where the file exposes them.
-- Armature/bone detection and up to four vertex bone weights.
-- In-game binding of imported bones to the six logical Minecraft body parts: `HEAD`, `CHEST`, `RIGHT_ARM`, `LEFT_ARM`, `RIGHT_LEG`, and `LEFT_LEG`.
-- Rotation-only procedural `Idle`, `Walk`, and `Sneak` animation for the six-part logical rig.
-- Basic imported clip detection. In the model rig editor, clips can be mapped to `Idle`, `Walk`, and `Sneak`.
+Good models usually have:
 
-Known limitations:
-- FBX is a broad format. Blender FBX exports are the main target.
-- Shape keys/blend shapes, advanced material graphs, constraints, IK, and complex animation stacks are not fully supported yet.
-- If a model has no usable skin weights, the fallback is best-effort and may need manual rig binding.
-- Translation keys in imported animation clips are ignored. Runtime logical rig animation rotates around each configured bind pivot and does not move body parts away from their bind positions.
-- Bad, oversized, malformed, or unsupported FBX files should fail gracefully instead of crashing the client.
+- Low detail.
+- One material.
+- A texture.
+- Clear bone names.
+- A file size under **3 MB**.
 
-## Blender FBX export notes
-- Apply transforms before export when possible.
-- Use a simple armature and clear bone names.
-- Keep the model under the mod upload limit of **3 MB**.
-- Export with UVs and materials enabled.
-- Prefer embedded textures or clearly referenced texture files next to the FBX.
-- Names like `head`, `neck`, `spine`, `chest`, `torso`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` help the auto-binder.
+Names like `head`, `chest`, `spine`, `upper_arm.R`, `upper_arm.L`, `leg.R`, and `leg.L` can help the mod guess the right body parts.
 
-## Binding bones in game
-1. Run `/skin` and choose an `.fbx` file.
-2. Open **Edit Model Rig** from the config screen.
-3. Use **Auto Bind** to map common Blender bone names to the six Minecraft body parts.
-4. Click each body-part row to cycle through detected bones and manually override the binding.
-5. Inspect each logical bind pivot in the editor. Animations rotate around these pivots.
-6. Optionally map imported animation clips to `Idle`, `Walk`, and `Sneak`.
+## Things That May Not Work
 
-The binding, source format, scale field, and animation clip mappings are saved with the selected skin in the existing config JSON.
+FBX files can be very different from each other. This mod does not support every advanced model feature.
 
-## 👥 Community & Contribution
-*FBX Player Models* is open source — contributions and feedback are always welcome!
+These may not work well yet:
 
-- 🐛 **Have a feature idea?**  
-  → [Open an issue](https://github.com/aksulightning/FBXPlayerModels/issues)
+- Very large models.
+- Very complex materials.
+- Shape keys or blend shapes.
+- Advanced animation setups.
+- IK, constraints, or complicated rigs.
+- Models exported from tools other than Blender.
 
-- 💡 **Want to contribute?**  
-  → [Submit a pull request](https://github.com/aksulightning/FBXPlayerModels/pulls)
+If a model does not load, try a simpler Blender export.
 
+## Multiplayer Uploads
 
-Your creativity shapes this project — thank you for helping make *FBX Player Models* better for everyone!
+Servers store uploaded models in the world save.
 
-## Links
-- 🧾 [Based on AllTheSkins, by 1TheCrazy](https://github.com/1TheCrazy/AllTheSkins).
+Operators can upload models by default. Operators can also allow or block uploads for other players:
+
+Allow players:
+```
+/fbxplayermodels uploadperm <playername> yes
+```
+Deny players:
+```
+/fbxplayermodels uploadperm <playername> no
+```
+
+Uploaded files must be **3 MB or smaller**.
+
+## FBX Mobs
+
+The mod can also show FBX models on special entities.
+
+Example commands:
+
+```
+/summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
+/summon fbxplayermodels:tameable_entity ~ ~ ~ {Model:"this_file.fbx",TameItem:"minecraft:apple"}
+```
+
+The model file must already be on the server in its FBX mob model folder.
+
+## Help And Feedback
+
+- [Report a bug or suggest an idea](https://github.com/aksulightning/FBXPlayerModels/issues)
+- [Contribute code](https://github.com/aksulightning/FBXPlayerModels/pulls)
+
+## Credits
+
+FBX Player Models is based on [AllTheSkins by 1TheCrazy](https://github.com/1TheCrazy/AllTheSkins).
