@@ -109,9 +109,11 @@ jobs:
 
           Branch: $BRANCH_NAME
           Commit: $COMMIT_SHA" \
-            --prerelease \
+            --prerelease \matrix.release_file
             --verify-tag
 
+      - name: set clear version for modrinth
+        run: cp ${{ matrix.artifact_path }}/${{ matrix.release_file }} ${{ matrix.artifact_path }}/fbx-player-models-nightly-${{ steps.date_step.outputs.date }}.jar
 
       - name: create modrinth release
         uses: cloudnode-pro/modrinth-publish@v2
@@ -123,5 +125,5 @@ jobs:
           version: ${{ matrix.branch }}-nightly-${{ steps.date_step.outputs.date }}
           loaders: ${{ matrix.mod_launcher }}
           game-versions: ${{ matrix.minecraft_version }}
-          files: ${{ matrix.artifact_path }}/${{ matrix.release_file }}
+          files: ${{ matrix.artifact_path }}/fbx-player-models-nightly-${{ steps.date_step.outputs.date }}.jar
             
