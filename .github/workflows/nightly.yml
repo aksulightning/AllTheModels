@@ -109,7 +109,7 @@ jobs:
 
           Branch: $BRANCH_NAME
           Commit: $COMMIT_SHA" \
-            --prerelease \matrix.release_file
+            --prerelease \
             --verify-tag
 
       - name: set clear version for modrinth
