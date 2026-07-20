@@ -1,4 +1,4 @@
-There is a basic template available for now.
+There is a basic template available for everyone.
 
 [https://raw.githubusercontent.com/aksulightning/FBXPlayerModels/refs/heads/template/FPM_template.fbx](https://raw.githubusercontent.com/aksulightning/FBXPlayerModels/refs/heads/template/FPM_template.fbx)
 
