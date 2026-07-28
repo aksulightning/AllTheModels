@@ -10,6 +10,7 @@ This mod is experimental. It was made for fun, so some models may not work perfe
 
 - [Minecraft 1.21.1 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1)
 - [Minecraft 26.1.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.1.2)
+- [Minecraft 26.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.2)
 
 Both downloads are experimental builds.
 

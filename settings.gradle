@@ -28,3 +28,7 @@ if (includeAllFabricProjects || requestedFabricProjects.contains("fabric-1.21.1"
 if (includeAllFabricProjects || requestedFabricProjects.contains("fabric-26.1.2")) {
 	include("fabric-26.1.2")
 }
+
+if (includeAllFabricProjects || requestedFabricProjects.contains("fabric-26.2")) {
+	include("fabric-26.2")
+}
