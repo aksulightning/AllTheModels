@@ -47,6 +47,10 @@ Good models usually have:
 
 The rig names like `Head`, `Chest`, `Right Arm`, `Left Arm`, `Right Leg`, and `Left Leg` can help the mod guess the right body parts.
 
+If you’re looking for a model template, you can find one here:
+
+[https://github.com/aksulightning/FBXPlayerModels/tree/template](https://github.com/aksulightning/FBXPlayerModels/tree/template)
+
 ## Things That May Not Work
 
 FBX files can be very different from each other. This mod does not support every advanced model feature.
