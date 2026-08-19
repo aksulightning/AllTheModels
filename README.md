@@ -51,21 +51,6 @@ If you’re looking for a model template, you can find one here:
 
 [https://github.com/aksulightning/FBXPlayerModels/tree/template](https://github.com/aksulightning/FBXPlayerModels/tree/template)
 
-## Things That May Not Work
-
-FBX files can be very different from each other. This mod does not support every advanced model feature.
-
-These may not work well yet:
-
-- Very large models.
-- Very complex materials.
-- Shape keys or blend shapes.
-- Advanced animation setups.
-- IK, constraints, or complicated rigs.
-- Models exported from tools other than Blender.
-
-If a model does not load, try a simpler Blender export.
-
 ## Multiplayer Uploads
 
 Servers store uploaded models in the world save.
