@@ -31,6 +31,7 @@ public final class ServerModelStore {
     private static final String PERMISSIONS_FILE = "upload-permissions.txt";
     private static final String INDEX_FILE = "model-index.tsv";
 
+    private final MinecraftServer server;
     private final Path root;
     private final Path modelsDir;
     private final Path mobSkinsDir;
@@ -40,6 +41,7 @@ public final class ServerModelStore {
     private final Map<String, StoredModel> modelsByPlayer = new HashMap<>();
 
     public ServerModelStore(MinecraftServer server) {
+        this.server = server;
         this.root = server.getWorldPath(LevelResource.ROOT).resolve(FBXPlayerModelsMod.MOD_ID).normalize();
         this.modelsDir = root.resolve("models").normalize();
         this.mobSkinsDir = root.resolve("mobskins").normalize();
@@ -49,7 +51,9 @@ public final class ServerModelStore {
     }
 
     public synchronized boolean hasUploadPermission(ServerPlayer player) {
-        return hasAdministratorRights(player) || uploadPermissionNames.contains(normalizeName(player.getGameProfile().name()));
+        return server.isSingleplayerOwner(player.nameAndId())
+                || hasAdministratorRights(player)
+                || uploadPermissionNames.contains(normalizeName(player.getGameProfile().name()));
     }
 
     public synchronized void setUploadPermission(String playerName, boolean allowed) throws IOException {
@@ -113,7 +117,7 @@ public final class ServerModelStore {
             return clearUpload(player);
         }
         if (data.length > ModelPackets.MAX_MODEL_BYTES) {
-            return UploadSaveResult.denied("Upload too large: model files must be 3 MB or smaller.");
+            return UploadSaveResult.denied("Upload too large: model files must be under 2 MB.");
         }
         if (!isSafeFileName(fileName)) {
             return UploadSaveResult.denied("Invalid file: unsafe model file name.");

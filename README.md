@@ -9,7 +9,6 @@ This mod is experimental. It was made for fun, so some models may not work perfe
 ## Download
 
 - [Minecraft 1.21.1 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1)
-- [Minecraft 26.1.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.1.2)
 - [Minecraft 26.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.2)
 
 Both downloads are experimental builds.
@@ -43,7 +42,7 @@ Good models usually have:
 - One material.
 - A texture.
 - Clear bone names.
-- A file size under **3 MB**.
+- A file size under **2 MB**.
 
 The rig names like `Head`, `Chest`, `Right Arm`, `Left Arm`, `Right Leg`, and `Left Leg` can help the mod guess the right body parts.
 
@@ -55,7 +54,7 @@ If you’re looking for a model template, you can find one here:
 
 Servers store uploaded models in the world save.
 
-Operators can upload models by default. Operators can also allow or block uploads for other players:
+The owner of a singleplayer world can upload without enabling cheats. On multiplayer servers, operators can upload models by default and can allow or block uploads for other players:
 
 Allow players:
 ```
@@ -66,7 +65,7 @@ Deny players:
 /fbxplayermodels uploadperm <playername> no
 ```
 
-Uploaded files must be **3 MB or smaller**.
+Uploaded files must be **under 2 MB**.
 
 ## FBX Mobs
 

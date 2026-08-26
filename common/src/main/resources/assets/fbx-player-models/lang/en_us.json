@@ -1,7 +1,7 @@
 {
   "gui.fbxplayermodels.select_skin" : "Choose a skin...",
   "gui.fbxplayermodels.title.file_too_large" : "File too large!",
-  "gui.fbxplayermodels.description.file_too_large" : "The file size is restricted to 3 MB",
+  "gui.fbxplayermodels.description.file_too_large" : "The file size must be under 2 MB",
   "gui.fbxplayermodels.title.moderation_notice" : "Moderation Notice",
   "gui.fbxplayermodels.description.moderation_notice" : "The skins uploaded to FBX Player Models are NOT moderated and may contain inappropriate content. By using this mod you agree that you're using the mod at your own risk.",
   "gui.fbxplayermodels.title.community_server_disclaimer" : "Caution: Community Servers",

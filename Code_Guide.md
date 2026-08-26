@@ -8,14 +8,13 @@ The project is structured for separate Fabric jars per Minecraft target. A unive
 
 ## Supported targets
 
-The repository maintains three supported Fabric targets. Each `fabric-*` module is a real, independently buildable Minecraft target with its own version-sensitive source, resources, metadata, and production jar. `common` supplies shared classes and assets to those jars; it is not a standalone Minecraft distribution.
+The repository maintains two supported Fabric targets. Each `fabric-*` module is a real, independently buildable Minecraft target with its own version-sensitive source, resources, metadata, and production jar. `common` supplies shared classes and assets to those jars; it is not a standalone Minecraft distribution.
 
 ### Target and toolchain versions
 
 | Module | Minecraft | Game namespace | Java | Fabric Loom | Fabric Loader | Fabric API |
 | --- | --- | --- | --- | --- | --- | --- |
 | `fabric-1.21.1` | `1.21.1` | Yarn `1.21.1+build.3` | 21 | `1.16.2` | `0.16.14` | `0.116.6+1.21.1` |
-| `fabric-26.1.2` | `26.1.2` | unobfuscated game names; no Yarn | 25 | `1.16.2` | `0.19.2` | `0.149.0+26.1.2` |
 | `fabric-26.2` | `26.2` | unobfuscated game names; no Yarn | 25 | `1.17.17` | `0.19.3` | `0.156.0+26.2` |
 
 ### Mod and production-build versions
@@ -23,12 +22,11 @@ The repository maintains three supported Fabric targets. Each `fabric-*` module 
 | Module | Mod version | Mod Menu | LWJGL Assimp/NFD | Build task | Production jar |
 | --- | --- | --- | --- | --- | --- |
 | `fabric-1.21.1` | `2.0.0+1.21.1` | `11.0.3` | `3.3.3` | `:fabric-1.21.1:build` | `fbx-player-models-v2.0.0+1.21.1+mc1.21.1.jar` |
-| `fabric-26.1.2` | `2.0.0+26.1.2` | `18.0.0-beta.1` | `3.4.1` | `:fabric-26.1.2:build` | `fbx-player-models-v2.0.0+26.1.2+mc26.1.2.jar` |
 | `fabric-26.2` | `2.0.0+26.2` | `20.0.1` | `3.4.1` | `:fabric-26.2:build` | `fbx-player-models-v2.0.0+26.2+mc26.2.jar` |
 
-`fabric-1.21.1` uses Yarn and produces its production artifact through Loom's `remapJar` task. Minecraft 26.1.2 and 26.2 expose unobfuscated game names, so those modules deliberately omit Yarn and produce their production artifacts through `jar`.
+`fabric-1.21.1` uses Yarn and produces its production artifact through Loom's `remapJar` task. Minecraft 26.2 exposes unobfuscated game names, so that module deliberately omits Yarn and produces its production artifact through `jar`.
 
-All production jars are written to `<module>/build/libs/` and include the `common` output. The Gradle wrapper is `9.5.1`. All modules bundle jgltf `2.0.4`; Native File Dialog and Assimp retain Windows, Linux, and macOS natives for x64 and arm64. DevAuth is development-only: 1.21.1 and 26.1.2 use `1.2.1`, while 26.2 uses `1.2.2`.
+All production jars are written to `<module>/build/libs/` and include the `common` output. The Gradle wrapper is `9.5.1`. All modules bundle jgltf `2.0.4`; Native File Dialog and Assimp retain Windows, Linux, and macOS natives for x64 and arm64. DevAuth is development-only: 1.21.1 uses `1.2.1`, while 26.2 uses `1.2.2`.
 
 ## Build commands
 
@@ -44,12 +42,6 @@ Build the Fabric 1.21.1 jar:
 ./gradlew :fabric-1.21.1:build
 ```
 
-Build the Fabric 26.1.2 jar:
-
-```bash
-./gradlew :fabric-26.1.2:build
-```
-
 Build the Fabric 26.2 jar:
 
 ```bash
@@ -62,14 +54,12 @@ Compile all supported main and client source sets:
 bash ./gradlew \
   :fabric-1.21.1:compileJava \
   :fabric-1.21.1:compileClientJava \
-  :fabric-26.1.2:compileJava \
-  :fabric-26.1.2:compileClientJava \
   :fabric-26.2:compileJava \
   :fabric-26.2:compileClientJava
 ```
 
 The 1.21.1 remapped jar is written under `fabric-1.21.1/build/libs/`.
-The unobfuscated 26.1.2 and 26.2 jars are written under their respective module's `build/libs/` directory. Loom 1.17's unobfuscated target produces the production 26.2 artifact through the `jar` task rather than a `remapJar` task.
+The unobfuscated 26.2 jar is written under `fabric-26.2/build/libs/`. Loom 1.17's unobfuscated target produces the production 26.2 artifact through the `jar` task rather than a `remapJar` task.
 
 ## Project layout
 
@@ -83,13 +73,6 @@ root/
     src/main/java/...
     src/main/resources/...
   fabric-1.21.1/
-    build.gradle
-    src/main/java/...
-    src/client/java/...
-    src/main/resources/fabric.mod.json
-    src/main/resources/fbx-player-models.mixins.json
-    src/client/resources/fbx-player-models.client.mixins.json
-  fabric-26.1.2/
     build.gradle
     src/main/java/...
     src/client/java/...
@@ -189,7 +172,7 @@ The AI variants reuse the same FBX model NBT, server sync, cache, and renderer:
 - `neutral_entity` wanders and only fights back after being damaged.
 - `hostile_entity` wanders, targets players, and attacks in melee.
 
-For the `fabric-26.1.2` and `fabric-26.2` targets, the summonable FBX mob variants register floating, random strolling, player look-at, and random look-around goals explicitly. Their random strolling uses the four-argument `RandomStrollGoal` with no-action-time checks disabled so summoned display mobs do not stop wandering after being idle. Non-tameable FBX pathfinder mobs also use animal-like walk target scoring, preferring grass blocks and otherwise following light-level pathfinding cost, matching the movement behavior that made the tameable variant reliable. The hostile variant still uses normal Minecraft hostile targeting and melee damage rules, including peaceful mode preventing attacks.
+For the `fabric-26.2` target, the summonable FBX mob variants register floating, random strolling, player look-at, and random look-around goals explicitly. Their random strolling uses the four-argument `RandomStrollGoal` with no-action-time checks disabled so summoned display mobs do not stop wandering after being idle. Non-tameable FBX pathfinder mobs also use animal-like walk target scoring, preferring grass blocks and otherwise following light-level pathfinding cost, matching the movement behavior that made the tameable variant reliable. The hostile variant still uses normal Minecraft hostile targeting and melee damage rules, including peaceful mode preventing attacks.
 
 Summon example:
 
@@ -210,6 +193,12 @@ Server-side model storage:
 ```
 
 Clients do not load `mobskins` as local source data. When a view entity renders, the client requests the named model from the server through the mod networking layer. The server validates the safe filename, reads only from its world-local `mobskins` directory, enforces the shared model size limit, and sends the FBX bytes back to that client.
+
+## Model upload authorization and size limit
+
+Both supported targets enforce a strict model size of less than 2 MiB (`2 * 1024 * 1024` bytes). `ModelPackets.MAX_MODEL_BYTES` is one byte below that boundary, and the same value protects file selection, cached-model re-upload, client packet creation, packet decoding, server persistence, and server-to-client model delivery. The upload decoder accepts the exact 2 MiB boundary only as a rejection sentinel so the server can return a useful size error; it is never saved.
+
+Upload permission is intentionally scoped to model uploads. Dedicated servers allow permission-level-2 operators and player names stored in the world's `fbx-player-models/upload-permissions.txt`. Integrated servers additionally recognize the native singleplayer owner identity, allowing the owner to upload in a world with cheats disabled without granting general command permissions.
 
 Client-side received model cache:
 
@@ -239,7 +228,7 @@ Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNor
 
 ## Minecraft 26.2 port
 
-The 26.2 module starts from the unobfuscated 26.1.2 implementation but carries its own Minecraft-sensitive source and resources. It preserves the player and entity renderers, rig binding, screens and file picker, local configuration, commands, networking payloads, tracked entity data, value input/output persistence, server upload permissions and size checks, safe filename validation, model synchronization, client caches, lifecycle hooks, Mod Menu integration, all five FBX entities, and custom tame items.
+The 26.2 module carries its own Minecraft-sensitive source and resources. It includes the player and entity renderers, rig binding, screens and file picker, local configuration, commands, networking payloads, tracked entity data, value input/output persistence, server upload permissions and size checks, safe filename validation, model synchronization, client caches, lifecycle hooks, Mod Menu integration, all five FBX entities, and custom tame items.
 
 Important 26.2 API changes handled in this module include:
 
@@ -269,7 +258,7 @@ The 26.2 development launch uses DevAuth `1.2.2`; unlike 1.2.1, it does not depe
 3. Add `include("fabric-<minecraft-version>")` to `settings.gradle`.
 4. Create `fabric-<minecraft-version>/build.gradle` from the closest compatible target.
 5. Copy only the necessary Fabric glue, resources, entrypoints, and mixins into the new module.
-6. Add Yarn only for an obfuscated target; Minecraft 26.1.2 and later use the unobfuscated names supplied by the game.
+6. Add Yarn only for an obfuscated target; Minecraft 26.2 uses the unobfuscated names supplied by the game.
 7. Adapt dependencies, `fabric.mod.json`, mixin targets, injection descriptors, GUI, networking, persistence, entity, and rendering APIs for that Minecraft version.
 8. Audit the new rendering path for backend-specific graphics calls.
 9. Keep shared logic in `common`; isolate mapping-sensitive differences inside the Fabric target module.

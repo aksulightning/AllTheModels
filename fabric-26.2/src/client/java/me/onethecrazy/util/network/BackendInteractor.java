@@ -108,7 +108,7 @@ public final class BackendInteractor {
             return;
         }
         if (data3d != null && data3d.length > ModelPackets.MAX_MODEL_BYTES) {
-            showMessage("Upload too large: model files must be 3 MB or smaller.");
+            showMessage("Upload too large: model files must be under 2 MB.");
             return;
         }
         String formatName = format == null ? ParsingFormat.FBX.name() : format.name();

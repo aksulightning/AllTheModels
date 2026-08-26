@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class ModelPackets {
-    public static final int MAX_MODEL_BYTES = 3 * 1024 * 1024;
+    public static final int MODEL_SIZE_LIMIT_BYTES = 2 * 1024 * 1024;
+    public static final int MAX_MODEL_BYTES = MODEL_SIZE_LIMIT_BYTES - 1;
 
     private ModelPackets() {
     }
