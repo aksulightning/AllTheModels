@@ -3,7 +3,7 @@ name: nightly-lite
 on:
   push:
     branches:
-      - main
+      - clientside
 
   workflow_dispatch:
 
