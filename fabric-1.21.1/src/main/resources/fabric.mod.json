@@ -3,8 +3,8 @@
 	"schemaVersion": 1,
 	"id": "fbx-player-models",
 	"version": "${version}",
-	"name": "FBX Player Models",
-	"description": "Let's you use any 3D-Model as your skin",
+	"name": "FBX Player Models Lite",
+	"description": "Use a local FBX model for your own player on this client only.",
 	"authors": [
 		"1TheCrazy",
 		"Aksu Lightning"
@@ -15,11 +15,8 @@
 	},
 	"license": "MIT",
 	"icon": "assets/fbx-player-models/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"me.onethecrazy.FBXPlayerModelsMod"
-		],
 		"client": [
 			"me.onethecrazy.FBXPlayerModelsClient"
 		],
@@ -28,7 +25,6 @@
 		]
 	},
 	"mixins": [
-		"fbx-player-models.mixins.json",
 		{
 			"config": "fbx-player-models.client.mixins.json",
 			"environment": "client"

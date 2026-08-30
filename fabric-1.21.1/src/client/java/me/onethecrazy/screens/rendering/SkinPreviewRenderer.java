@@ -23,7 +23,6 @@ import org.joml.Matrix4f;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class SkinPreviewRenderer {
     private final int x, y;
@@ -90,8 +89,7 @@ public class SkinPreviewRenderer {
             return false;
         }
 
-        UUID selfUuid = client.getSession().getUuidOrNull();
-        @Nullable CacheSkin cacheSkin = selfUuid == null ? null : SkinManager.skinCache.get(selfUuid.toString());
+        @Nullable CacheSkin cacheSkin = SkinManager.getSelfSkin();
         if (!hasRenderablePreview(cacheSkin)) {
             cacheSkin = getSelectedPreviewCache();
         }

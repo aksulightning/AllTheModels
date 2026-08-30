@@ -3,7 +3,6 @@ package me.onethecrazy.mixin.client;
 import me.onethecrazy.*;
 import me.onethecrazy.screens.ConfigScreen;
 import me.onethecrazy.screens.rendering.SkinPreviewRenderer;
-import me.onethecrazy.util.ToastUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,7 +28,6 @@ public abstract class MainMenuMixin extends Screen{
     // Other Constants
     @Unique private static final float PLAYER_SKIN_PREVIEW_SCALE = 30f;
 
-    @Unique private static boolean hasModerationNoticeBeenShown = false;
     @Unique private SkinPreviewRenderer skinPreviewRenderer;
 
     protected MainMenuMixin(Component title) {
@@ -41,11 +39,6 @@ public abstract class MainMenuMixin extends Screen{
         // Create a SkinPreviewRenderer instance
         skinPreviewRenderer = new SkinPreviewRenderer(getCellOriginX(), getCellOriginY(), SKIN_CELL_DIMENSIONS, PLAYER_SKIN_PREVIEW_SCALE);
 
-        // Show Moderation Notice everytime we open Main Menu
-        if(!hasModerationNoticeBeenShown && FBXPlayerModelsClient.isFirstStartup){
-            hasModerationNoticeBeenShown = true;
-            ToastUtil.showModerationNoticeToast();
-        }
     }
 
 

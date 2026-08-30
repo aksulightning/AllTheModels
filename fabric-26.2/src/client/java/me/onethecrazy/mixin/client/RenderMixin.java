@@ -3,8 +3,8 @@ package me.onethecrazy.mixin.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.FBXPlayerModelsClient;
+import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.LivingEntityRenderExtension;
 import me.onethecrazy.util.model.animation.CustomModelPose;
@@ -54,18 +54,11 @@ public abstract class RenderMixin implements LivingEntityRenderExtension {
             return;
         }
 
-        if (!FBXPlayerModelsClient.options().isEnabled) {
+        if (!FBXPlayerModelsClient.options().isEnabled || renderedPlayer != Minecraft.getInstance().player) {
             return;
         }
 
-        String uuid = renderedPlayer.getUUID().toString();
-        if (!SkinManager.skinLookup.containsKey(uuid)) {
-            FBXPlayerModelsMod.LOGGER.info("Loading skin for uuid: {}", uuid);
-            SkinManager.loadSkin(uuid);
-            return;
-        }
-
-        @Nullable CacheSkin cacheResult = SkinManager.skinCache.get(uuid);
+        @Nullable CacheSkin cacheResult = SkinManager.getSelfSkin();
         if (cacheResult == null) {
             return;
         }

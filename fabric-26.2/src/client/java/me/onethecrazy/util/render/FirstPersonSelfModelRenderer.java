@@ -78,7 +78,7 @@ public final class FirstPersonSelfModelRenderer {
             return null;
         }
 
-        CacheSkin cacheSkin = SkinManager.skinCache.get(player.getStringUUID());
+        CacheSkin cacheSkin = SkinManager.getSelfSkin();
         if (cacheSkin == null) {
             return null;
         }

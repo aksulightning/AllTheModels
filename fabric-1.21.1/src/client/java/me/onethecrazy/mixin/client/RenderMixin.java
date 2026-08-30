@@ -1,16 +1,14 @@
 package me.onethecrazy.mixin.client;
 
-import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.FBXPlayerModelsClient;
+import me.onethecrazy.FBXPlayerModelsMod;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.util.LivingEntityRenderExtension;
-import me.onethecrazy.screens.ConfigScreen;
 import me.onethecrazy.util.model.animation.CustomModelPose;
 import me.onethecrazy.util.objects.CacheSkin;
 import me.onethecrazy.util.objects.Vertex;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -45,41 +43,11 @@ public abstract class RenderMixin <T extends LivingEntity> implements LivingEnti
     private void onPlayerRender(T livingEntity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci){
         // We only want to hook the player rendering
         if(livingEntity instanceof AbstractClientPlayerEntity renderedPlayer){
+            if (!FBXPlayerModelsClient.options().isEnabled || renderedPlayer != MinecraftClient.getInstance().player)
+                return;
+
             player = renderedPlayer;
-
-            if(!FBXPlayerModelsClient.options().isEnabled)
-                return;
-
-            String uuid;
-
-            try {
-                uuid = player.getUuid().toString();
-            }
-            catch(NullPointerException ex){
-                var screen = MinecraftClient.getInstance().currentScreen;
-
-                // We are inside a screen and don't have an uuid, so we just fall back to the clients uuid
-                if(screen instanceof TitleScreen || screen instanceof ConfigScreen) {
-                    var sessionUuid = MinecraftClient.getInstance().getSession().getUuidOrNull();
-                    if (sessionUuid == null) {
-                        return;
-                    }
-
-                    uuid = sessionUuid.toString();
-                }
-                // Just hand off to default rendering
-                else
-                    return;
-            }
-
-            // We have never encountered this user before (we don't know whether he has a skin or not) or we have never loaded the skin of this user
-            if(!SkinManager.skinLookup.containsKey(uuid)){
-                FBXPlayerModelsMod.LOGGER.info("Loading skin for uuid: {}", uuid);
-                SkinManager.loadSkin(uuid);
-                return;
-            }
-
-            @Nullable CacheSkin cacheResult = SkinManager.skinCache.get(uuid);
+            @Nullable CacheSkin cacheResult = SkinManager.getSelfSkin();
 
             // We don't have the skin data yet
             if(cacheResult == null)

@@ -19,7 +19,6 @@ import org.joml.Vector3f;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class SkinPreviewRenderer {
     private static final int FULL_BRIGHT_LIGHT = 0xF000F0;
@@ -71,8 +70,7 @@ public class SkinPreviewRenderer {
             return false;
         }
 
-        UUID selfUuid = client.getUser().getProfileId();
-        @Nullable CacheSkin cacheSkin = selfUuid == null ? null : SkinManager.skinCache.get(selfUuid.toString());
+        @Nullable CacheSkin cacheSkin = SkinManager.getSelfSkin();
         if (!hasRenderablePreview(cacheSkin)) {
             cacheSkin = getSelectedPreviewCache();
         }

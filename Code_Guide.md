@@ -1,54 +1,54 @@
-# FBX Player Models Code Guide
+# FBX Player Models Lite Code Guide
 
-## Fabric-only support
+## Lite architecture
 
-This repository is Fabric-only. It does not use Forge, NeoForge, Quilt, or Architectury.
+FBX Player Models Lite is a Fabric client-only mod. It loads one locally selected FBX model and uses it only when rendering the active local player.
 
-The project is structured for separate Fabric jars per Minecraft target. A universal jar is not implemented.
+The client-only boundary is enforced in several layers:
 
-## Supported targets
+- Both `fabric.mod.json` files declare `"environment": "client"`.
+- The only Fabric initializer is `me.onethecrazy.FBXPlayerModelsClient`; there is no `main` entrypoint.
+- `SkinManager` owns one `selfSkin` cache rather than a UUID-indexed player cache.
+- Each player-render mixin checks that the rendered player is the current Minecraft client player before using the custom model.
+- The first-person renderer accepts only the local-player type and reads the same local cache.
+- The project registers no custom payloads, network receivers, server commands, entity types, or entity renderers.
 
-The repository maintains two supported Fabric targets. Each `fabric-*` module is a real, independently buildable Minecraft target with its own version-sensitive source, resources, metadata, and production jar. `common` supplies shared classes and assets to those jars; it is not a standalone Minecraft distribution.
+The stable mod id remains `fbx-player-models` so existing configuration and asset identifiers continue to work. The display name and archive base name are `FBX Player Models Lite` and `fbx-player-models-lite`.
 
-### Target and toolchain versions
+## Removed full-version features
 
-| Module | Minecraft | Game namespace | Java | Fabric Loom | Fabric Loader | Fabric API |
+This branch does not contain:
+
+- FBX display entities or pathfinding FBX mobs.
+- Server-side model storage or upload permissions.
+- Client-to-server model uploads.
+- Server-to-client model downloads.
+- Player model lookup, distribution, broadcast, or synchronization packets.
+- Remote-player custom-model caching or rendering.
+- Mob-model download caches.
+- Community-server upload disclaimers or upload controls.
+
+Do not reintroduce server model handling into the Lite branch. Features that need multiplayer distribution belong in the full mod.
+
+## Supported Fabric targets
+
+Each target is independently buildable and contains its own Minecraft-version-sensitive client code. `common` supplies pure Java model data and shared assets; it is not a standalone mod.
+
+| Module | Minecraft | Namespace | Java | Fabric Loom | Fabric Loader | Fabric API |
 | --- | --- | --- | --- | --- | --- | --- |
 | `fabric-1.21.1` | `1.21.1` | Yarn `1.21.1+build.3` | 21 | `1.16.2` | `0.16.14` | `0.116.6+1.21.1` |
-| `fabric-26.2` | `26.2` | unobfuscated game names; no Yarn | 25 | `1.17.17` | `0.19.3` | `0.156.0+26.2` |
+| `fabric-26.2` | `26.2` | unobfuscated game names | 25 | `1.17.17` | `0.19.3` | `0.156.0+26.2` |
 
-### Mod and production-build versions
+| Module | Mod version | Mod Menu | LWJGL Assimp/NFD | Production jar |
+| --- | --- | --- | --- | --- |
+| `fabric-1.21.1` | `2.0.0+1.21.1` | `11.0.3` | `3.3.3` | `fbx-player-models-lite-v2.0.0+1.21.1+mc1.21.1.jar` |
+| `fabric-26.2` | `2.0.0+26.2` | `20.0.1` | `3.4.1` | `fbx-player-models-lite-v2.0.0+26.2+mc26.2.jar` |
 
-| Module | Mod version | Mod Menu | LWJGL Assimp/NFD | Build task | Production jar |
-| --- | --- | --- | --- | --- | --- |
-| `fabric-1.21.1` | `2.0.0+1.21.1` | `11.0.3` | `3.3.3` | `:fabric-1.21.1:build` | `fbx-player-models-v2.0.0+1.21.1+mc1.21.1.jar` |
-| `fabric-26.2` | `2.0.0+26.2` | `20.0.1` | `3.4.1` | `:fabric-26.2:build` | `fbx-player-models-v2.0.0+26.2+mc26.2.jar` |
+The 1.21.1 target uses Yarn and Loom's `remapJar`. Minecraft 26.2 exposes unobfuscated names and produces its artifact through `jar`. Both targets bundle jgltf `2.0.4` plus Native File Dialog and Assimp natives for Windows, Linux, and macOS on x64 and arm64.
 
-`fabric-1.21.1` uses Yarn and produces its production artifact through Loom's `remapJar` task. Minecraft 26.2 exposes unobfuscated game names, so that module deliberately omits Yarn and produces its production artifact through `jar`.
+## Required compile command
 
-All production jars are written to `<module>/build/libs/` and include the `common` output. The Gradle wrapper is `9.5.1`. All modules bundle jgltf `2.0.4`; Native File Dialog and Assimp retain Windows, Linux, and macOS natives for x64 and arm64. DevAuth is development-only: 1.21.1 uses `1.2.1`, while 26.2 uses `1.2.2`.
-
-## Build commands
-
-Build all configured modules:
-
-```bash
-./gradlew build
-```
-
-Build the Fabric 1.21.1 jar:
-
-```bash
-./gradlew :fabric-1.21.1:build
-```
-
-Build the Fabric 26.2 jar:
-
-```bash
-./gradlew :fabric-26.2:build
-```
-
-Compile all supported main and client source sets:
+For requested coding work, compile only the supported main and client source sets:
 
 ```bash
 bash ./gradlew \
@@ -58,8 +58,14 @@ bash ./gradlew \
   :fabric-26.2:compileClientJava
 ```
 
-The 1.21.1 remapped jar is written under `fabric-1.21.1/build/libs/`.
-The unobfuscated 26.2 jar is written under `fabric-26.2/build/libs/`. Loom 1.17's unobfuscated target produces the production 26.2 artifact through the `jar` task rather than a `remapJar` task.
+Production build tasks remain:
+
+```bash
+./gradlew :fabric-1.21.1:build
+./gradlew :fabric-26.2:build
+```
+
+Artifacts are written under each module's `build/libs/` directory.
 
 ## Project layout
 
@@ -69,197 +75,95 @@ root/
   build.gradle
   gradle.properties
   common/
-    build.gradle
     src/main/java/...
     src/main/resources/...
   fabric-1.21.1/
     build.gradle
-    src/main/java/...
-    src/client/java/...
     src/main/resources/fabric.mod.json
-    src/main/resources/fbx-player-models.mixins.json
+    src/client/java/...
     src/client/resources/fbx-player-models.client.mixins.json
   fabric-26.2/
     build.gradle
-    src/main/java/...
-    src/client/java/...
     src/main/resources/fabric.mod.json
-    src/main/resources/fbx-player-models.mixins.json
+    src/client/java/...
     src/client/resources/fbx-player-models.client.mixins.json
 ```
 
+There is deliberately no version-specific `src/main/java` implementation. The version modules contain client source plus the metadata that marks the mod as client-only.
+
 ## Common code
 
-Put version-independent code in `common`, including:
+Keep version-independent code in `common`, including:
 
-- Constants such as `FBXPlayerModels.MOD_ID`.
-- Config/save model classes.
-- Pure Java utilities and model data structures.
-- Shared assets that are valid for every configured Fabric target.
-- Platform-neutral interfaces under `com.aksulightning.platform`.
+- `FBXPlayerModels.MOD_ID` and `DISPLAY_NAME`.
+- Configuration/save data classes.
+- Pure Java model, skeleton, rig, and animation data.
+- Mapping-independent numeric utility types.
+- Shared assets.
+- Platform-neutral client interfaces under `com.aksulightning.platform`.
 
 Common code must not import Minecraft, Fabric, Mixin, Mod Menu, or mapping-specific classes.
 
-## Fabric version code
+## Version-specific client code
 
-Put Minecraft- and Fabric-sensitive code in a Fabric target module, such as `fabric-1.21.1`, including:
+Keep Minecraft- and Fabric-sensitive code in both Fabric target modules, including:
 
-- `ModInitializer` and `ClientModInitializer` entrypoints.
-- Fabric event registration.
-- Client commands.
-- Mod Menu integration.
-- Screens, renderers, texture upload, and key client setup.
-- Mixins and mixin config files.
-- `fabric.mod.json`.
-- Access wideners, if any are added later.
+- `ClientModInitializer` and Mod Menu integration.
+- Client commands and screens.
+- FBX parsing and dynamic texture creation.
+- Player and first-person rendering.
+- Camera and held-item hooks.
+- Client lifecycle integration and game-directory access.
 
-Fabric platform implementations live under `com.aksulightning.platform.fabric`.
+When a feature changes in one target, make the equivalent mapping-appropriate change in the other target.
 
-## Community server disclaimer screen
+## Local model lifecycle
 
-`me.onethecrazy.screens.CommunityServerDisclaimerScreen` is duplicated in each Fabric target module because the screen, button, text renderer, and mouse APIs differ by mappings and Minecraft version.
+`SkinManager.pickClientSkin()` opens the native file chooser. Selection continues on the render thread through `selectSelfSkin(Path)`:
 
-The disclaimer layout uses the scaled Minecraft GUI size, not raw window pixels. Keep its margins, text width, checkbox position, and button row derived from the current `width` and `height` so small windows do not let the disclaimer text overlap the checkbox or buttons.
+1. Read the selected local file.
+2. Reject formats other than FBX.
+3. Hash the bytes and copy them into `.fbxplayermodels/skins/<sha256>.fbx`.
+4. Save the selected hash, original display name, and rig settings in `.fbxplayermodels/.config`.
+5. Parse and normalize the model into the single in-memory `selfSkin` cache.
 
-## Current entrypoints
+`loadSelfSkin()` restores only that configured local model. No UUID lookup, connection event, server request, or world state participates in loading.
 
-Every Fabric target's `fabric.mod.json` declares:
+## Rendering boundary
 
-- `main`: `me.onethecrazy.FBXPlayerModelsMod`
-- `client`: `me.onethecrazy.FBXPlayerModelsClient`
-- `modmenu`: `me.onethecrazy.ModMenuIntegration`
+Third-person rendering is implemented by the version-specific `RenderMixin`:
 
-## Mixins and access wideners
+- 1.21.1 requires `renderedPlayer == MinecraftClient.getInstance().player`.
+- 26.2 requires `renderedPlayer == Minecraft.getInstance().player`.
 
-The current mixin configs are version-specific:
+If that identity check fails, vanilla rendering continues untouched. This guarantees that remote players cannot receive the local model on the same client. Because the mod has no networking and is not installed on the server, no other client can learn or render the selection.
 
-- `fbx-player-models.mixins.json`
-- `fbx-player-models.client.mixins.json`
+`FirstPersonSelfModelRenderer` is separately guarded by the local player, first-person camera, option state, spectator state, invisibility, and sleeping pose. GUI previews render the same local cache directly and fall back to the vanilla local player when no custom model is selected.
 
-The client mixins are:
+## Mixins
 
-- `me.onethecrazy.mixin.client.CameraMixin`
-- `me.onethecrazy.mixin.client.ItemInHandRendererMixin`
-- `me.onethecrazy.mixin.client.RenderMixin`
-- `me.onethecrazy.mixin.client.MainMenuMixin`
+The only mixin configuration is `fbx-player-models.client.mixins.json`. Client mixins are:
 
-There are currently no project access wideners.
+- `CameraMixin`
+- `HeldItemRendererMixin` on 1.21.1 / `ItemInHandRendererMixin` on 26.2
+- `RenderMixin`
+- `MainMenuMixin`
 
-## Version-sensitive code
+There is no common/server mixin configuration and no access widener.
 
-Code that imports `net.minecraft.*`, `com.mojang.*`, `net.fabricmc.*`, Mixin, or Mod Menu APIs remains in the applicable Fabric target module. This includes rendering, screens, commands, dynamic texture loading, Fabric events, Fabric Loader config paths, and mixins.
+## Minecraft 26.2 rendering notes
 
-Shared code currently includes platform interfaces, constants, save/config models, rig binding metadata, simple model structures, `Float2`, `Float3`, and shared resources.
+The 26.2 path uses `SubmitNodeCollector.submitCustomGeometry`, `RenderTypes.entityCutout`, `PoseStack`, and `VertexConsumer`. It contains no direct raw OpenGL state manipulation. Animated vertices are generated during render submission so inventory-preview body/head rotations from `LivingEntityRenderState` are respected.
 
-## FBX view entity
+Assimp parses FBX files but does not issue rendering calls. OpenGL is the minimum runtime target; experimental Vulkan behavior has not been functionally verified.
 
-The mod registers summonable FBX-backed entities for displaying an FBX model:
+## Adding another Fabric target
 
-```text
-fbxplayermodels:view_entity
-fbxplayermodels:passive_entity
-fbxplayermodels:tameable_entity
-fbxplayermodels:neutral_entity
-fbxplayermodels:hostile_entity
-```
-
-`view_entity` is intentionally not a pathfinding mob. It extends the base Minecraft entity type in each Fabric target, has no AI goals, no attacks, no wandering, no fleeing, and no natural spawning for the MVP. It exists as a server-synced display entity with a client renderer.
-
-The AI variants reuse the same FBX model NBT, server sync, cache, and renderer:
-
-- `passive_entity` wanders and looks at nearby players.
-- `tameable_entity` can be tamed with a bone, can sit, follows its owner, wanders, and looks at nearby players.
-- `neutral_entity` wanders and only fights back after being damaged.
-- `hostile_entity` wanders, targets players, and attacks in melee.
-
-For the `fabric-26.2` target, the summonable FBX mob variants register floating, random strolling, player look-at, and random look-around goals explicitly. Their random strolling uses the four-argument `RandomStrollGoal` with no-action-time checks disabled so summoned display mobs do not stop wandering after being idle. Non-tameable FBX pathfinder mobs also use animal-like walk target scoring, preferring grass blocks and otherwise following light-level pathfinding cost, matching the movement behavior that made the tameable variant reliable. The hostile variant still uses normal Minecraft hostile targeting and melee damage rules, including peaceful mode preventing attacks.
-
-Summon example:
-
-```mcfunction
-/summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
-/summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
-/summon fbxplayermodels:tameable_entity ~ ~ ~ {Model:"this_file.fbx",TameItem:"minecraft:apple"}
-```
-
-The `Model` NBT value is persisted on the entity and synced to clients with tracked entity data. The value must be a safe flat FBX filename. Absolute paths, nested paths, path traversal, blank values, and non-`.fbx` files are rejected by sanitizing to an empty model value.
-
-`tameable_entity` also supports a per-entity tame item NBT value. Use `TameItem:"minecraft:item_id"` in summon NBT. The lowercase alias `tame_item` is accepted when reading entity NBT. Missing or invalid item ids fall back to `minecraft:bone`.
-
-Server-side model storage:
-
-```text
-<world>/fbx-player-models/mobskins/this_file.fbx
-```
-
-Clients do not load `mobskins` as local source data. When a view entity renders, the client requests the named model from the server through the mod networking layer. The server validates the safe filename, reads only from its world-local `mobskins` directory, enforces the shared model size limit, and sends the FBX bytes back to that client.
-
-## Model upload authorization and size limit
-
-Both supported targets enforce a strict model size of less than 2 MiB (`2 * 1024 * 1024` bytes). `ModelPackets.MAX_MODEL_BYTES` is one byte below that boundary, and the same value protects file selection, cached-model re-upload, client packet creation, packet decoding, server persistence, and server-to-client model delivery. The upload decoder accepts the exact 2 MiB boundary only as a rejection sentinel so the server can return a useful size error; it is never saved.
-
-Upload permission is intentionally scoped to model uploads. Dedicated servers allow permission-level-2 operators and player names stored in the world's `fbx-player-models/upload-permissions.txt`. Integrated servers additionally recognize the native singleplayer owner identity, allowing the owner to upload in a world with cheats disabled without granting general command permissions.
-
-Client-side received model cache:
-
-```text
-.fbxplayermodels/mobskins-cache/
-```
-
-This cache is only a parsing cache for server-sent bytes. It is not the authoritative model folder.
-
-Important classes, duplicated per Fabric target where mappings differ:
-
-- `com.aksulightning.fbxplayermodels.ModEntities`
-- `com.aksulightning.fbxplayermodels.ViewEntity`
-- `com.aksulightning.fbxplayermodels.FbxPassiveEntity`
-- `com.aksulightning.fbxplayermodels.FbxTameableEntity`
-- `com.aksulightning.fbxplayermodels.FbxNeutralEntity`
-- `com.aksulightning.fbxplayermodels.FbxHostileEntity`
-- `com.aksulightning.fbxplayermodels.ViewEntityModelPath`
-- `com.aksulightning.fbxplayermodels.client.ViewEntityRenderer`
-- `com.aksulightning.fbxplayermodels.client.ViewEntityModelCache`
-- `me.onethecrazy.network.ModelPackets`
-- `me.onethecrazy.server.ServerModelStore`
-- `me.onethecrazy.server.ServerModelNetworking`
-- `me.onethecrazy.util.network.BackendInteractor`
-
-Rendering reuses the existing FBX loading pipeline: `UniversalParser`, `ModelNormalizer`, `CacheSkin`, static vertices, and `SkinnedModel.render(...)`. The renderer chooses `Idle` when an entity is still and `Walk` when a FBX mob variant is moving.
-
-## Minecraft 26.2 port
-
-The 26.2 module carries its own Minecraft-sensitive source and resources. It includes the player and entity renderers, rig binding, screens and file picker, local configuration, commands, networking payloads, tracked entity data, value input/output persistence, server upload permissions and size checks, safe filename validation, model synchronization, client caches, lifecycle hooks, Mod Menu integration, all five FBX entities, and custom tame items.
-
-Important 26.2 API changes handled in this module include:
-
-- Screens and toasts are now reached through `Minecraft.gui`.
-- The first-person hand renderer hook targets `submitHandsWithItems` with its complete 26.2 descriptor.
-- The living-entity name-tag submission no longer receives the removed distance argument.
-- Packed light lookup moved to `LightCoordsUtil`.
-- Toast submission uses the 26.2 `SystemToast` helpers and GUI-owned `ToastManager`.
-- Main-menu and player-render mixins use explicit 26.2 method descriptors without local-variable capture assumptions.
-
-The title-screen moderation notice is guarded for the full client session rather than per `TitleScreen` instance. Its toast uses `SystemToast.addOrUpdate`, preventing recreated or reinitialized title screens from queuing duplicate notices during first startup.
-
-Minecraft 26.2 applies inventory mouse-follow rotations to `LivingEntityRenderState` after entity extraction. Animated FBX player vertices are therefore generated during render submission from the final `bodyRot`, `yRot`, and `xRot` values. This keeps both horizontal body/head yaw and vertical head pitch aligned with the inventory mouse pose without mutating the live player entity or depending on captured method locals.
-
-The 26.2 client rendering path was audited for backend-specific calls. It contains no direct `GL11`, `GL20`, `GL30`, `GlStateManager`, manual shader binding, texture-state mutation, or framebuffer access. FBX geometry is submitted through `SubmitNodeCollector.submitCustomGeometry`, `RenderTypes.entityCutout`, `PoseStack`, and `VertexConsumer`; textures use Minecraft's `DynamicTexture` and texture manager. These abstractions leave reversed depth and backend state to Minecraft/Blaze3D. Assimp remains a native FBX parser and does not issue rendering commands.
-
-The default OpenGL backend is the minimum supported runtime target. The experimental Vulkan backend was not launched or functionally tested during this port, so Vulkan compatibility is not claimed. No known raw-OpenGL architectural limitation remains in the 26.2 Minecraft rendering path, but correctness under Vulkan remains an explicit runtime-verification limitation.
-
-The nightly workflow builds 26.2 with Java 25 as its own matrix target and publishes a distinct `nightly-26.2` artifact. The stable Mod Menu 20.0.1 artifact is resolved from Modrinth Maven.
-
-The 26.2 development launch uses DevAuth `1.2.2`; unlike 1.2.1, it does not depend on the Apache HttpClient classes removed from the game runtime. DevAuth is `runtimeOnly` and is not bundled into the production mod jar.
-
-## Adding another Fabric Minecraft version
-
-1. Confirm the actual Minecraft version, mapping model, Fabric Loader version, Fabric API version, Loom version, Java version, and Mod Menu version from official metadata.
-2. Add target-specific properties to `gradle.properties`.
-3. Add `include("fabric-<minecraft-version>")` to `settings.gradle`.
-4. Create `fabric-<minecraft-version>/build.gradle` from the closest compatible target.
-5. Copy only the necessary Fabric glue, resources, entrypoints, and mixins into the new module.
-6. Add Yarn only for an obfuscated target; Minecraft 26.2 uses the unobfuscated names supplied by the game.
-7. Adapt dependencies, `fabric.mod.json`, mixin targets, injection descriptors, GUI, networking, persistence, entity, and rendering APIs for that Minecraft version.
-8. Audit the new rendering path for backend-specific graphics calls.
-9. Keep shared logic in `common`; isolate mapping-sensitive differences inside the Fabric target module.
-10. Run the focused compile tasks for every supported target, build the new module, and inspect the production jar.
+1. Confirm the Minecraft version, mappings, Java, Loader, Fabric API, Loom, and Mod Menu versions.
+2. Add target properties and include the module in `settings.gradle`.
+3. Copy the closest Fabric module's client source and resources.
+4. Adapt mapping-sensitive GUI, renderer, lifecycle, and mixin APIs.
+5. Keep metadata client-only and declare no `main` entrypoint.
+6. Preserve the local-player identity check and single self-model cache.
+7. Do not add server networking, registration, commands, persistence, or entities.
+8. Compile every supported target with the focused compile command.

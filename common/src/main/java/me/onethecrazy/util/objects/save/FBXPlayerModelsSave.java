@@ -7,7 +7,6 @@ public class FBXPlayerModelsSave {
     public float firstPersonCameraOffsetX;
     public float firstPersonCameraOffsetY;
     public float firstPersonCameraOffsetZ;
-    public boolean hideCommunityServerDisclaimer;
 
     public FBXPlayerModelsSave(){
         this.selectedSkin = new ClientSkin();
@@ -16,6 +15,5 @@ public class FBXPlayerModelsSave {
         this.firstPersonCameraOffsetX = 0f;
         this.firstPersonCameraOffsetY = 0f;
         this.firstPersonCameraOffsetZ = 0f;
-        this.hideCommunityServerDisclaimer = false;
     }
 }

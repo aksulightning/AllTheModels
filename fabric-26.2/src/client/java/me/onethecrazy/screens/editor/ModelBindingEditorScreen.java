@@ -482,8 +482,7 @@ public class ModelBindingEditorScreen extends Screen {
     }
 
     private CacheSkin currentCache() {
-        var uuid = Minecraft.getInstance().getUser().getProfileId();
-        return uuid == null ? null : SkinManager.skinCache.get(uuid.toString());
+        return SkinManager.getSelfSkin();
     }
 
     private static final class CameraOffsetSlider extends AbstractSliderButton {

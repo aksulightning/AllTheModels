@@ -1,5 +1,6 @@
 package me.onethecrazy.screens;
 
+import me.onethecrazy.FBXPlayerModels;
 import me.onethecrazy.FBXPlayerModelsClient;
 import me.onethecrazy.SkinManager;
 import me.onethecrazy.screens.editor.ModelBindingEditorScreen;
@@ -33,7 +34,6 @@ public class ConfigScreen extends Screen {
     private Button selectSkinButton;
     private Button resetButton;
     private Button toggleButton;
-    private Button uploadAgainButton;
     private Button editorButton;
     private Button doneButton;
     private final Screen parent;
@@ -44,15 +44,12 @@ public class ConfigScreen extends Screen {
     }
 
     public ConfigScreen(Screen parent) {
-        super(Component.nullToEmpty("FBX Player Models"));
+        super(Component.nullToEmpty(FBXPlayerModels.DISPLAY_NAME));
         this.parent = parent;
     }
 
     public static Screen create(Screen parent) {
-        ConfigScreen configScreen = new ConfigScreen(parent);
-        return FBXPlayerModelsClient.options().hideCommunityServerDisclaimer
-                ? configScreen
-                : new CommunityServerDisclaimerScreen(parent, configScreen);
+        return new ConfigScreen(parent);
     }
 
     @Override
@@ -77,13 +74,9 @@ public class ConfigScreen extends Screen {
             updateEnabledButtonText();
         }).bounds(getContentOriginX() + getHalfButtonWidth() + BUTTON_SPACING, selectSkinButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
 
-        uploadAgainButton = Button.builder(Component.empty(), (button) ->
-                SkinManager.uploadSelectedSkin(false)
-        ).bounds(getContentOriginX(), resetButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
-
         editorButton = Button.builder(Component.nullToEmpty("Settings"), (button) ->
                 Minecraft.getInstance().gui.setScreen(new ModelBindingEditorScreen(this))
-        ).bounds(getContentOriginX() + getHalfButtonWidth() + BUTTON_SPACING, resetButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getHalfButtonWidth(), BUTTON_HEIGHT).build();
+        ).bounds(getContentOriginX(), resetButton.getY() + BUTTON_HEIGHT + BUTTON_SPACING, getContentWidth(), BUTTON_HEIGHT).build();
 
         doneButton = Button.builder(
                 Component.translatable("gui.done"),
@@ -94,7 +87,6 @@ public class ConfigScreen extends Screen {
         this.addRenderableWidget(selectSkinButton);
         this.addRenderableWidget(resetButton);
         this.addRenderableWidget(toggleButton);
-        this.addRenderableWidget(uploadAgainButton);
         this.addRenderableWidget(editorButton);
         this.addRenderableWidget(doneButton);
         this.addRenderableOnly(this::renderText);
@@ -102,7 +94,6 @@ public class ConfigScreen extends Screen {
         // Set Button Texts
         updateSelectButtonText();
         updateResetButtonText();
-        updateUploadAgainButtonText();
         updateEnabledButtonText();
     }
 
@@ -110,22 +101,17 @@ public class ConfigScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Update Text
         updateSelectButtonText();
-        updateUploadAgainButtonText();
-
         super.extractRenderState(context, mouseX, mouseY, delta);
     }
 
     private void renderText(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        // Render the banner text
-        context.text(font, trimmed(FBXPlayerModelsClient.bannerText, getContentWidth()), getContentOriginX(), getCellOriginY() + getScreenFriendlyDimensions() + MARGIN, 0xFFFFFFFF, true);
-
         CacheSkin cacheSkin = getSelfCacheSkin();
         int statusY = editorButton.getY() + BUTTON_HEIGHT + MARGIN;
         if(cacheSkin != null && statusY + font.lineHeight < doneButton.getY())
             context.text(font, trimmed(cacheSkin.debugStatus(), getContentWidth()), getContentOriginX(), statusY, 0xFFFFFFFF, true);
 
         // Render Mod Title
-        String title = "FBX Player Models";
+        String title = FBXPlayerModels.DISPLAY_NAME;
         context.text(font, title, this.width / 2 - font.width(title) / 2, MARGIN, 0xFFFFFFFF, true);
     }
 
@@ -259,11 +245,6 @@ public class ConfigScreen extends Screen {
         resetButton.setMessage(Component.nullToEmpty(trimmed(Component.translatable("gui.fbxplayermodels.reset").getString(), resetButton.getWidth() - 12)));
     }
 
-    @Unique private void updateUploadAgainButtonText(){
-        uploadAgainButton.active = !Objects.equals(FBXPlayerModelsClient.options().selectedSkin.hash, "");
-        uploadAgainButton.setMessage(Component.nullToEmpty(trimmed(Component.translatable("gui.fbxplayermodels.upload_again").getString(), uploadAgainButton.getWidth() - 12)));
-    }
-
     @Unique private void updateEnabledButtonText(){
         Component text = FBXPlayerModelsClient.options().isEnabled ? Component.translatable("gui.fbxplayermodels.mod_enabled") : Component.translatable("gui.fbxplayermodels.mod_disabled");
 
@@ -279,8 +260,7 @@ public class ConfigScreen extends Screen {
     }
 
     @Unique private CacheSkin getSelfCacheSkin() {
-        var uuid = Minecraft.getInstance().getUser().getProfileId();
-        return uuid == null ? null : SkinManager.skinCache.get(uuid.toString());
+        return SkinManager.getSelfSkin();
     }
 
 }

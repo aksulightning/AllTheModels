@@ -1,91 +1,48 @@
-# FBX Player Models
+# FBX Player Models Lite
 
-Use a 3D model as your Minecraft player skin.
+Use an `.fbx` model for your own Minecraft player without installing anything on the server.
 
-FBX Player Models lets you pick an `.fbx` model and show it on your player. Other players can see it too when they also have the mod installed.
+FBX Player Models Lite is entirely client-side:
 
-This mod is experimental. It was made for fun, so some models may not work perfectly.
+- Your selected FBX file is loaded from your own game directory.
+- The custom model replaces only your local player's rendering on your client.
+- Other players continue to render normally on your client.
+- Other players cannot see your custom model; they see your normal Minecraft skin.
+- No model files, hashes, selections, or permissions are sent to a server.
+
+FBX mobs, server model storage, multiplayer model synchronization, and server skin uploads are not included.
 
 ## Download
 
 - [Minecraft 1.21.1 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-1.21.1)
 - [Minecraft 26.2 nightly](https://github.com/aksulightning/FBXPlayerModels/releases/tag/nightly-26.2)
 
-Both downloads are experimental builds.
+Both downloads are experimental Fabric builds.
 
-## What You Can Do
+## How to use a model
 
-- Use an `.fbx` model instead of a normal Minecraft skin.
-- See your model on the main menu.
-- Change your model in game with `/skin`.
-- Use custom models on multiplayer servers.
-- Let server players upload models if they have permission.
+1. Install the mod on your client only.
+2. Start Minecraft and run `/skin`, use Mod Menu, or select the preview on the title screen.
+3. Choose an `.fbx` file.
+4. Open **Settings** if the arms, legs, head, or body need different rig bindings.
+5. Use **Auto Bind** first, then adjust individual body-part bindings if necessary.
 
-## How To Use A Model
+The selected file is copied into the local `.fbxplayermodels/skins/` cache. The selection and rig settings are stored in `.fbxplayermodels/.config`.
 
-1. Install the mod.
-2. Join a world or server.
-3. Run `/skin`.
-4. Choose your `.fbx` file.
-5. Open **Edit Model Rig** if the arms, legs, head, or body do not move correctly.
-6. Use **Auto Bind** first. If needed, click each body part and choose the right bone by hand.
+## Good model characteristics
 
-Your settings are saved after you choose and edit your model.
+Simple models exported from Blender are the most likely to work well. Prefer:
 
-## Best Model Type
-
-For the best chance of working, use a simple model exported from Blender.
-
-Good models usually have:
-
-- Low detail.
+- Low-detail geometry.
 - One material.
-- A texture.
-- Clear bone names.
-- A file size under **2 MB**.
+- Embedded or adjacent textures.
+- Clear bone names such as `Head`, `Chest`, `Right Arm`, `Left Arm`, `Right Leg`, and `Left Leg`.
 
-The rig names like `Head`, `Chest`, `Right Arm`, `Left Arm`, `Right Leg`, and `Left Leg` can help the mod guess the right body parts.
+A model template is available on the [template branch](https://github.com/aksulightning/FBXPlayerModels/tree/template).
 
-If you’re looking for a model template, you can find one here:
-
-[https://github.com/aksulightning/FBXPlayerModels/tree/template](https://github.com/aksulightning/FBXPlayerModels/tree/template)
-
-## Multiplayer Uploads
-
-Servers store uploaded models in the world save.
-
-The owner of a singleplayer world can upload without enabling cheats. On multiplayer servers, operators can upload models by default and can allow or block uploads for other players:
-
-Allow players:
-```
-/fbxplayermodels uploadperm <playername> yes
-```
-Deny players:
-```
-/fbxplayermodels uploadperm <playername> no
-```
-
-Uploaded files must be **under 2 MB**.
-
-## FBX Mobs
-
-The mod can also show FBX models on special entities.
-
-Example commands:
-
-```
-/summon fbxplayermodels:view_entity ~ ~ ~ {Model:"this_file.fbx"}
-/summon fbxplayermodels:hostile_entity ~ ~ ~ {Model:"this_file.fbx"}
-/summon fbxplayermodels:tameable_entity ~ ~ ~ {Model:"this_file.fbx",TameItem:"minecraft:apple"}
-```
-
-The model file must already be on the server in its FBX mob model folder.
-
-## Help And Feedback
+## Help and feedback
 
 - [Report a bug or suggest an idea](https://github.com/aksulightning/FBXPlayerModels/issues)
 - [Contribute code](https://github.com/aksulightning/FBXPlayerModels/pulls)
 
-## Credits
-
-FBX Player Models is based on [AllTheSkins by 1TheCrazy](https://github.com/1TheCrazy/AllTheSkins).
+FBX Player Models Lite is based on [AllTheSkins by 1TheCrazy](https://github.com/1TheCrazy/AllTheSkins).

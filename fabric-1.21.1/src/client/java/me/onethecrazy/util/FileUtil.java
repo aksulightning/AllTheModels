@@ -6,7 +6,6 @@ import me.onethecrazy.FBXPlayerModelsMod;
 import com.aksulightning.platform.PlatformServices;
 import me.onethecrazy.util.objects.save.FBXPlayerModelsSave;
 import me.onethecrazy.util.parsing.ParsingFormat;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -61,7 +60,6 @@ public class FileUtil {
             Files.createDirectories(getDefaultPath());
             createFileIfNotPresent(getSavePath(), "{}".getBytes(StandardCharsets.UTF_8));
             Files.createDirectories(getSkinsPath());
-            Files.createDirectories(getMobModelCachePath());
         } catch (IOException e) {
             FBXPlayerModelsMod.LOGGER.error("Ran into error while creating default path: {0}", e);
         }
@@ -77,14 +75,6 @@ public class FileUtil {
 
     public static Path getSkinsPath(){
         return getDefaultPath().resolve("skins");
-    }
-
-    public static Path getMobModelCachePath(){
-        return getDefaultPath().resolve("mobskins-cache");
-    }
-
-    public static Path getMobModelCachePath(String model){
-        return getMobModelCachePath().resolve(model);
     }
 
     public static Path getSkinPath(String skin, ParsingFormat format){
@@ -110,28 +100,6 @@ public class FileUtil {
         } catch (NoSuchAlgorithmException e) {
             // SHA-256 is guaranteed to be available in the Java platform
             throw new RuntimeException("SHA-256 algorithm not found", e);
-        }
-    }
-
-    public static boolean isSkinCached(String hash){
-        return tryGetSkinFromIOCache(hash) != null;
-    }
-
-    public static @Nullable Path tryGetSkinFromIOCache(String hash){
-        // Iterate cached skin files to see if we already got the hash (and therefore the skin)
-        try (var stream = Files.list(getSkinsPath())) {
-            return stream
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().startsWith(hash))
-                    .findAny()
-                    .orElseThrow();
-        } catch (Exception e) {
-            // Ignore NoSuchElementException
-            if(e instanceof IOException)
-                FBXPlayerModelsMod.LOGGER.error("Failed to iterate local I/O skin cache: ", e);
-
-            // Fallback
-            return null;
         }
     }
 
